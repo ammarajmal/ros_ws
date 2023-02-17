@@ -1,0 +1,6 @@
+devel_space: /home/ammar/ros_ws/devel
+install: false
+install_space: /home/ammar/ros_ws/install
+profile: default
+source_space: /home/ammar/ros_ws/src
+workspace: /home/ammar/ros_ws
