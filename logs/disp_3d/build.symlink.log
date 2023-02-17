@@ -1,3 +1,3 @@
-Linked: (/home/ammar/ros_ws/devel/.private/disp_3d/share/disp_3d/cmake/disp_3dConfig-version.cmake, /home/ammar/ros_ws/devel/share/disp_3d/cmake/disp_3dConfig-version.cmake)
-Linked: (/home/ammar/ros_ws/devel/.private/disp_3d/share/disp_3d/cmake/disp_3dConfig.cmake, /home/ammar/ros_ws/devel/share/disp_3d/cmake/disp_3dConfig.cmake)
-Linked: (/home/ammar/ros_ws/devel/.private/disp_3d/lib/pkgconfig/disp_3d.pc, /home/ammar/ros_ws/devel/lib/pkgconfig/disp_3d.pc)
+Symlinking /home/ammar/ros_ws/devel/share/disp_3d/cmake/disp_3dConfig-version.cmake
+Symlinking /home/ammar/ros_ws/devel/share/disp_3d/cmake/disp_3dConfig.cmake
+Symlinking /home/ammar/ros_ws/devel/lib/pkgconfig/disp_3d.pc

@@ -43,7 +43,7 @@ RM = /usr/bin/cmake -E remove -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/ammar/ros_ws/src/usb_cam
+CMAKE_SOURCE_DIR = /home/ammar/ros_ws/src/usb_cam_custom
 
 # The top-level build directory on which CMake was run.
 CMAKE_BINARY_DIR = /home/ammar/ros_ws/build/usb_cam
@@ -71,6 +71,6 @@ CMakeFiles/clean_test_results.dir/clean:
 .PHONY : CMakeFiles/clean_test_results.dir/clean
 
 CMakeFiles/clean_test_results.dir/depend:
-	cd /home/ammar/ros_ws/build/usb_cam && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/ammar/ros_ws/src/usb_cam /home/ammar/ros_ws/src/usb_cam /home/ammar/ros_ws/build/usb_cam /home/ammar/ros_ws/build/usb_cam /home/ammar/ros_ws/build/usb_cam/CMakeFiles/clean_test_results.dir/DependInfo.cmake --color=$(COLOR)
+	cd /home/ammar/ros_ws/build/usb_cam && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/ammar/ros_ws/src/usb_cam_custom /home/ammar/ros_ws/src/usb_cam_custom /home/ammar/ros_ws/build/usb_cam /home/ammar/ros_ws/build/usb_cam /home/ammar/ros_ws/build/usb_cam/CMakeFiles/clean_test_results.dir/DependInfo.cmake --color=$(COLOR)
 .PHONY : CMakeFiles/clean_test_results.dir/depend
 

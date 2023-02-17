@@ -43,7 +43,7 @@ RM = /usr/bin/cmake -E remove -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/ammar/ros_ws/src/usb_cam
+CMAKE_SOURCE_DIR = /home/ammar/ros_ws/src/usb_cam_custom
 
 # The top-level build directory on which CMake was run.
 CMAKE_BINARY_DIR = /home/ammar/ros_ws/build/usb_cam
@@ -58,17 +58,17 @@ include CMakeFiles/usb_cam_node.dir/progress.make
 include CMakeFiles/usb_cam_node.dir/flags.make
 
 CMakeFiles/usb_cam_node.dir/nodes/usb_cam_node.cpp.o: CMakeFiles/usb_cam_node.dir/flags.make
-CMakeFiles/usb_cam_node.dir/nodes/usb_cam_node.cpp.o: /home/ammar/ros_ws/src/usb_cam/nodes/usb_cam_node.cpp
+CMakeFiles/usb_cam_node.dir/nodes/usb_cam_node.cpp.o: /home/ammar/ros_ws/src/usb_cam_custom/nodes/usb_cam_node.cpp
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/ammar/ros_ws/build/usb_cam/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object CMakeFiles/usb_cam_node.dir/nodes/usb_cam_node.cpp.o"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/usb_cam_node.dir/nodes/usb_cam_node.cpp.o -c /home/ammar/ros_ws/src/usb_cam/nodes/usb_cam_node.cpp
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/usb_cam_node.dir/nodes/usb_cam_node.cpp.o -c /home/ammar/ros_ws/src/usb_cam_custom/nodes/usb_cam_node.cpp
 
 CMakeFiles/usb_cam_node.dir/nodes/usb_cam_node.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/usb_cam_node.dir/nodes/usb_cam_node.cpp.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/ammar/ros_ws/src/usb_cam/nodes/usb_cam_node.cpp > CMakeFiles/usb_cam_node.dir/nodes/usb_cam_node.cpp.i
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/ammar/ros_ws/src/usb_cam_custom/nodes/usb_cam_node.cpp > CMakeFiles/usb_cam_node.dir/nodes/usb_cam_node.cpp.i
 
 CMakeFiles/usb_cam_node.dir/nodes/usb_cam_node.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/usb_cam_node.dir/nodes/usb_cam_node.cpp.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/ammar/ros_ws/src/usb_cam/nodes/usb_cam_node.cpp -o CMakeFiles/usb_cam_node.dir/nodes/usb_cam_node.cpp.s
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/ammar/ros_ws/src/usb_cam_custom/nodes/usb_cam_node.cpp -o CMakeFiles/usb_cam_node.dir/nodes/usb_cam_node.cpp.s
 
 # Object files for target usb_cam_node
 usb_cam_node_OBJECTS = \
@@ -223,6 +223,6 @@ CMakeFiles/usb_cam_node.dir/clean:
 .PHONY : CMakeFiles/usb_cam_node.dir/clean
 
 CMakeFiles/usb_cam_node.dir/depend:
-	cd /home/ammar/ros_ws/build/usb_cam && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/ammar/ros_ws/src/usb_cam /home/ammar/ros_ws/src/usb_cam /home/ammar/ros_ws/build/usb_cam /home/ammar/ros_ws/build/usb_cam /home/ammar/ros_ws/build/usb_cam/CMakeFiles/usb_cam_node.dir/DependInfo.cmake --color=$(COLOR)
+	cd /home/ammar/ros_ws/build/usb_cam && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/ammar/ros_ws/src/usb_cam_custom /home/ammar/ros_ws/src/usb_cam_custom /home/ammar/ros_ws/build/usb_cam /home/ammar/ros_ws/build/usb_cam /home/ammar/ros_ws/build/usb_cam/CMakeFiles/usb_cam_node.dir/DependInfo.cmake --color=$(COLOR)
 .PHONY : CMakeFiles/usb_cam_node.dir/depend
 

@@ -67,7 +67,7 @@ set(usb_cam_CONFIG_INCLUDED TRUE)
 
 # set variables for source/devel/install prefixes
 if("FALSE" STREQUAL "TRUE")
-  set(usb_cam_SOURCE_PREFIX /home/ammar/ros_ws/src/usb_cam)
+  set(usb_cam_SOURCE_PREFIX /home/ammar/ros_ws/src/usb_cam_custom)
   set(usb_cam_DEVEL_PREFIX /home/ammar/ros_ws/devel/.private/usb_cam)
   set(usb_cam_INSTALL_PREFIX "")
   set(usb_cam_PREFIX ${usb_cam_DEVEL_PREFIX})

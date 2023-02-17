@@ -6,7 +6,7 @@
 
 #IncludeRegexTransform: 
 
-/home/ammar/ros_ws/src/usb_cam/include/usb_cam/usb_cam.h
+/home/ammar/ros_ws/src/usb_cam_custom/include/usb_cam/usb_cam.h
 asm/types.h
 -
 linux/videodev2.h
@@ -28,7 +28,7 @@ sstream
 sensor_msgs/Image.h
 -
 
-/home/ammar/ros_ws/src/usb_cam/src/usb_cam.cpp
+/home/ammar/ros_ws/src/usb_cam_custom/src/usb_cam.cpp
 stdio.h
 -
 stdlib.h
