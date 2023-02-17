@@ -1,0 +1,1 @@
+/home/ammar/ros_ws/devel/.private/image_view/lib/python3/dist-packages/image_view/cfg/ImageViewConfig.py

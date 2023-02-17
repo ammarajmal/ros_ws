@@ -1,0 +1,2 @@
+- setup-file:
+    local-name: /home/ammar/ros_ws/devel/.private/image_publisher/setup.sh
