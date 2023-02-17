@@ -1,0 +1,8 @@
+prefix=/home/ammar/ros_ws/devel/.private/gige_cam_driver
+
+Name: gige_cam_driver
+Description: Description of gige_cam_driver
+Version: 0.0.0
+Cflags: 
+Libs: -L${prefix}/lib 
+Requires: 
