@@ -4,3 +4,6 @@
 [submodule "src/usb_cam"]
 	path = src/usb_cam
 	url = https://github.com/ros-drivers/usb_cam
+[submodule "src/camera_info_manager_py"]
+	path = src/camera_info_manager_py
+	url = https://github.com/mllofriu/camera_info_manager_py
