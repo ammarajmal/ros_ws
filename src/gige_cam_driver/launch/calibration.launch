@@ -1,0 +1,29 @@
+<launch>
+  <node pkg="camera_calibration" name="camera_1_calibration" type="cameracalibrator.py" output="screen">
+    <param name="size" value="6x5"/>
+    <param name="square" value="0.025"/>
+    <param name="k-coefficients" value="2"/>
+    <param name="fix-principal-point" value="i"/>
+    <param name="fix-aspect-ratio" value="true"/>
+    <remap from="image" to="/camera_1/image_raw"/>
+    <remap from="camera" to="/camera_1"/>
+  </node>
+  <node pkg="camera_calibration" name="camera_2_calibration" type="cameracalibrator.py" output="screen">
+    <param name="size" value="6x5"/>
+    <param name="square" value="0.025"/>
+    <param name="k-coefficients" value="2"/>
+    <param name="fix-principal-point" value="i"/>
+    <param name="fix-aspect-ratio" value="true"/>
+    <remap from="image" to="/camera_2/image_raw"/>
+    <remap from="camera" to="/camera_2"/>
+  </node>
+  <node pkg="camera_calibration" name="camera_3_calibration" type="cameracalibrator.py" output="screen">
+    <param name="size" value="6x5"/>
+    <param name="square" value="0.025"/>
+    <param name="k-coefficients" value="2"/>
+    <param name="fix-principal-point" value="i"/>
+    <param name="fix-aspect-ratio" value="true"/>
+    <remap from="image" to="/camera_3/image_raw"/>
+    <remap from="camera" to="/camera_3"/>
+  </node>
+</launch>
