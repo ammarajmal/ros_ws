@@ -1,1 +1,0 @@
-/home/ammar/ros_ws/devel/.private/stereo_image_proc/lib/python3/dist-packages/stereo_image_proc/cfg/DisparityConfig.py

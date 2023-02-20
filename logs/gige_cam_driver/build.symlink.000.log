@@ -1,6 +1,0 @@
-Symlinking /home/ammar/ros_ws/devel/share/gige_cam_driver/cmake/gige_cam_driverConfig.cmake
-Symlinking /home/ammar/ros_ws/devel/share/gige_cam_driver/cmake/gige_cam_driverConfig-version.cmake
-Symlinking /home/ammar/ros_ws/devel/lib/pkgconfig/gige_cam_driver.pc
-Symlinking /home/ammar/ros_ws/devel/lib/gige_cam_driver/camera_node.py
-Symlinking /home/ammar/ros_ws/devel/lib/gige_cam_driver/cmake.lock
-Symlinking /home/ammar/ros_ws/devel/lib/python3/dist-packages/gige_cam_driver/__init__.py

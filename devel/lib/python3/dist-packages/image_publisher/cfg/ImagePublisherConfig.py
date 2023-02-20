@@ -1,1 +1,0 @@
-/home/ammar/ros_ws/devel/.private/image_publisher/lib/python3/dist-packages/image_publisher/cfg/ImagePublisherConfig.py

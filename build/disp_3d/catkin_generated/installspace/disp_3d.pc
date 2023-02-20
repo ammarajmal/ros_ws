@@ -1,8 +1,0 @@
-prefix=/home/ammar/ros_ws/install
-
-Name: disp_3d
-Description: Description of disp_3d
-Version: 0.0.0
-Cflags: 
-Libs: -L${prefix}/lib 
-Requires: 

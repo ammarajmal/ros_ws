@@ -1,1 +1,0 @@
-/home/ammar/ros_ws/devel/.private/gige_cam_driver/share/gige_cam_driver/cmake/gige_cam_driverConfig-version.cmake

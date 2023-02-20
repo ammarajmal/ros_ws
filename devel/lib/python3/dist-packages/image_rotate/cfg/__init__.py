@@ -1,1 +1,0 @@
-/home/ammar/ros_ws/devel/.private/image_rotate/lib/python3/dist-packages/image_rotate/cfg/__init__.py

@@ -1,1 +1,0 @@
-/home/ammar/ros_ws/devel/.private/disp_3d/lib/pkgconfig/disp_3d.pc
