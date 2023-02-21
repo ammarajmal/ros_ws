@@ -6,4 +6,4 @@
 	url = https://github.com/ros-drivers/usb_cam
 [submodule "src/camera_info_manager_py"]
 	path = src/camera_info_manager_py
-	url = https://github.com/mllofriu/camera_info_manager_py
+	url = https://github.com/ros-perception/camera_info_manager_py
