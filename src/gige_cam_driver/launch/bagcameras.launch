@@ -1,0 +1,62 @@
+<launch>
+  <arg name="duration" default="30"/>
+  <node pkg="rosbag" name="record_cameras" type="record" output="screen">
+    <param name="duration" value="$(arg duration)"/>
+    <param name="output-name" value="/home/agcam/bagfiles/bagcam1.bag"/>
+    <remap from="image" to="/camera_1/image_raw"/>
+    <remap from="camera" to="/camera_1/camera_info"/>
+    <remap from="image" to="/camera_2/image_raw"/>
+    <remap from="camera" to="/camera_2/camera_info"/>
+    <remap from="image" to="/camera_3/image_raw"/>
+    <remap from="camera" to="/camera_3/camera_info"/>
+  </node>
+</launch>
+
+
+
+<!-- <launch>
+  <arg name="duration" default="30"/>
+  <node pkg="rosbag" name="record_camera_1" type="record" output="screen">
+    <param name="duration" value="$(arg duration)"/>
+    
+    <remap from="image" to="/camera_1/image_raw"/>
+  </node>
+</launch> -->
+
+
+<!-- <launch>
+  <arg name="duration" default="30"/>
+  <node pkg="rosbag" name="record_camera_1" type="record" output="screen">
+    <param name="duration" value="$(arg duration)"/>
+    <param name="output-name" value="$(env HOME)/bagcam1/camera_1_$(date +%Y-%m-%d_%H-%M-%S).bag"/>
+    <remap from="image" to="/camera_1/image_raw"/>
+    <remap from="camera" to="/camera_1/camera_info"/>
+  </node>
+</launch> -->
+<!-- 
+
+<launch>
+  <arg name="duration" default="60"/>
+  <node pkg="rosbag" name="record_cameras" type="record" output="screen">
+    <param name="duration" value="$(arg duration)"/>
+    <param name="output-name" value="/home/agcam/bagfiles/cameras.bag"/>
+    <remap from="image" to="/camera_1/image_raw"/>
+    <remap from="camera" to="/camera_1/camera_info"/>
+    <remap from="image" to="/camera_2/image_raw"/>
+    <remap from="camera" to="/camera_2/camera_info"/>
+    <remap from="image" to="/camera_3/image_raw"/>
+    <remap from="camera" to="/camera_3/camera_info"/>
+  </node>
+</launch>
+
+
+
+<launch>
+  <node name="camera_1" pkg="gige_cam_driver" type="camera_1">
+  </node>
+  <node pkg="rosbag" name="record_camera_1" type="record" output="screen">
+    <param name="output-name" value="/home/agcam/bagfiles/camera_1.bag"/>
+    <remap from="image" to="/camera_1/image_raw"/>
+    <remap from="camera" to="/camera_1/camera_info"/>
+  </node>
+</launch> -->
