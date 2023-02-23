@@ -7,3 +7,6 @@
 [submodule "src/camera_info_manager_py"]
 	path = src/camera_info_manager_py
 	url = https://github.com/ros-perception/camera_info_manager_py
+[submodule "src/vision_msgs"]
+	path = src/vision_msgs
+	url = https://github.com/ros-perception/vision_msgs
