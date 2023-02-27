@@ -6,5 +6,6 @@
     "python.analysis.extraPaths": [
         "/home/ammar/ros_ws/devel/lib/python3/dist-packages",
         "/opt/ros/noetic/lib/python3/dist-packages"
-    ]
+    ],
+    "cmake.sourceDirectory": "${workspaceFolder}/camera_info_manager_py"
 }

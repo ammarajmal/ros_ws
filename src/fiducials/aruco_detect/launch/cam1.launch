@@ -1,7 +1,7 @@
 <!-- Run the aruco_detect node -->
 <launch>
   <arg name="aruco_marker_size" default="0.04"/>    <!-- Marker Size in meters -->
-  <group ns="camera_1_aruco_detect">
+  <group ns="cam1_marker">
     <include file="$(find aruco_detect)/launch/aruco_detect.launch">
       <arg name="camera" value="/camera_1"/>
       <arg name="image" value="image"/>
