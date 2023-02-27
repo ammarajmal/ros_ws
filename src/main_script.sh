@@ -56,7 +56,7 @@ if [ "$save_data" == "y" ]; then
         gnome-terminal -- roslaunch gige_cam_driver allcams.launch & cameras_pid=$!
         sleep 3
         gnome-terminal -- roslaunch gige_cam_driver allbags.launch & record_pid=$!
-        sleep 5
+        sleep 20
         # Wait for the rosbag recording node to exit
         wait $record_pid
 
@@ -119,5 +119,17 @@ if [ "$save_data" == "y" ]; then
         esac
     fi
 fi
+
+echo "Do you want to run marker detection (y/n)? "
+read marker_detect
+if [ "$marker_detect" == "y" ]; then
+    # Run the marker detection script
+    gnome-terminal -- roslaunch gige_cam_driver cam1.launch & cameras_pid=$!
+    sleep 3
+    gnome-terminal -- roslaunch aruco_detect cam1.launch & cam1_detect_pid=$!
+else
+    echo "Skipping marker detection."
+fi
+
 
 echo "The process finished successfully."

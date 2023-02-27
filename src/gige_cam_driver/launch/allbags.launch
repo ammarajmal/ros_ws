@@ -1,5 +1,5 @@
 <launch>
-  <node name="rosbag_record" pkg="rosbag" type="record" respawn="false" output="screen" args=" --duration=5 --output-name=/home/agcam/bag_files_test/allcams.bag /camera_1/camera_info /camera_1/image_raw
+  <node name="rosbag_record" pkg="rosbag" type="record" respawn="false" output="screen" args=" --duration=2 --output-name=/home/agcam/bag_files_test/allcams.bag /camera_1/camera_info /camera_1/image_raw
                                                                                 /camera_2/camera_info /camera_2/image_raw
                                                                                 /camera_3/camera_info /camera_3/image_raw" />
 
