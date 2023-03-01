@@ -1,5 +1,8 @@
 #!/bin/bash
-#!/bin/bash
+
+
+
+
 echo 
 echo "3-D Displacement Calculation:"
 echo 
@@ -131,14 +134,52 @@ while true; do
             case $cam_number in
                 1)
                     # Load Camera 1 data by launching readbag1.launch file from gige_cam_driver package into a new terminal
-                    gnome-terminal -- roslaunch gige_cam_driver readbag1.launch & rosbag_pid=$! 
-                     
+                    gnome-terminal -- roslaunch gige_cam_driver readbag1.launch & rosbag_pid=$!
+                    sleep 1
+                    # Load aruco_detect node from aruco_detect package into a new terminal 
+                    gnome-terminal -- roslaunch aruco_detect cam1.launch & aruco_pid=$!
+                    sleep 2
+                    # save the topic /cam1_marker/fiducial_transforms into a bag file into a new terminal with name detect_cam1.bag 
+                    # gnome-terminal rosbag record --output-name=detect_cam1.bag /cam1_marker/fiducial_transforms
+                    rosbag record /cam1_marker/fiducial_transforms -o cam1.bag
+                    when readbag1.launch exits, kill the aruco_detect node and the rosbag record node
+                    if ! ps -p $rosbag_pid > /dev/null; then
+                        echo "Killing aruco_detect node..."
+                        rosnode kill -a
+                        echo "Killing rosbag record node..."
+                        rosnode kill /rosbag_record
+                    fi
 
-                    # # kills the task when the rosbag is finished playing
-                    # if ! ps -p $rosbag_pid > /dev/null; then
-                    #     echo "Killing camera 1 node..."
-                    #     rosnode kill -a
-                    # fi
+                    
+                    # rostopic echo /cam1_marker/fiducial_transforms > cam1_marker.csv
+
+                    
+
+
+
+
+
+
+
+                    # Now store the translation x, y and z  from rostopic echo /cam1_marker/fiducial_transforms into a csv file in the same directory
+                    # rostopic echo /cam1_marker/fiducial_transforms > cam1_data.csv &
+                    # rostopic echo /cam1_marker/fiducial_transforms | grep -e 'header:\|fiducial_id:\|translation:' | sed 's/.*header: { secs: \([0-9]*\), nsecs: \([0-9]*\), frame_id: \"\(.*\)\" }.*/\1,\2,\3/g' | sed 's/.*fiducial_id: \([0-9]*\).*/\1/g' | sed 's/.*translation: { x: \([-0-9.]*\), y: \([-0-9.]*\), z: \([-0-9.]*\).*/\1,\2,\3/g' > cam1_data.csv &
+
+
+rostopic 
+                    # rostopic echo /cam1_marker/fiducial_transforms > cam1_data.csv &
+                    # sleep 1
+                    # Wait for the rosbag process to finish
+                    wait $rosbag_pid
+                    # Terminate the aruco_detect process
+                    kill $aruco_pid
+                    # Kill all the terminal windows
+                    
+                    pkill gnome-terminal
+                    # Display a message that the work is done
+                    echo "Work is done!"
+
+
                     ;;
 
                 2)
