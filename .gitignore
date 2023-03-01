@@ -1,4 +1,5 @@
 build/
 devel/
 logs/
+**/*.bag
 .catkin_tools/
