@@ -18,14 +18,16 @@ class LaunchHandle(object):
         self.cam3_calib_file_path = self.launch_path + 'calib3.launch'
         self.cam3_calib = roslaunch.parent.ROSLaunchParent(self.uuid, [self.cam3_calib_file_path])
         
+        
+        # running ros_bag launch file for camera_1
         cli_args = [self.cam_bagfile_file_path, 'cam:=camera_1']
         roslaunch_file = [(roslaunch.rlutil.resolve_launch_arguments(cli_args)[0], cli_args[1:])]
         self.cam1_bagfile = roslaunch.parent.ROSLaunchParent(self.uuid, roslaunch_file)
-
+        # running ros_bag launch file for camera_2
         cli_args = [self.cam_bagfile_file_path, 'cam:=camera_2']
         roslaunch_file = [(roslaunch.rlutil.resolve_launch_arguments(cli_args)[0], cli_args[1:])]        
         self.cam2_bagfile = roslaunch.parent.ROSLaunchParent(self.uuid, roslaunch_file)
-        
+        # running ros_bag launch file for camera_3
         cli_args = [self.cam_bagfile_file_path, 'cam:=camera_3']
         roslaunch_file = [(roslaunch.rlutil.resolve_launch_arguments(cli_args)[0], cli_args[1:])]
         self.cam3_bagfile = roslaunch.parent.ROSLaunchParent(self.uuid, roslaunch_file)
@@ -43,8 +45,8 @@ class LaunchHandle(object):
         # rospy.spin()
         
         # bag file saving 
-        # self.cam1_bagfile.start()
-        # self.running_launch_files.update({"cam1_bagfile": self.cam1_bagfile})
+        self.cam1_bagfile.start()
+        self.running_launch_files.update({"cam1_bagfile": self.cam1_bagfile})
 
         # self.cam2_bagfile.start()
         # self.running_launch_files.update({"cam2_bagfile": self.cam2_bagfile})
