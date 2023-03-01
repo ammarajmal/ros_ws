@@ -1,8 +1,6 @@
 #!/bin/bash
 
 
-
-
 echo 
 echo "3-D Displacement Calculation:"
 echo 
@@ -142,13 +140,13 @@ while true; do
                     # save the topic /cam1_marker/fiducial_transforms into a bag file into a new terminal with name detect_cam1.bag 
                     # gnome-terminal rosbag record --output-name=detect_cam1.bag /cam1_marker/fiducial_transforms
                     rosbag record /cam1_marker/fiducial_transforms -o cam1.bag
-                    when readbag1.launch exits, kill the aruco_detect node and the rosbag record node
-                    if ! ps -p $rosbag_pid > /dev/null; then
-                        echo "Killing aruco_detect node..."
-                        rosnode kill -a
-                        echo "Killing rosbag record node..."
-                        rosnode kill /rosbag_record
-                    fi
+                    # when readbag1.launch exits, kill the aruco_detect node and the rosbag record node
+                    # if ! ps -p $rosbag_pid > /dev/null; then
+                    #     echo "Killing aruco_detect node..."
+                    #     rosnode kill -a
+                    #     echo "Killing rosbag record node..."
+                    #     rosnode kill /rosbag_record
+                    # fi
 
                     
                     # rostopic echo /cam1_marker/fiducial_transforms > cam1_marker.csv
