@@ -1,0 +1,14 @@
+<launch>
+
+<arg name="cam" default="camera_1" />
+<arg name="hz" default="1" />
+
+<arg name="bag_file_path" default="$(find gige_cam_driver)/bagfiles/'$(arg cam)'.bag" />
+
+
+  <node name="$(arg cam)_rosbag_play"
+  pkg="rosbag" type="play" respawn="false" output="log"
+  args="--clock -q --hz=$(arg hz) '$(arg bag_file_path)' " />
+</launch>
+
+
