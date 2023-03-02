@@ -34,7 +34,7 @@ class LaunchHandle(object):
         self.cam3_bagfile = roslaunch.parent.ROSLaunchParent(self.uuid, roslaunch_file)
         
         # running camera node for camera_1
-        cli_args = [self.cam_launch_file_path, 'cam:=cam1']
+        cli_args = [self.cam_launch_file_path, 'cam:=camera_1', 'device_id:=0', 'calib_file:=cam1']
         roslaunch_file = [(roslaunch.rlutil.resolve_launch_arguments(cli_args)[0], cli_args[1:])]
         self.cam1_driver = roslaunch.parent.ROSLaunchParent(self.uuid, roslaunch_file)
         
