@@ -11,6 +11,7 @@ class LaunchHandle(object):
         self.launch_path = rospkg.RosPack().get_path('gige_cam_driver') + '/launch/'
         self.uuid = roslaunch.rlutil.get_or_generate_uuid(None, False)        
         self.cam_bagfile_file_path = self.launch_path + 'bag.launch'
+        self.cam_launch_file_path = self.launch_path + 'cam.launch'
         self.cam1_calib_file_path = self.launch_path + 'calib1.launch'        
         self.cam1_calib = roslaunch.parent.ROSLaunchParent(self.uuid, [self.cam1_calib_file_path, ])
         self.cam2_calib_file_path = self.launch_path + 'calib2.launch'
@@ -31,6 +32,13 @@ class LaunchHandle(object):
         cli_args = [self.cam_bagfile_file_path, 'cam:=camera_3']
         roslaunch_file = [(roslaunch.rlutil.resolve_launch_arguments(cli_args)[0], cli_args[1:])]
         self.cam3_bagfile = roslaunch.parent.ROSLaunchParent(self.uuid, roslaunch_file)
+        
+        # running camera node for camera_1
+        cli_args = [self.cam_launch_file_path, 'cam:=camera_1']
+        roslaunch_file = [(roslaunch.rlutil.resolve_launch_arguments(cli_args)[0], cli_args[1:])]
+        self.cam1_bagfile = roslaunch.parent.ROSLaunchParent(self.uuid, roslaunch_file)
+        
+        
         
         self.running_launch_files = {}
         
