@@ -51,6 +51,7 @@ class LaunchHandle(object):
         
         self.cam1_driver.start()
         self.running_launch_files.update({"cam1_driver": self.cam1_driver})
+        rospy.spin()
         
         
         # self.cam1_calib.start()
