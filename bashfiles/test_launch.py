@@ -105,13 +105,12 @@ class LaunchHandle(object):
         # Saving Camera Bag Files 
         # ======================================
         
-        # bag file saving for camera 1
+        # # bag file saving for camera 1
         
         # self.cam1_driver.start()
         # self.running_launch_files.update({"cam1_driver": self.cam1_driver})
         # self.cam1_bagfile.start()
         # self.running_launch_files.update({"cam1_bagfile": self.cam1_bagfile})
-        # rospy.spin()
         
         
         
@@ -121,33 +120,29 @@ class LaunchHandle(object):
         # self.running_launch_files.update({"cam2_driver": self.cam2_driver})
         # self.cam2_bagfile.start()
         # self.running_launch_files.update({"cam2_bagfile": self.cam2_bagfile})
+        
+        
+        # # bag file saving for camera 3
+        
+        # self.cam3_driver.start()
+        # self.running_launch_files.update({"cam3_driver": self.cam3_driver})
+        # self.cam3_bagfile.start()
+        # self.running_launch_files.update({"cam3_bagfile": self.cam3_bagfile})
         # rospy.spin()
         
+        # ======================================
+        # Detection using Post Processing 
+        # ======================================
         
-        # bag file saving for camera 2
+        # # loading the bag file for camera 1
         
-        self.cam3_driver.start()
-        self.running_launch_files.update({"cam3_driver": self.cam3_driver})
-        self.cam3_bagfile.start()
-        self.running_launch_files.update({"cam3_bagfile": self.cam3_bagfile})
-        rospy.spin()
+        # self.cam1_driver.start()
+        # self.running_launch_files.update({"cam1_driver": self.cam1_driver})
 
-        # self.cam2_bagfile.start()
-        # self.running_launch_files.update({"cam2_bagfile": self.cam2_bagfile})
 
-        # self.cam3_bagfile.start()
-        # self.running_launch_files.update({"cam3_bagfile": self.cam3_bagfile})
-        # rospy.spin() 
         
         # # self.running_launch_files["cam1_calib"].shutdown()
-
-        # self.cam2_bagfile.start()
-        # self.running_launch_files.update({"cam2_bagfile": self.cam2_bagfile})
-        
-
-        # self.cam3_bagfile.start()
-        # self.running_launch_files.update({"cam3_bagfile": self.cam3_bagfile})
-        
+    
         
 if __name__ == '__main__':
     launch_handle = LaunchHandle()
