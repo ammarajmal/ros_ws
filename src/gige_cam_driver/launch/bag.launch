@@ -7,5 +7,5 @@
 
   <node name="$(arg cam)_rosbag_record"
   pkg="rosbag" type="record" respawn="false" output="screen"
-  args=" --duration=2 --output-name='$(arg bag_file_path)' /'$(arg cam)'/camera_info /'$(arg cam)'/image_raw" />
+  args=" --duration=5 --output-name='$(arg bag_file_path)' /'$(arg cam)'/camera_info /'$(arg cam)'/image_raw" />
 </launch>
