@@ -130,8 +130,9 @@ while true; do
             read -p "which Camera data do you want to load (1/2/3)? " cam_number
             case $cam_number in
                 1)
-                    # Load Camera 1 data
-                    roslaunch gige_cam_driver readallbags.launch & rosbag_pid=$! & roslaunch aruco_detect cam1.launch  & aruco_pid=$!
+                    # Load Camera 1 data by launching readbag1.launch file from gige_cam_driver package into a new terminal
+                    gnome-terminal -- roslaunch gige_cam_driver readbag1.launch & rosbag_pid=$! 
+                     
 
                     # # kills the task when the rosbag is finished playing
                     # if ! ps -p $rosbag_pid > /dev/null; then
