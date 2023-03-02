@@ -34,9 +34,9 @@ class LaunchHandle(object):
         self.cam3_bagfile = roslaunch.parent.ROSLaunchParent(self.uuid, roslaunch_file)
         
         # running camera node for camera_1
-        cli_args = [self.cam_launch_file_path, 'cam:=camera_1']
+        cli_args = [self.cam_launch_file_path, 'cam:=cam1']
         roslaunch_file = [(roslaunch.rlutil.resolve_launch_arguments(cli_args)[0], cli_args[1:])]
-        self.cam1_bagfile = roslaunch.parent.ROSLaunchParent(self.uuid, roslaunch_file)
+        self.cam1_driver = roslaunch.parent.ROSLaunchParent(self.uuid, roslaunch_file)
         
         
         
@@ -48,13 +48,18 @@ class LaunchHandle(object):
             file.shutdown()
         
     def run(self):
+        
+        self.cam1_driver.start()
+        self.running_launch_files.update({"cam1_driver": self.cam1_driver})
+        
+        
         # self.cam1_calib.start()
         # self.running_launch_files.update({"cam1_calib": self.cam1_calib})
         # rospy.spin()
         
         # bag file saving 
-        self.cam1_bagfile.start()
-        self.running_launch_files.update({"cam1_bagfile": self.cam1_bagfile})
+        # self.cam1_bagfile.start()
+        # self.running_launch_files.update({"cam1_bagfile": self.cam1_bagfile})
 
         # self.cam2_bagfile.start()
         # self.running_launch_files.update({"cam2_bagfile": self.cam2_bagfile})
