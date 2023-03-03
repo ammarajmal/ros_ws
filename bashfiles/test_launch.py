@@ -362,10 +362,10 @@ if __name__ == '__main__':
     launch_handle = LaunchHandle()
     # launch_handle.run()
     # launch_handle.test()
-    # launch_handle.plot()
+    launch_handle.plot()
     # launch_handle.camera_driver()
     # launch_handle.camera_calibration() # this one is working
-    launch_handle.bag_cam_record()
+    # launch_handle.bag_cam_record()
     
     
     
