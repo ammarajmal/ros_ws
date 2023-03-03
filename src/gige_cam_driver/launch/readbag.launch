@@ -2,8 +2,11 @@
 
 <arg name="cam" default="camera_1" />
 <arg name="hz" default="1" />
+<arg name="dur" default="5" />
+<arg name="bag_file_path" default="$(find gige_cam_driver)/bagfiles/'$(arg cam)'_$(arg dur)s.bag" />
 
-<arg name="bag_file_path" default="$(find gige_cam_driver)/bagfiles/'$(arg cam)'.bag" />
+
+<!-- <arg name="bag_file_path" default="$(find gige_cam_driver)/bagfiles/'$(arg cam)'.bag" /> -->
 
 
   <node name="$(arg cam)_rosbag_play"

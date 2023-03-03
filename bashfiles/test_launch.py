@@ -1,14 +1,13 @@
 #/usr/bin/env python3
 import roslaunch
-import os
 import rospkg
 import rospy
 import time
 import subprocess
 import pandas as pd
 import matplotlib.pyplot as plt
+import os
 
-from os.path import join
 
 class LaunchHandle(object):
     def __init__(self):
@@ -53,15 +52,15 @@ class LaunchHandle(object):
         # ********************************************************************************
 
         # running ros_bag launch file for camera_1
-        cli_args = [self.cam_bagfile_path, 'cam:=camera_1', 'dur:=20']
+        cli_args = [self.cam_bagfile_path, 'cam:=camera_1', 'dur:=30']
         roslaunch_file = [(roslaunch.rlutil.resolve_launch_arguments(cli_args)[0], cli_args[1:])]
         self.cam1_bagfile = roslaunch.parent.ROSLaunchParent(self.uuid, roslaunch_file)
         # running ros_bag launch file for camera_2
-        cli_args = [self.cam_bagfile_path, 'cam:=camera_2','dur:=20']
+        cli_args = [self.cam_bagfile_path, 'cam:=camera_2','dur:=30']
         roslaunch_file = [(roslaunch.rlutil.resolve_launch_arguments(cli_args)[0], cli_args[1:])]
         self.cam2_bagfile = roslaunch.parent.ROSLaunchParent(self.uuid, roslaunch_file)
         # running ros_bag launch file for camera_3
-        cli_args = [self.cam_bagfile_path, 'cam:=camera_3', 'dur:=20']
+        cli_args = [self.cam_bagfile_path, 'cam:=camera_3', 'dur:=30']
         roslaunch_file = [(roslaunch.rlutil.resolve_launch_arguments(cli_args)[0], cli_args[1:])]
         self.cam3_bagfile = roslaunch.parent.ROSLaunchParent(self.uuid, roslaunch_file)
         # ********************************************************************************
@@ -77,10 +76,26 @@ class LaunchHandle(object):
         camera_names = ['camera_1', 'camera_2', 'camera_3']
 
         # loop through the camera names and create a ROS launch parent for each one
-        for name in camera_names:
-            cli_args = [self.read_bagfile_path, f'cam:={name}']
+        cam_dict_1 = {'cam'         : ['camera_1', 'camera_2', 'camera_3'],
+                      'device_id'   : ['0', '1', '2'],
+                      'calib_file'  : ['cam1', 'cam2', 'cam3'],
+                      'dur'    : ['20', '20', '20']}
+        for i in range(len(cam_dict_1['cam'])):
+            cli_args = [
+                self.read_bagfile_path,
+                f"cam:={cam_dict_1['cam'][i]}",
+                f"dur:={cam_dict_1['dur'][i]}"
+            ]
             roslaunch_file = [(roslaunch.rlutil.resolve_launch_arguments(cli_args)[0], cli_args[1:])]
-            setattr(self, f'read_bagfile_{name}', roslaunch.parent.ROSLaunchParent(self.uuid, roslaunch_file))
+            node_name = f"cam{i+1}"
+            setattr(self, node_name, roslaunch.parent.ROSLaunchParent(self.uuid, roslaunch_file))
+
+        
+        # for name in camera_names:
+        #     cli_args = [self.read_bagfile_path, f'cam:={name}', f'dur:=20']
+            
+        #     roslaunch_file = [(roslaunch.rlutil.resolve_launch_arguments(cli_args)[0], cli_args[1:])]
+        #     setattr(self, f'read_bagfile_{name}', roslaunch.parent.ROSLaunchParent(self.uuid, roslaunch_file))
             
         # # reading bag file for camera_1
         # cli_args = [self.read_bagfile_path, 'cam:=camera_1']
@@ -110,7 +125,7 @@ class LaunchHandle(object):
                 self.cam_launch_path,
                 f"cam:={cam_dict['cam'][i]}",
                 f"device_id:={cam_dict['device_id'][i]}",
-                f"calib_file:={cam_dict['calib_file'][i]}",
+                f"calib_file:={cam_dict['calib_file'][i]}"
             ]
             roslaunch_file = [(roslaunch.rlutil.resolve_launch_arguments(cli_args)[0], cli_args[1:])]
             node_name = f"cam{i+1}_driver"
@@ -129,13 +144,9 @@ class LaunchHandle(object):
         
 
         self.running_processes = {}
-        
-        
     def on_shutdown(self):
         for file in self.running_processes.values():
             file.shutdown()
-        
-    
     def camera_driver(self):    
         print("=======================================")
         print("         Starting Camera Node")
@@ -225,23 +236,23 @@ class LaunchHandle(object):
                 print("Invalid camera number.")
                 continue
             rospy.spin()
-    def run(self): 
-    
-        # ======================================
-        # Detection using Post Processing 
-        # ======================================
-        
-        # # # loading the bag file for camera 1
-        self.read_bagfile_camera_1.start()
-        self.running_processes.update({"read_bagfile_camera_1": self.read_bagfile_camera_1})
-        # rospy.spin()
-        time.sleep(1)
-        self.marker_detect_camera_1.start()
-        self.running_processes.update({"marker_detect_camera_1": self.marker_detect_camera_1})
-        
-        topic_name = '/cam1_marker/fiducial_transforms'
-        
-        self.bagfile_path = os.path.join(self.bagfile_path, 'detect_camera_1.bag')
+    def post_process_bag_file(self): 
+        print("\n===================================")
+        print("      Post Processing the bag file   ") 
+        print("=====================================\n")
+        # Prompt the user to enter a camera number
+        while True:
+            camera_num = input("Enter a camera number (1-3) for bag file saving, or 'q' for quit: ")
+            if camera_num == '1':
+                # # # loading the bag file for camera 1
+                self.read_bagfile_camera_1.start()
+                self.running_processes.update({"read_bagfile_camera_1": self.read_bagfile_camera_1})
+                # rospy.spin()
+                time.sleep(1)
+                self.marker_detect_camera_1.start()
+                self.running_processes.update({"marker_detect_camera_1": self.marker_detect_camera_1})
+                topic_name = '/cam1_marker/fiducial_transforms'
+                self.bagfile_path = os.path.join(self.bagfile_path, 'detect_camera_1.bag')
         
         
         self.command = f'rosbag record -O {self.bagfile_path} {topic_name}'
