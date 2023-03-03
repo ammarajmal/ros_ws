@@ -27,7 +27,7 @@ class LaunchHandle(object):
         
         self.uuid = roslaunch.rlutil.get_or_generate_uuid(None, False)
 
-        self.bag_cam_launch   = f"{self.launch_path}bag.launch"
+        self.record_bag_launch   = f"{self.launch_path}recordbag.launch"
         self.read_bag_launch  = f"{self.launch_path}readbag.launch"
         self.cam_launch    = f"{self.launch_path}cam.launch"
         self.detect_launch = f"{self.detect_launch_path}detect.launch"
@@ -48,19 +48,19 @@ class LaunchHandle(object):
 
 
         # ********************************************************************************
-        # Saving bag files for multiple cameras
+        # Recording bag files for multiple cameras
         # ********************************************************************************
 
         # running ros_bag launch file for camera_1
-        cli_args = [self.bag_cam_launch, 'cam:=camera_1', 'dur:=30']
+        cli_args = [self.record_bag_launch, 'cam:=camera_1', 'dur:=40']
         roslaunch_file = [(roslaunch.rlutil.resolve_launch_arguments(cli_args)[0], cli_args[1:])]
         self.cam1_bagfile = roslaunch.parent.ROSLaunchParent(self.uuid, roslaunch_file)
         # running ros_bag launch file for camera_2
-        cli_args = [self.bag_cam_launch, 'cam:=camera_2','dur:=30']
+        cli_args = [self.record_bag_launch, 'cam:=camera_2','dur:=40']
         roslaunch_file = [(roslaunch.rlutil.resolve_launch_arguments(cli_args)[0], cli_args[1:])]
         self.cam2_bagfile = roslaunch.parent.ROSLaunchParent(self.uuid, roslaunch_file)
         # running ros_bag launch file for camera_3
-        cli_args = [self.bag_cam_launch, 'cam:=camera_3', 'dur:=30']
+        cli_args = [self.record_bag_launch, 'cam:=camera_3', 'dur:=40']
         roslaunch_file = [(roslaunch.rlutil.resolve_launch_arguments(cli_args)[0], cli_args[1:])]
         self.cam3_bagfile = roslaunch.parent.ROSLaunchParent(self.uuid, roslaunch_file)
         # ********************************************************************************
@@ -76,19 +76,30 @@ class LaunchHandle(object):
         # camera_names = ['camera_1', 'camera_2', 'camera_3']
 
         # # loop through the camera names and create a ROS launch parent for each one
-        cam_dict_1 = {'cam'         : ['camera_1', 'camera_2', 'camera_3'],
-                      'device_id'   : ['0', '1', '2'],
-                      'calib_file'  : ['cam1', 'cam2', 'cam3'],
-                      'dur'    : ['20', '20', '20']}
-        for i in range(len(cam_dict_1['cam'])):
-            cli_args = [
-                self.read_bag_launch,
-                f"cam:={cam_dict_1['cam'][i]}",
-                f"dur:={cam_dict_1['dur'][i]}"
-            ]
-            roslaunch_file = [(roslaunch.rlutil.resolve_launch_arguments(cli_args)[0], cli_args[1:])]
-            node_name = f"read_bagfile_{cam_dict_1['cam'][i]}"
-            setattr(self, node_name, roslaunch.parent.ROSLaunchParent(self.uuid, roslaunch_file))
+        
+        
+        # &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+        # &&&&&&&&&&&&&&&&&&&&&&  to replace &&&&&&&&&&&&&&&&&
+        # &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+        
+        # cam_dict_1 = {'cam'         : ['camera_1', 'camera_2', 'camera_3'],
+        #               'device_id'   : ['0', '1', '2'],
+        #               'calib_file'  : ['cam1', 'cam2', 'cam3'],
+        #               'dur'    : ['20', '20', '20']}
+        # for i in range(len(cam_dict_1['cam'])):
+        #     cli_args = [
+        #         self.read_bag_launch,
+        #         f"cam:={cam_dict_1['cam'][i]}",
+        #         f"dur:={cam_dict_1['dur'][i]}"
+        #     ]
+        #     roslaunch_file = [(roslaunch.rlutil.resolve_launch_arguments(cli_args)[0], cli_args[1:])]
+        #     node_name = f"read_bagfile_{cam_dict_1['cam'][i]}"
+        #     setattr(self, node_name, roslaunch.parent.ROSLaunchParent(self.uuid, roslaunch_file))
+        
+        
+        # &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+        # &&&&&&&&&&&&&&&&&&&&&&  to replace &&&&&&&&&&&&&&&&&
+        # &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 
         
         # for name in camera_names:
@@ -141,6 +152,16 @@ class LaunchHandle(object):
         cli_args = [self.detect_launch, 'camera:=camera_1']
         roslaunch_file = [(roslaunch.rlutil.resolve_launch_arguments(cli_args)[0], cli_args[1:])]
         self.marker_detect_camera_1 = roslaunch.parent.ROSLaunchParent(self.uuid, roslaunch_file)
+        
+        
+        cli_args = [self.detect_launch, 'camera:=camera_2']
+        roslaunch_file = [(roslaunch.rlutil.resolve_launch_arguments(cli_args)[0], cli_args[1:])]
+        self.marker_detect_camera_2 = roslaunch.parent.ROSLaunchParent(self.uuid, roslaunch_file)
+        
+        
+        cli_args = [self.detect_launch, 'camera:=camera_3']
+        roslaunch_file = [(roslaunch.rlutil.resolve_launch_arguments(cli_args)[0], cli_args[1:])]
+        self.marker_detect_camera_3 = roslaunch.parent.ROSLaunchParent(self.uuid, roslaunch_file)
         
 
         self.running_processes = {}
@@ -201,7 +222,7 @@ class LaunchHandle(object):
                 print("Invalid camera number.")
                 continue
             rospy.spin()
-    def bag_cam_record(self): 
+    def record_bag_cam(self): 
         print("\n=====================================================")
         print("      Recording Camera bag file for post processing  ")
         print("=====================================================\n")
@@ -245,47 +266,66 @@ class LaunchHandle(object):
         print("      Post Processing the bag file   ") 
         print("=====================================\n")
         # Prompt the user to enter a camera number
+        dur = 5
         while True:
             camera_num = input("Enter a camera number (1-3) for bag file saving, or 'q' for quit: ")
+            
+            duration = [5, 10, 20, 30, 40]
+            dur = duration[0]
+            print(dur)
+            # break
+            # --------------------------------------------------------
+            # STEP:01  loading the bag file for camera 1
+            # --------------------------------------------------------
+            # loop through the camera names and create a ROS launch parent for each one
+            cam_dict_1 = {'cam'         : ['camera_1', 'camera_2', 'camera_3'],
+                        'device_id'   : ['0', '1', '2'],
+                        'calib_file'  : ['cam1', 'cam2', 'cam3']}
+                        # 'dur'    : ['5', '10', '20', '30', '40']
+            for i in range(len(cam_dict_1['cam'])):
+                cli_args = [
+                    self.read_bag_launch,
+                    f"cam:={cam_dict_1['cam'][i]}",
+                    # f"dur:={cam_dict_1['dur'][2]}"
+                    # f"dur:={cam_dict_1['dur'][i]}"
+                    f'dur:={dur}'
+                    # "dur:={str(dur)}"
+                ]
+                roslaunch_file = [(roslaunch.rlutil.resolve_launch_arguments(cli_args)[0], cli_args[1:])]
+                node_name = f"read_bagfile_{cam_dict_1['cam'][i]}"
+                setattr(self, node_name, roslaunch.parent.ROSLaunchParent(self.uuid, roslaunch_file))
+
             if camera_num == '1':
-                
-                # STEP:01  loading the bag file for camera 1
-                # # loop through the camera names and create a ROS launch parent for each one
-                # cam_dict_1 = {'cam'         : ['camera_1', 'camera_2', 'camera_3'],
-                #               'device_id'   : ['0', '1', '2'],
-                #               'calib_file'  : ['cam1', 'cam2', 'cam3'],
-                #               'dur'    : ['5', '10', '20']}
-                # for i in range(len(cam_dict_1['cam'])):
-                #     cli_args = [
-                #         self.read_bag_launch,
-                #         f"cam:={cam_dict_1['cam'][i]}",
-                #         f"dur:={cam_dict_1['dur'][2]}"
-                #     ]
-                #     roslaunch_file = [(roslaunch.rlutil.resolve_launch_arguments(cli_args)[0], cli_args[1:])]
-                #     node_name = f"read_bagfile_{cam_dict_1['cam'][i]}"
-                #     setattr(self, node_name, roslaunch.parent.ROSLaunchParent(self.uuid, roslaunch_file))
                 self.read_bagfile_camera_1.start()
                 self.running_processes.update({"read_bagfile_camera_1": self.read_bagfile_camera_1})
                 time.sleep(1)
-                
-                #  STEP:02 Detecting the fiducial markers in the bag file  
+                # --------------------------------------------------------
+                #  STEP:02 Detecting the fiducial markers in the bag file
+                # --------------------------------------------------------
                 self.marker_detect_camera_1.start()
                 self.running_processes.update({"marker_detect_camera_1": self.marker_detect_camera_1})
+                
+                # --------------------------------------------------------------
+                #  STEP:03 Recording the fiducial markers topic in the bag file
+                # --------------------------------------------------------------
+                                
                 topic_name = '/cam1_marker/fiducial_transforms'
-                self.bagfile_path = os.path.join(self.bagfile_path, 'detect_camera_1.bag')
+                self.bagfile_path = os.path.join(self.bagfile_path, f'detect_camera_1_{str(dur)}s.bag')
         
         
                 self.command = f'rosbag record -O {self.bagfile_path} {topic_name}'
                 self.process = subprocess.Popen(self.command.split(), stdout=subprocess.PIPE)
 
-                time.sleep(20)
+                time.sleep(dur)
                 self.process.terminate()
                 self.running_processes["read_bagfile_camera_1"].shutdown()
                 self.running_processes["marker_detect_camera_1"].shutdown()
                 
-                bag_file_path = '/home/agcam/ros_ws/src/gige_cam_driver/bagfiles/detect_camera_1.bag'
+                
+                
+                bag_file_path = f'/home/agcam/ros_ws/src/gige_cam_driver/bagfiles/detect_camera_1_{str(dur)}s.bag'
                 topic_name = '/cam1_marker/fiducial_transforms'
-                csv_file_path = '/home/agcam/ros_ws/src/gige_cam_driver/data/detect_camera_1.csv'
+                csv_file_path = f'/home/agcam/ros_ws/src/gige_cam_driver/data/detect_camera_1_{str(dur)}s.csv'
 
                 # Use the subprocess module to execute the rostopic command and redirect the output to the CSV file
                 with open(csv_file_path, 'w') as csv_file:
@@ -300,6 +340,100 @@ class LaunchHandle(object):
                 rospy.spin()
             elif camera_num == 'q':
                 break
+            
+            elif camera_num == '2':
+                self.read_bagfile_camera_2.start()
+                self.running_processes.update({"read_bagfile_camera_2": self.read_bagfile_camera_2})
+                time.sleep(1)
+                # --------------------------------------------------------
+                #  STEP:02 Detecting the fiducial markers in the bag file
+                # --------------------------------------------------------
+                self.marker_detect_camera_2.start()
+                self.running_processes.update({"marker_detect_camera_2": self.marker_detect_camera_2})
+                break
+                # --------------------------------------------------------------
+                #  STEP:03 Recording the fiducial markers topic in the bag file
+                # --------------------------------------------------------------
+                                
+                topic_name = '/cam2_marker/fiducial_transforms'
+                self.bagfile_path = os.path.join(self.bagfile_path, f'detect_camera_2_{str(dur)}s.bag')
+        
+        
+                self.command = f'rosbag record -O {self.bagfile_path} {topic_name}'
+                self.process = subprocess.Popen(self.command.split(), stdout=subprocess.PIPE)
+
+                time.sleep(dur)
+                self.process.terminate()
+                self.running_processes["read_bagfile_camera_2"].shutdown()
+                self.running_processes["marker_detect_camera_2"].shutdown()
+                
+                
+                
+                bag_file_path = f'/home/agcam/ros_ws/src/gige_cam_driver/bagfiles/detect_camera_2_{str(dur)}s.bag'
+                topic_name = '/cam2_marker/fiducial_transforms'
+                csv_file_path = f'/home/agcam/ros_ws/src/gige_cam_driver/data/detect_camera_2_{str(dur)}s.csv'
+
+                # Use the subprocess module to execute the rostopic command and redirect the output to the CSV file
+                with open(csv_file_path, 'w') as csv_file:
+                    subprocess.run(['rostopic', 'echo', '-b', bag_file_path, '-p', topic_name], stdout=csv_file)
+                    
+            
+                # kill all nodes
+                subprocess.call(['rosnode', 'kill', '-a'])
+
+                # wait for the nodes to shut down
+                subprocess.call(['rosnode', 'cleanup'])
+                rospy.spin()
+            
+            elif camera_num == '3':
+                self.read_bagfile_camera_3.start()
+                self.running_processes.update({"read_bagfile_camera_3": self.read_bagfile_camera_3})
+                time.sleep(1)
+                # --------------------------------------------------------
+                #  STEP:02 Detecting the fiducial markers in the bag file
+                # --------------------------------------------------------
+                self.marker_detect_camera_3.start()
+                self.running_processes.update({"marker_detect_camera_3": self.marker_detect_camera_3})
+                
+                # --------------------------------------------------------------
+                #  STEP:03 Recording the fiducial markers topic in the bag file
+                # --------------------------------------------------------------
+                                
+                topic_name = '/cam3_marker/fiducial_transforms'
+                self.bagfile_path = os.path.join(self.bagfile_path, f'detect_camera_3_{str(dur)}s.bag')
+        
+        
+                self.command = f'rosbag record -O {self.bagfile_path} {topic_name}'
+                self.process = subprocess.Popen(self.command.split(), stdout=subprocess.PIPE)
+
+                time.sleep(dur)
+                self.process.terminate()
+                self.running_processes["read_bagfile_camera_3"].shutdown()
+                self.running_processes["marker_detect_camera_3"].shutdown()
+                
+                
+                
+                bag_file_path = f'/home/agcam/ros_ws/src/gige_cam_driver/bagfiles/detect_camera_3_{str(dur)}s.bag'
+                topic_name = '/cam3_marker/fiducial_transforms'
+                csv_file_path = f'/home/agcam/ros_ws/src/gige_cam_driver/data/detect_camera_3_{str(dur)}s.csv'
+
+                # Use the subprocess module to execute the rostopic command and redirect the output to the CSV file
+                with open(csv_file_path, 'w') as csv_file:
+                    subprocess.run(['rostopic', 'echo', '-b', bag_file_path, '-p', topic_name], stdout=csv_file)
+                    
+            
+                # kill all nodes
+                subprocess.call(['rosnode', 'kill', '-a'])
+
+                # wait for the nodes to shut down
+                subprocess.call(['rosnode', 'cleanup'])
+                rospy.spin()
+            else:
+                print("Invalid input")
+                break
+
+
+        
         
         # # # loading the bag file for camera 2
         # self.read_bagfile_camera_2.start()
@@ -326,34 +460,39 @@ class LaunchHandle(object):
         with open(csv_file_path, 'w') as csv_file:
             subprocess.run(['rostopic', 'echo', '-b', bag_file_path, '-p', topic_name], stdout=csv_file)
     def plot(self):
+            duration = [5, 10, 20, 30, 40]
+            for dur in duration:
+                print('start')
+                # Load data from CSV file
+                data = pd.read_csv(f"/home/agcam/ros_ws/src/gige_cam_driver/data/detect_camera_1_{dur}s.csv")
 
+                # Extract the columns of interest
+                image_seq = data["field.image_seq"]
+                x = data["field.transforms0.transform.translation.x"]
+                y = data["field.transforms0.transform.translation.y"]
+                z = data["field.transforms0.transform.translation.z"]
 
-        # Load data from CSV file
-        data = pd.read_csv("/home/agcam/ros_ws/src/gige_cam_driver/data/detect_camera_1.csv")
+                # Create a new figure and set its size
+                fig, axs = plt.subplots(nrows=3, figsize=(10, 8))
+                # Set the title of the figure
+                fig.suptitle(f"3D displacement using ARUCO maker detection - Camera 1 ({dur}s)")
+                
+                # Plot the data on each subplot
+                axs[0].plot(image_seq, x, color="red")
+                axs[0].set_ylabel("x-axis")
 
-        # Extract the columns of interest
-        image_seq = data["field.image_seq"]
-        x = data["field.transforms0.transform.translation.x"]
-        y = data["field.transforms0.transform.translation.y"]
-        z = data["field.transforms0.transform.translation.z"]
+                axs[1].plot(image_seq, y, color="green")
+                axs[1].set_ylabel("y-axis")
 
-        # Create a new figure and set its size
-        fig, axs = plt.subplots(nrows=3, figsize=(10, 8))
+                axs[2].plot(image_seq, z, color="blue")
+                axs[2].set_ylabel("z-axis")
 
-        # Plot the data on each subplot
-        axs[0].plot(image_seq, x, color="red")
-        axs[0].set_ylabel("X")
-
-        axs[1].plot(image_seq, y, color="green")
-        axs[1].set_ylabel("Y")
-
-        axs[2].plot(image_seq, z, color="blue")
-        axs[2].set_ylabel("Z")
-
-        # Add a legend and axis labels to the last subplot
-        axs[2].set_xlabel("Image Sequence")
-        axs[2].legend(loc="best")
-
+                # Add a legend and axis labels to the last subplot
+                axs[2].set_xlabel("Image Sequence")
+                axs[2].legend(loc="best")
+                print('end')
+                # Save the plot with a given filename
+                fig.savefig(f"/home/agcam/ros_ws/src/gige_cam_driver/data/3D_displacement_ARUCO_{dur}s.png")
 
         # # Add annotations to the plot
         # ax.annotate("X", xy=(image_seq[0], x[0]), xytext=(image_seq[0] + 5, x[0] + 5),
@@ -364,7 +503,7 @@ class LaunchHandle(object):
         #             arrowprops=dict(facecolor="blue", shrink=0.05))
 
         # Show the plot
-        plt.show()
+        # plt.show()
 
 
 
@@ -378,12 +517,12 @@ class LaunchHandle(object):
         
 if __name__ == '__main__':
     launch_handle = LaunchHandle()
-    launch_handle.post_process_bag_file()
+    launch_handle.post_process_bag_file() # this one is working
     # launch_handle.bag_to_csv()
     # launch_handle.bag_file_read()         # this one is working
     # launch_handle.camera_driver()         # this one is working
     # launch_handle.camera_calibration()    # this one is working
-    # launch_handle.bag_cam_record()        # this one is working
+    # launch_handle.record_bag_cam()        # this one is working
     # launch_handle.plot()                  # this one is working
     
     
