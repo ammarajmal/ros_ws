@@ -1,8 +1,0 @@
-<launch>
-    <node pkg="rosbag"
-    type="play" name="rosbag_player"
-    args="-q /home/ammar/bagfiles/20sec/cam2.bag"
-    output="log">
-    <remap from="~" to="/rosbag_cam2"/>
-    </node>
-</launch>

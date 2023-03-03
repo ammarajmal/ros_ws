@@ -1,8 +1,0 @@
-<launch>
-  <arg name="cam_1" default="camera_1" />
-  <node pkg="gige_cam_driver" type="camera_node.py" name="$(arg cam_1)" output="screen">
-      <param name="device_id" value="0"/>
-      <param name="camera_manager" value="$(arg cam_1)"/>
-      <param name="calibration_file" value="$(find gige_cam_driver)/config/camera_info_cam1.yaml"/>
-   </node>
-</launch>

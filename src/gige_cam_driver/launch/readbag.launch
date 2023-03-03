@@ -8,7 +8,7 @@
 
   <node name="$(arg cam)_rosbag_play"
   pkg="rosbag" type="play" respawn="false" output="log"
-  args="--clock -q --hz=$(arg hz) '$(arg bag_file_path)' " />
+  args="--clock -l --hz=$(arg hz) '$(arg bag_file_path)' " />
 </launch>
 
 
