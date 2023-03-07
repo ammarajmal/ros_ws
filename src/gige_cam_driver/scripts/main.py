@@ -33,17 +33,17 @@ class LaunchHandle(object):
         self.detect_launch = f"{self.detect_launch_path}detect.launch"
         
            
-        self.cam1_calib_file_path = f"{self.launch_path}calib1.launch"
-        self.cam2_calib_file_path = f"{self.launch_path}calib2.launch"
-        self.cam3_calib_file_path = f"{self.launch_path}calib3.launch"
+        # self.cam1_calib_file_path = f"{self.launch_path}calib1.launch"
+        # self.cam2_calib_file_path = f"{self.launch_path}calib2.launch"
+        # self.cam3_calib_file_path = f"{self.launch_path}calib3.launch"
         
         
-        # ********************************************************************************
-        # Camera Calibration code for multiple cameras
-        # ********************************************************************************
-        self.cam1_calib = roslaunch.parent.ROSLaunchParent(self.uuid, [self.cam1_calib_file_path])
-        self.cam2_calib = roslaunch.parent.ROSLaunchParent(self.uuid, [self.cam2_calib_file_path])
-        self.cam3_calib = roslaunch.parent.ROSLaunchParent(self.uuid, [self.cam3_calib_file_path])
+        # # ********************************************************************************
+        # # Camera Calibration code for multiple cameras
+        # # ********************************************************************************
+        # self.cam1_calib = roslaunch.parent.ROSLaunchParent(self.uuid, [self.cam1_calib_file_path])
+        # self.cam2_calib = roslaunch.parent.ROSLaunchParent(self.uuid, [self.cam2_calib_file_path])
+        # self.cam3_calib = roslaunch.parent.ROSLaunchParent(self.uuid, [self.cam3_calib_file_path])
 
 
 
@@ -226,22 +226,55 @@ class LaunchHandle(object):
         print("=======================================")
         # Prompt the user to enter a camera number
         while True:
+            # ********************************************************************************
+            # Camera Calibration code for multiple cameras
+            # ********************************************************************************
+            self.cam1_calib_file_path = f"{self.launch_path}calib1.launch"
+            self.cam1_calib = roslaunch.parent.ROSLaunchParent(self.uuid, [self.cam1_calib_file_path])
+            
+            self.cam2_calib_file_path = f"{self.launch_path}calib2.launch"
+            self.cam2_calib = roslaunch.parent.ROSLaunchParent(self.uuid, [self.cam2_calib_file_path])
+            
+            self.cam3_calib_file_path = f"{self.launch_path}calib3.launch"
+            self.cam3_calib = roslaunch.parent.ROSLaunchParent(self.uuid, [self.cam3_calib_file_path])
+            
+            
             camera_num = input("Enter a camera number (1-3) to calibrate, or 'q' to quit: ")
             if camera_num == '1':
                 self.cam1_calib.start()
                 self.running_processes.update({"cam1_calib": self.cam1_calib})
+                while self.cam1_calib.pm.is_alive():
+                    time.sleep(1)
+                self.cam1_calib.shutdown()
+                del self.running_processes["cam1_calib"]
+                break
+                    
             elif camera_num == '2':
                 self.cam2_calib.start()
                 self.running_processes.update({"cam2_calib": self.cam2_calib})
+                while self.cam2_calib.pm.is_alive():
+                    time.sleep(1)
+                self.cam2_calib.shutdown()
+                del self.running_processes["cam2_calib"]
+                break
+                
             elif camera_num == '3':
                 self.cam3_calib.start()
                 self.running_processes.update({"cam3_calib": self.cam3_calib})
+                while self.cam3_calib.pm.is_alive():
+                    time.sleep(1)
+                self.cam3_calib.shutdown()
+                del self.running_processes["cam3_calib"]
+                break
+                
             elif camera_num == 'q':
                 break
             else:
                 print("Invalid camera number.")
                 continue
-            rospy.spin()
+        rospy.spin()
+            
+            
     def record_bag_cam(self):
         print("\n=====================================================")
         print("      Recording Camera bag file for post processing  ")
@@ -548,14 +581,14 @@ class LaunchHandle(object):
 if __name__ == '__main__':
     launch_handle = LaunchHandle()
     # launch_handle.camera_driver()         # this one is working (final)
-    launch_handle.record_bag_cam()        # this one is working
-    
+    # launch_handle.record_bag_cam()        # this one is working (final)
+    launch_handle.camera_calibration()    # this one is working
     
     # launch_handle.post_process_bag_file() # this one is working
     # launch_handle.bag_to_csv()
     # launch_handle.bag_file_read()         # this one is working
     
-    # launch_handle.camera_calibration()    # this one is working
+    
     
     # launch_handle.plot()                  # this one is working
     
