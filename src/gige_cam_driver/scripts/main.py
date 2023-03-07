@@ -242,80 +242,49 @@ class LaunchHandle(object):
                 print("Invalid camera number.")
                 continue
             rospy.spin()
-    def record_bag_cam(self): 
+    def record_bag_cam(self):
         print("\n=====================================================")
         print("      Recording Camera bag file for post processing  ")
         print("=====================================================\n")
         # Prompt the user to enter a camera number
         while True:
             camera_num = input("Enter a camera number (1-3) for bag file saving, or 'q' for quit: ")
-            if camera_num == '1':
-                self.cam1_driver.start()
-                self.running_processes.update({"cam1_driver": self.cam1_driver})
-                time.sleep(2)
-                # running ros_bag launch file for camera_1
-                time_dur_bag= int(input("\nEnter the duration of the bag file in seconds: "))
-                cli_args = [self.record_bag_launch, 'cam:=camera_1', f'dur:={time_dur_bag}']
-                roslaunch_file = [(roslaunch.rlutil.resolve_launch_arguments(cli_args)[0], cli_args[1:])]
-                self.cam1_bagfile = roslaunch.parent.ROSLaunchParent(self.uuid, roslaunch_file)
-                self.cam1_bagfile.start()
-                self.running_processes.update({"cam1_bagfile": self.cam1_bagfile})
-                while self.cam1_bagfile.pm.is_alive():
-                    time.sleep(1)
-                
-                # Remove cam1_bagfile from running_processes dictionary
-                self.cam1_driver.shutdown()
-                self.cam1_bagfile.shutdown()
-                self.running_processes.pop("cam1_driver", None)
-                self.running_processes.pop("cam1_bagfile", None)
+            if camera_num == 'q':
                 break
-
-            elif camera_num == '2':
-                self.cam2_driver.start()
-                self.running_processes.update({"cam2_driver": self.cam2_driver})
-                time.sleep(2)
-                # running ros_bag launch file for camera_2
-                time_dur_bag= int(input("\nEnter the duration of the bag file in seconds: "))
-                cli_args = [self.record_bag_launch, 'cam:=camera_2', f'dur:={time_dur_bag}']
-                roslaunch_file = [(roslaunch.rlutil.resolve_launch_arguments(cli_args)[0], cli_args[1:])]
-                self.cam2_bagfile = roslaunch.parent.ROSLaunchParent(self.uuid, roslaunch_file)
-                self.cam2_bagfile.start()
-                self.running_processes.update({"cam2_bagfile": self.cam2_bagfile})
-                while self.cam2_bagfile.pm.is_alive():
-                    time.sleep(1)
-                
-                # Remove cam2_bagfile from running_processes dictionary
-                self.cam2_driver.shutdown()
-                self.cam2_bagfile.shutdown()
-                self.running_processes.pop("cam2_driver", None)
-                self.running_processes.pop("cam2_bagfile", None)
-                break
-            elif camera_num == '3':
-                self.cam3_driver.start()
-                self.running_processes.update({"cam3_driver": self.cam3_driver})
-                time.sleep(2)
-                # running ros_bag launch file for camera_3
-                time_dur_bag= int(input("\nEnter the duration of the bag file in seconds: "))
-                cli_args = [self.record_bag_launch, 'cam:=camera_3', f'dur:={time_dur_bag}']
-                roslaunch_file = [(roslaunch.rlutil.resolve_launch_arguments(cli_args)[0], cli_args[1:])]
-                self.cam3_bagfile = roslaunch.parent.ROSLaunchParent(self.uuid, roslaunch_file)
-                self.cam3_bagfile.start()
-                self.running_processes.update({"cam3_bagfile": self.cam3_bagfile})
-                while self.cam3_bagfile.pm.is_alive():
-                    time.sleep(1)
-                
-                # Remove cam3_bagfile from running_processes dictionary
-                self.cam3_driver.shutdown()
-                self.cam3_bagfile.shutdown()
-                self.running_processes.pop("cam3_driver", None)
-                self.running_processes.pop("cam3_bagfile", None)
-                break
-            elif camera_num == 'q':
-                break
-            else:
+            
+            if camera_num not in ['1', '2', '3']:
                 print("Invalid camera number.")
                 continue
-        return
+            
+            # Start the driver for the selected camera
+            driver_name = f"cam{camera_num}_driver"
+            driver = getattr(self, driver_name)
+            driver.start()
+            self.running_processes[driver_name] = driver
+            time.sleep(2)
+
+            # Start recording the bag file for the selected camera
+            time_dur_bag = int(input("Enter the duration of the bag file in seconds: "))
+            bagfile_name = f"cam{camera_num}_bagfile"
+            cli_args = [self.record_bag_launch, f'cam:=camera_{camera_num}', f'dur:={time_dur_bag}']
+            roslaunch_file = [(roslaunch.rlutil.resolve_launch_arguments(cli_args)[0], cli_args[1:])]
+            bagfile = roslaunch.parent.ROSLaunchParent(self.uuid, roslaunch_file)
+            bagfile.start()
+            self.running_processes[bagfile_name] = bagfile
+
+            # Wait for the bag file recording to finish
+            while bagfile.pm.is_alive():
+                time.sleep(1)
+
+            # Remove the camera driver and bagfile from the running_processes dictionary
+            driver.shutdown()
+            bagfile.shutdown()
+            del self.running_processes[driver_name]
+            del self.running_processes[bagfile_name]
+            
+            break
+
+
     def bag_file_read(self):
         self.read_bagfile_camera_1.start()
         self.running_processes.update({"read_bagfile_camera_1": self.read_bagfile_camera_1})
