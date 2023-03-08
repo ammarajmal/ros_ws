@@ -398,7 +398,7 @@ class LaunchHandle(object):
                 axs[2].legend(loc="best")
 
                 # Save the plot with a given filename
-                fig.savefig(f"/home/agcam/ros_ws/src/gige_cam_driver/data/3D_displacement_ARUCO_{dur}s.png")
+                fig.savefig(f"/home/agcam/ros_ws/src/gige_cam_driver/data/3D_disp_camera_{dur}s.png")
                 print('\nClose the figure to continue...')
                 plt.show()
                 print('\nDisplacemetn plot saved successfully to: \n', f"/home/agcam/ros_ws/src/gige_cam_driver/data/3D_displacement_ARUCO_{dur}s.png", '\n')
