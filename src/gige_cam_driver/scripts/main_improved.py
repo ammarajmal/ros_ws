@@ -7,6 +7,45 @@ import subprocess
 import pandas as pd
 import matplotlib.pyplot as plt
 import os
+import roslaunch
+import time
+
+class CameraCalibration:
+    def __init__(self, launch_path):
+        self.launch_path = launch_path
+        self.uuid = roslaunch.rlutil.get_or_generate_uuid(None, False)
+        self.running_processes = {}
+
+    def __del__(self):
+        for process in self.running_processes.values():
+            process.shutdown()
+
+    def start_calibration(self):
+        """Launches a camera calibration process for a specified camera."""
+        print("="*36,"      Starting Camera Calibration","="*36, sep="\n" )
+        # Launch parent processes for each camera calibration
+        launch_files = [f"{self.launch_path}calib{num}.launch" for num in range(1, 4)]
+        
+        calibrations = {f"cam{num}_calib": roslaunch.parent.ROSLaunchParent(self.uuid, [launch_files[num-1]]) for num in range(1, 4)}
+
+        # Prompt the user to enter a camera number
+        while True:
+            camera_num = input("Enter a camera number (1-3) to calibrate, \nor enter 'q' to quit: ")
+            if camera_num == 'q':
+                break
+            elif camera_num not in ['1', '2', '3']:
+                print("Invalid camera number.")
+                continue
+
+            # Start calibration process and wait for it to finish
+            calibration = calibrations[f"cam{camera_num}_calib"]
+            calibration.start()
+            self.running_processes.update({f"cam{camera_num}_calib": calibration})
+            while calibration.pm.is_alive():
+                time.sleep(1)
+            calibration.shutdown()
+            del self.running_processes[f"cam{camera_num}_calib"]
+            break
 
 
 class LaunchHandle(object):
