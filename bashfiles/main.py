@@ -562,10 +562,13 @@ if __name__ == '__main__':
             break
         elif choice == 4:
             print("Exiting...")
-            exit()
+            break
+            # exit()
+        
+            
         else:
             print("Invalid input")
-    
+    os.system('exit')
     # launch_handle = LaunchHandle()
     # launch_handle.camera_driver()         # this one is working (final)
     # launch_handle.record_bag_cam()        # this one is working (final)
