@@ -20,7 +20,7 @@ class DisplacementAruco:
     def __init__(self):
         """Constructor of the class"""
         rospy.init_node("displacement_aruco", anonymous=True)
-        rospy.on_shutdown(self.on_shutdown)
+        # rospy.on_shutdown(self.on_shutdown)
         
         self.running_processes = {}
         self.uuid = roslaunch.rlutil.get_or_generate_uuid(None, False)
@@ -36,28 +36,30 @@ class DisplacementAruco:
         self.cam_launch = os.path.join(self.launch_path, 'cam.launch')
         self.detect_launch = os.path.join(self.detect_path, 'detect.launch')
         
-        # ********************************************************************************
-        # Camera Node code for multiple cameras
-        # ********************************************************************************
 
-        # running camera node for all cameras
-        cam_dict = {'cam': ['camera_1', 'camera_2', 'camera_3'], 'device_id': ['0', '1', '2'], 'calib_file': ['cam1', 'cam2', 'cam3']}
-        for i in range(len(cam_dict['cam'])):
-            cli_args = [
-                self.cam_launch,
-                f"cam:={cam_dict['cam'][i]}",
-                f"device_id:={cam_dict['device_id'][i]}",
-                f"calib_file:={cam_dict['calib_file'][i]}"
-            ]
-            roslaunch_file = [(roslaunch.rlutil.resolve_launch_arguments(cli_args)[0], cli_args[1:])]
-            node_name = f"cam{i+1}_driver"
-            setattr(self, node_name, roslaunch.parent.ROSLaunchParent(self.uuid, roslaunch_file))
-        # ********************************************************************************
     def camera_driver(self):
         """Camera Node code for multiple cameras"""
         print("="*36,"      Starting Camera Node","="*36, sep="\n" )
         # Prompt the user to enter a camera number
         while True:
+            
+            # ********************************************************************************
+            # Camera Node code for multiple cameras
+            # ********************************************************************************
+
+            # running camera node for all cameras
+            cam_dict = {'cam': ['camera_1', 'camera_2', 'camera_3'], 'device_id': ['0', '1', '2'], 'calib_file': ['cam1', 'cam2', 'cam3']}
+            for i in range(len(cam_dict['cam'])):
+                cli_args = [
+                    self.cam_launch,
+                    f"cam:={cam_dict['cam'][i]}",
+                    f"device_id:={cam_dict['device_id'][i]}",
+                    f"calib_file:={cam_dict['calib_file'][i]}"
+                ]
+                roslaunch_file = [(roslaunch.rlutil.resolve_launch_arguments(cli_args)[0], cli_args[1:])]
+                node_name = f"cam{i+1}_driver"
+                setattr(self, node_name, roslaunch.parent.ROSLaunchParent(self.uuid, roslaunch_file))
+            # ********************************************************************************
             camera_num = input("Enter a camera number (1-3) or 'q' to quit: ")
             if camera_num == '1':
                 # run camera 1
@@ -69,7 +71,7 @@ class DisplacementAruco:
                 if option == 's':
                     self.cam1_driver.shutdown()
                     self.running_processes.pop("cam1_driver")
-                    break
+                    continue
             elif camera_num == '2':
                 # run camera 2
                 self.cam2_driver.start()
@@ -79,7 +81,7 @@ class DisplacementAruco:
                 if option == 's':
                     self.cam2_driver.shutdown()
                     self.running_processes.pop("cam2_driver")
-                    break
+                    continue
             elif camera_num == '3':
                 # run camera 3
                 self.cam3_driver.start()
@@ -89,7 +91,7 @@ class DisplacementAruco:
                 if option == 's':
                     self.cam3_driver.shutdown()
                     self.running_processes.pop("cam3_driver")
-                    break
+                    continue
                     
             elif camera_num == 'q':
                 # quit
