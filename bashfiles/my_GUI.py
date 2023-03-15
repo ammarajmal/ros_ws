@@ -13,6 +13,11 @@ customtkinter.set_appearance_mode("System")  # Modes: "System" (standard), "Dark
 customtkinter.set_default_color_theme("blue")  # Themes: "blue" (standard), "green", "dark-blue"
 
 class GUI(customtkinter.CTk):
+    """_summary_
+
+    Args:
+        customtkinter (_type_): _description_
+    """
     def __init__(self) -> None:
         super().__init__()
         
