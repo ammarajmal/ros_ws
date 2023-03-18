@@ -9,3 +9,6 @@
       <param name="calibration_file" value="$(find gige_cam_driver)/config/camera_info_$(arg calib_file).yaml"/>
    </node>
 </launch>
+
+
+

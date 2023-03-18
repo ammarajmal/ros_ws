@@ -1,0 +1,17 @@
+<launch>
+    <arg name="camera_name" default="camera_1" />
+    <node name="$(arg camera_name)_view" pkg="gige_cam_driver" type="camera_view.py" output="screen">
+        <param name="camera_name" value="$(arg camera_name)"/>
+    </node>
+</launch>
+
+
+
+
+
+
+
+
+
+
+

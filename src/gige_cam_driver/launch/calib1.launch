@@ -5,7 +5,11 @@
       <param name="camera_manager" value="$(arg cam_1)"/>
       <param name="calibration_file" value="$(find gige_cam_driver)/config/camera_info_cam1.yaml"/>
    </node>
-  <node pkg="camera_calibration" name="camera_1_calibration" type="cameracalibrator.py" output="screen">
+
+  <node pkg="camera_calibration"
+        name="camera_1_calibration"
+        type="cameracalibrator.py"
+        output="screen">
     <param name="size" value="6x5"/>
     <param name="square" value="0.025"/>
     <param name="k-coefficients" value="2"/>
