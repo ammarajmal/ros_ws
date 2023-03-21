@@ -37,6 +37,9 @@ class GUI(customtkinter.CTk):
         self.camera_selection_var = tk.StringVar()
         self.sidebar_entry_get_calib_sq_size_var = tk.StringVar()
         self.sidebar_entry_get_calib_cb_dim_var = tk.StringVar()
+        self.board_size = "6x5"
+        self.square_size = "0.025"
+        
         # ********************************************************************************
         # Path management for Launch files
         # ********************************************************************************
@@ -52,6 +55,7 @@ class GUI(customtkinter.CTk):
         self.read_bag_launch = f"{self.launch_path}readbag.launch"
         self.cam_launch = f"{self.launch_path}cam.launch"
         self.view_launch = f"{self.launch_path}viewcam.launch"
+        self.calib_launch = f"{self.launch_path}calib.launch"
         self.detect_launch = f"{self.detect_launch_path}detect.launch"
         self.running_processes = {}
         self.camera_1_active = False
@@ -101,17 +105,17 @@ class GUI(customtkinter.CTk):
         self.sidebar_btn_cam_1_calib = customtkinter.CTkButton(
             master=self.sidebar_frame_cam_calib,
             text='Calibrate Camera 1',
-            command=lambda: self.sidebar_button_event(1),
+            command=lambda: self.sidebar_camera_btn_event(1, False, True)
         )
         self.sidebar_btn_cam_2_calib = customtkinter.CTkButton(
             master=self.sidebar_frame_cam_calib,
             text='Calibrate Camera 2',
-            command=lambda: self.sidebar_button_event(2)
+            command=lambda: self.sidebar_camera_btn_event(2, False, True)
         )
         self.sidebar_btn_cam_3_calib = customtkinter.CTkButton(
             self.sidebar_frame_cam_calib,
             text='Calibrate Camera 3',
-            command=lambda: self.sidebar_button_event(3)
+            command=lambda: self.sidebar_camera_btn_event(3, False, True)
         )
         self.sidebar_entry_get_calib_cb_dim_label = customtkinter.CTkLabel(
             master=self.sidebar_frame_cam_calib,
@@ -141,7 +145,8 @@ class GUI(customtkinter.CTk):
             master=self.sidebar_frame_cam_calib,
             text="☑",
             text_color='green',
-            font=customtkinter.CTkFont(size=25, weight="bold")
+            font=customtkinter.CTkFont(size=25, weight="bold"),
+            
         )
 
 
@@ -178,17 +183,17 @@ class GUI(customtkinter.CTk):
         self.sidebar_btn_cam_1_start = customtkinter.CTkButton(
             master=self.sidebar_frame_cam_view,
             text='Start Camera 1',
-            command=self.sidebar_btn_cam_1_start_event
+            command=lambda: self.sidebar_camera_btn_event(1, False, False)
         )
         self.sidebar_btn_cam_2_start = customtkinter.CTkButton(
             master=self.sidebar_frame_cam_view,
             text='Start Camera 2',
-            command=self.sidebar_btn_cam_2_start_event
+            command=lambda: self.sidebar_camera_btn_event(2, True, False)
         )
         self.sidebar_btn_cam_3_start = customtkinter.CTkButton(
             master=self.sidebar_frame_cam_view,
             text='Start Camera 3',
-            command=self.sidebar_btn_cam_3_start_event
+            command=lambda: self.sidebar_camera_btn_event(3,True, False)
         )
         self.sidebar_frame_cam_view_label.grid  (row=0, column=0, columnspan=2, padx=25, pady=(10, 10))
         self.sidebar_btn_cam_1_start.grid       (row=1, column=0, columnspan=2, padx=25, pady=(0,10))
@@ -314,23 +319,6 @@ class GUI(customtkinter.CTk):
             font=customtkinter.CTkFont(size=14)
             # text_color="#707070"
         )
-
-
-
-
-        self.single_camera_1_checkbox = customtkinter.CTkCheckBox(
-            master=self.record_single_frame,
-            text="Camera 1",
-            font=customtkinter.CTkFont(size=14),
-            checkbox_width=20,
-            checkbox_height=20,
-            command=self.checkbox_event,
-            variable=self.camera_selection_var,
-            onvalue="on",
-            offvalue="off",
-            # text_color="#808080"
-
-        )
         self.single_camera_1_radio = customtkinter.CTkRadioButton(
                     master=self.record_single_frame,
             value="Camera 1",
@@ -382,7 +370,8 @@ class GUI(customtkinter.CTk):
         self.single_camera_rec_button = customtkinter.CTkButton(
             master=self.record_single_frame,
             text="Record",
-            font=customtkinter.CTkFont(size=14)
+            font=customtkinter.CTkFont(size=14),
+            command=self.record_single_camera
         )
         self.single_camera_rec_manual_button = customtkinter.CTkButton(
             master=self.record_single_frame,
@@ -542,8 +531,6 @@ class GUI(customtkinter.CTk):
         self.tabview.tab("Recording Data").rowconfigure(2, weight=1)  # add this line to set row 2 to have equal weight
         self.tabview.tab("Recording Data").columnconfigure(0, weight=1)  # add this line to set column 0 to have equal weight
 
-    def sidebar_btn_set_calib_event(self):
-        pass
     def checkbox_event(self):
         pass
     def record_data(self):
@@ -566,48 +553,63 @@ class GUI(customtkinter.CTk):
         # new_scaling_float = int(new_scaling.replace("%", "")) / 100
         # customtkinter.set_widget_scaling(new_scaling_float)
 
-    def start_camera(self, camera_name, device_id, calibration_file, view_camera):
+    def start_camera(self, camera_name, device_id, calibration_file, view_camera, calibrate_camera):
         """Starts a camera driver and optionally a camera view"""
         camera_launch_args = [f"{self.cam_launch}",
-                              f"cam:={camera_name}",
-                              f"device_id:={device_id}",
-                              f"calib_file:={calibration_file}"
+                            f"cam:={camera_name}",
+                            f"device_id:={device_id}",
+                            f"calib_file:={calibration_file}"
         ]
         view_launch_args = [self.view_launch,
                             f"camera_name:={camera_name}"
+        ]
+        # print(f"board size: {self.board_size} and square size: {self.square_size}")
+        calib_launch_args = [self.calib_launch,
+                            f"cam:={camera_name}",
+                            f"size:={self.board_size}",
+                            f"square:={self.square_size}"
         ]
 
         # Create a ROS launch file with the camera launch command
         roslaunch_file = [(roslaunch.rlutil.resolve_launch_arguments(camera_launch_args)[0], camera_launch_args[1:])]
         cam_driver = roslaunch.parent.ROSLaunchParent(self.uuid, roslaunch_file)
 
-        view_roslaunch_file = [(roslaunch.rlutil.resolve_launch_arguments(view_launch_args)[0], view_launch_args[1:])]
-        view_output = roslaunch.parent.ROSLaunchParent(self.uuid, view_roslaunch_file)
-
-
         # Start the camera driver
         try:
             cam_driver.start()
             self.running_processes[f'{camera_name}_driver'] = cam_driver
+
+            # Set camera active flag to True
+            if camera_name == 'camera_1':
+                self.camera_1_active = True
+            elif camera_name == 'camera_2':
+                self.camera_2_active = True
+            elif camera_name == 'camera_3':
+                self.camera_3_active = True
+
+            # Print success message
+            rospy.loginfo(f"{camera_name} camera driver started successfully.")
+            rospy.sleep(2)
+
+            # If view_camera is True, start the camera view
             if view_camera:
+                view_launch_file = [(roslaunch.rlutil.resolve_launch_arguments(view_launch_args)[0], view_launch_args[1:])]
+                view_output = roslaunch.parent.ROSLaunchParent(self.uuid, view_launch_file)
                 view_output.start()
                 self.running_processes[f'{camera_name}_view'] = view_output
+
+            # If calibrate_camera is True, start camera calibration
+            if calibrate_camera:
+                rospy.loginfo(f"{camera_name} calibration started successfully.")
+                calibrate_launch_file = [(roslaunch.rlutil.resolve_launch_arguments(calib_launch_args)[0], calib_launch_args[1:])]
+                camera_calibrate = roslaunch.parent.ROSLaunchParent(self.uuid, calibrate_launch_file)
+                camera_calibrate.start()
+                self.running_processes[f'{camera_name}_calibrate'] = camera_calibrate
 
         except roslaunch.RLException as excep_camera:
             rospy.logerr(f"Error starting {camera_name} camera driver: {str(excep_camera)}")
             return
 
-        # Set camera active flag to True
-        if camera_name == 'camera_1':
-            self.camera_1_active = True
-        elif camera_name == 'camera_2':
-            self.camera_2_active = True
-        elif camera_name == 'camera_3':
-            self.camera_3_active = True
-
-        # Print success message
-        rospy.loginfo(f"{camera_name} camera driver started successfully.")
-        rospy.sleep(2)
 
     def stop_camera(self, camera_name):
         """Stop a camera driver."""
@@ -619,7 +621,10 @@ class GUI(customtkinter.CTk):
         # Shutdown the camera driver
         try:
             self.running_processes[f'{camera_name}_driver'].shutdown()
-            self.running_processes[f'{camera_name}_view'].shutdown()
+            if f'{camera_name}_view' in self.running_processes:
+                self.running_processes[f'{camera_name}_view'].shutdown()
+            if f'{camera_name}_calibrate' in self.running_processes:
+                self.running_processes[f'{camera_name}_calibrate'].shutdown()
         except roslaunch.RLException as excep_camera:
             rospy.logerr(f"Error stopping {camera_name} camera driver: {str(excep_camera)}")
             return
@@ -635,114 +640,77 @@ class GUI(customtkinter.CTk):
         # Remove camera driver from running processes dictionary
         self.running_processes.pop(f'{camera_name}_driver', None)
         self.running_processes.pop(f'{camera_name}_view', None)
+        self.running_processes.pop(f'{camera_name}_calibrate', None)
         # Print success message
+        
         rospy.loginfo(f"{camera_name} camera driver stopped successfully.")
 
-    def sidebar_btn_cam_1_start_event(self):
-        """This function is called when camera 1 button is pressed"""
-        camera_name = 'camera_1'
-        device_id = 0
-        calibration_file = 'cam1'
+
+    def sidebar_camera_btn_event(self, camera_number, show_camera, calibrate_camera):
+        """This function is called when a camera button is pressed"""
+        cameras = [
+            {'camera_name': 'camera_1', 'device_id': 0, 'calibration_file': 'cam1', 'button': self.sidebar_btn_cam_1_start, 'calibrate_button': self.sidebar_btn_cam_1_calib, 'name': 'Camera 1'},
+            {'camera_name': 'camera_2', 'device_id': 1, 'calibration_file': 'cam2', 'button': self.sidebar_btn_cam_2_start, 'calibrate_button': self.sidebar_btn_cam_2_calib, 'name': 'Camera 2'},
+            {'camera_name': 'camera_3', 'device_id': 2, 'calibration_file': 'cam3', 'button': self.sidebar_btn_cam_3_start, 'calibrate_button': self.sidebar_btn_cam_3_calib, 'name': 'Camera 3'}
+        ]
+
+        # Select the camera based on the provided number
+        if camera_number < 1 or camera_number > 3:
+            rospy.logerr(f"Invalid camera number: {camera_number}")
+            return
+
+        camera = cameras[camera_number - 1]
+
+        camera_name = camera['camera_name']
+        device_id = camera['device_id']
+        calibration_file = camera['calibration_file']
+        button = camera['calibrate_button'] if calibrate_camera else camera['button']
+        button_name = 'Calibrate' if calibrate_camera else 'Start'
+        # Get the current state of the camera
+        camera_active_states = [self.camera_1_active, self.camera_2_active, self.camera_3_active]
+        camera_active = camera_active_states[camera_number - 1]
 
         # Start or stop the camera depending on its current state
-        if self.camera_1_active is False:
-            # Start camera 1
-            try:
-                self.start_camera(camera_name, device_id, calibration_file, view_camera=True)
-            except Exception as excep_camera:
-                rospy.logerr(f"Error starting {camera_name} camera: {str(excep_camera)}")
-                self.camera_1_active = False
-                return
+        try:
+            if not camera_active:
+                # Start the selected camera
+                self.start_camera(camera_name, device_id, calibration_file, show_camera, calibrate_camera)
 
-            # Update button text and color
-            self.sidebar_btn_cam_1_start.configure(text="Stop Camera 1", fg_color=("#fa5f5a", "#ba3732"))
-        else:
-            # Stop camera 1
-            try:
+
+                # Update button text and color
+                button.configure(text=f"Stop {camera['name']}", fg_color=("#fa5f5a", "#ba3732"))
+
+                # Set the camera active flag to True
+                camera_active_states[camera_number - 1] = True
+            else:
+                # Stop the selected camera
                 self.stop_camera(camera_name)
-            except Exception as e:
-                rospy.logerr(f"Error stopping {camera_name} camera: {str(e)}")
-                self.camera_1_active = True
-                return
-            self.sidebar_btn_cam_1_start.configure(text="Start Camera 1", fg_color=themes[color_select])
 
-    def sidebar_btn_cam_2_start_event(self):
-        """This function is called when camera 2 button is pressed"""
-        camera_name = 'camera_2'
-        device_id = 1
-        calibration_file = 'cam2'
+                # Update button text and color
+                button.configure(text=f"{button_name} {camera['name']}", fg_color=themes[color_select])
 
-        # Start or stop the camera depending on its current state
-        if self.camera_2_active is False:
-            # Start camera 2
-            try:
-                self.start_camera(camera_name, device_id, calibration_file, view_camera=True)
-            except Exception as e:
-                rospy.logerr(f"Error starting {camera_name} camera: {str(e)}")
-                self.camera_2_active = False
-                return
+                # Set the camera active flag to False
+                camera_active_states[camera_number - 1] = False
+        except Exception as excep_camera:
+            rospy.logerr(f"Error {'' if camera_active else 'starting'} {camera_name} camera: {str(excep_camera)}")
+            return
 
-            # Update button text and color
-            self.sidebar_btn_cam_2_start.configure(text="Stop Camera 2", fg_color=("#fa5f5a", "#ba3732"))
-        else:
-            # Stop camera 2
-            try:
-                self.stop_camera(camera_name)
-            except Exception as e:
-                rospy.logerr(f"Error stopping {camera_name} camera: {str(e)}")
-                self.camera_2_active = True
-                return
-            self.sidebar_btn_cam_2_start.configure(text="Start Camera 2", fg_color=themes[color_select])
+        # Update the camera active states
+        self.camera_1_active, self.camera_2_active, self.camera_3_active = camera_active_states
 
-    def sidebar_btn_cam_3_start_event(self):
-        """This function is called when camera 3 button is pressed"""
-        camera_name = 'camera_3'
-        device_id = 2
-        calibration_file = 'cam3'
-
-        # Start or stop the camera depending on its current state
-        if self.camera_3_active is False:
-            # Start camera 3
-            try:
-                self.start_camera(camera_name, device_id, calibration_file, view_camera=True)
-            except Exception as e:
-                rospy.logerr(f"Error starting {camera_name} camera: {str(e)}")
-                self.camera_3_active = False
-                return
-
-            # Update button text and color
-            self.sidebar_btn_cam_3_start.configure(text="Stop Camera 3", fg_color=("#fa5f5a", "#ba3732"))
-        else:
-            # Stop camera 3
-            try:
-                self.stop_camera(camera_name)
-            except Exception as e:
-                rospy.logerr(f"Error stopping {camera_name} camera: {str(e)}")
-                self.camera_3_active = True
-                return
-            self.sidebar_btn_cam_3_start.configure(text="Start Camera 3", fg_color=themes[color_select])
-
-
-    def sidebar_button_event(self, camera_num):
-        self.launch_files = [
-            f"{self.launch_path}calib{num}.launch" for num in range(1, 4)]
-        self.calibrations = {f"cam{num}_calib": roslaunch.parent.ROSLaunchParent(
-            self.uuid, [self.launch_files[num-1]]) for num in range(1, 4)}
-
-        """Launches the camera calibration process for the camera 1"""
-        print("="*36, "      Starting Camera Calibration", "="*36, sep="\n")
-        # Launch parent processes for each camera calibration
-
-        # Start calibration process and wait for it to finish
-        calibration = self.calibrations[f"cam{camera_num}_calib"]
-        calibration.start()
-        self.running_processes.update({f"cam{camera_num}_calib": calibration})
-        while calibration.pm.is_alive():
-            time.sleep(1)
-        calibration.shutdown()
-        del self.running_processes[f"cam{camera_num}_calib"]
-
+    def sidebar_btn_set_calib_event(self):
+        """This function is called when the set calibration button is pressed and updates the calibration values"""
+        self.board_size = self.sidebar_entry_get_calib_cb_dim.get()
+        self.square_size = self.sidebar_entry_get_calib_sq_size.get()
+        
+    def record_single_camera(self):
+        print(self.single_camera_dur_entry.get())
+        print(self.single_camera_dur_combo_box.get())
+        
+        
+    
     def exit_button_click(self):
+        """This function is called when the exit button is clicked."""""
         print("Terminated successfully.")
         self.destroy()
         exit()

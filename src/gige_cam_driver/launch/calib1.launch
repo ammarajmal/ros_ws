@@ -1,5 +1,7 @@
 <launch>
 <arg name="cam_1" default="camera_1" />
+<arg name="size" default="6x5" />
+<arg name="square" default="0.025" />
   <node pkg="gige_cam_driver" type="camera_node.py" name="$(arg cam_1)" output="screen">
       <param name="device_id" value="0"/>
       <param name="camera_manager" value="$(arg cam_1)"/>
@@ -10,8 +12,10 @@
         name="camera_1_calibration"
         type="cameracalibrator.py"
         output="screen">
-    <param name="size" value="6x5"/>
-    <param name="square" value="0.025"/>
+    <param name="size" value= $(arg size) />
+    <param name="square" value= $(arg square) />
+    <!-- <param name="size" value="6x5"/> -->
+    <!-- <param name="square" value="0.025"/> -->
     <param name="k-coefficients" value="2"/>
     <param name="fix-principal-point" value="i"/>
     <param name="fix-aspect-ratio" value="true"/>
