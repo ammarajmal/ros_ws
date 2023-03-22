@@ -5,6 +5,10 @@ import roslaunch
 import rospkg
 import rospy
 import customtkinter
+import subprocess
+
+subprocess.Popen(['gnome-terminal', '--', '/bin/bash', '-c', 'source /opt/ros/noetic/setup.bash && roscore; exec /bin/bash'])
+
 
 themes = {'blue': ("#3B8ED0", "#1F6AA5"),
           'green': ("#2CC985", "#2FA572"),
@@ -34,7 +38,9 @@ class GUI(customtkinter.CTk):
         self.check_camera_1_var = tk.StringVar(self, "on")
         self.check_camera_2_var = tk.StringVar(self, "on")
         self.check_camera_3_var = tk.StringVar(self, "on")
-        self.camera_selection_var = tk.StringVar()
+        self.camera_selection_var = tk.StringVar(self, "Camera 1")
+        self.single_camera_duration_var = tk.StringVar(self, 'Select')
+        
         self.sidebar_entry_get_calib_sq_size_var = tk.StringVar()
         self.sidebar_entry_get_calib_cb_dim_var = tk.StringVar()
         self.board_size = "6x5"
@@ -301,12 +307,6 @@ class GUI(customtkinter.CTk):
             font=customtkinter.CTkFont(size=14)
             # text_color="#707070"
         )
-        self.single_dur_select_label = customtkinter.CTkLabel(
-            master=self.record_single_frame,
-            text="Select duration:",
-            font=customtkinter.CTkFont(size=14)
-            # text_color="#707070"
-        )
         self.single_rec_manual_label = customtkinter.CTkLabel(
             master=self.record_single_frame,
             text="Start Recording manually:",
@@ -315,54 +315,57 @@ class GUI(customtkinter.CTk):
         )
         self.single_dur_select_or_label = customtkinter.CTkLabel(
             master=self.record_single_frame,
-            text="or",
+            text="or        Enter manually:",
             font=customtkinter.CTkFont(size=14)
             # text_color="#707070"
         )
         self.single_camera_1_radio = customtkinter.CTkRadioButton(
-                    master=self.record_single_frame,
-            value="Camera 1",
+            master=self.record_single_frame,
             text="Camera 1",
             font=customtkinter.CTkFont(size=14),
-            command=self.checkbox_event,
+            # command=self.single_camera_radio_event,
             variable=self.camera_selection_var,
+            value="Camera 1"
             # text_color="#808080"
             )
         self.single_camera_2_radio = customtkinter.CTkRadioButton(
-                    master=self.record_single_frame,
-            value="Camera 2",
+            master=self.record_single_frame,
             text="Camera 2",
             font=customtkinter.CTkFont(size=14),
-            command=self.checkbox_event,
+            # command=self.single_camera_radio_event,
             variable=self.camera_selection_var,
+            value="Camera 2"
             # text_color="#808080"
             )
         self.single_camera_3_radio = customtkinter.CTkRadioButton(
-                    master=self.record_single_frame,
-            value="Camera 3",
+            master=self.record_single_frame,
             text="Camera 3",
             font=customtkinter.CTkFont(size=14),
-            command=self.checkbox_event,
+            # command=self.single_camera_radio_event,
             variable=self.camera_selection_var,
+            value="Camera 3"
             # text_color="#808080"
             )
+        self.single_dur_select_label = customtkinter.CTkLabel(
+            master=self.record_single_frame,
+            text="Select duration (s):",
+            font=customtkinter.CTkFont(size=14)
+        )
         self.single_camera_dur_combo_box = customtkinter.CTkComboBox(
             master=self.record_single_frame,
-            values=["Duration: 10s",
-                    "Duration: 20s",
-                    "Duration: 30s",
-                    "Duration: 40s",
-                    "Duration: 50s",
-                    "Duration: 60s"
+            values=['10',
+                    '20',
+                    '30',
+                    '40',
+                    '50',
+                    '60'
                     ],
-            # font=customtkinter.CTkFont(size=14),
-            # dropdown_text_color="#808080",
-            # dropdown_fg_color='#ffffff',
-            # text_color="#303030"
+            variable=self.single_camera_duration_var
             )
         self.single_camera_dur_entry = customtkinter.CTkEntry(
             master=self.record_single_frame,
-            placeholder_text="Manual entry",
+            placeholder_text="Enter",
+            justify = 'center',
             # placeholder_text_color="#808080",
             corner_radius=5,
             width=20
@@ -384,18 +387,18 @@ class GUI(customtkinter.CTk):
 
 
 
-        self.single_cam_label.grid               (row=0, column=1, padx=10, pady=(10,10), sticky="nsew", columnspan=2, rowspan=1)
-        self.single_cam_select_label.grid            (row=1, column=0, padx=10, pady=(5,5),   sticky="nsew")
-        self.single_camera_1_radio.grid           (row=1, column=1, padx=5,  pady=(0,5),   sticky="nsew")
-        self.single_camera_2_radio.grid           (row=1, column=2, padx=5,  pady=(0,5),   sticky="nsew")
-        self.single_camera_3_radio.grid           (row=1, column=3, padx=5,  pady=(0,5),   sticky="nsew")
-        self.single_dur_select_label.grid            (row=2, column=0, padx=5,  pady=(0,5),   sticky="nsew")
-        self.single_camera_dur_combo_box.grid        (row=2, column=1, padx=5,  pady=(0,5),   sticky="nsew", columnspan=1)
-        self.single_dur_select_or_label.grid         (row=2, column=2, padx=5,  pady=(0,5),   sticky="nsew")
-        self.single_camera_dur_entry.grid            (row=2, column=3, padx=5,  pady=(0,5),   sticky="nsew")
-        self.single_camera_rec_button.grid           (row=3, column=1, padx=10, pady=(5, 5),  sticky="nsew", columnspan=2)
-        self.single_rec_manual_label.grid            (row=4, column=2, padx=10, pady=(10, 20),sticky="nsew")
-        self.single_camera_rec_manual_button.grid    (row=4, column=3, padx=5,  pady=(10, 20),sticky="nsew")
+        self.single_cam_label.grid                  (row=0, column=1, padx=10, pady=(10,10), sticky="nsew", columnspan=2, rowspan=1)
+        self.single_cam_select_label.grid           (row=1, column=0, padx=10, pady=(5,5),   sticky="nsew")
+        self.single_camera_1_radio.grid             (row=1, column=1, padx=5,  pady=(0,5),   sticky="nsew")
+        self.single_camera_2_radio.grid             (row=1, column=2, padx=5,  pady=(0,5),   sticky="nsew")
+        self.single_camera_3_radio.grid             (row=1, column=3, padx=5,  pady=(0,5),   sticky="nsew")
+        self.single_dur_select_label.grid           (row=2, column=0, padx=(20, 5),  pady=(0,5),   sticky="nsew")
+        self.single_camera_dur_combo_box.grid       (row=2, column=1, padx=0,  pady=(0,5),   sticky="nsew")
+        self.single_dur_select_or_label.grid        (row=2, column=2, padx=(0, 10),  pady=(0,5),   sticky="nse")
+        self.single_camera_dur_entry.grid           (row=2, column=3, padx=(0, 20),  pady=(0,5),   sticky="nsew")
+        self.single_camera_rec_button.grid          (row=3, column=1, padx=(10), pady=(5, 5),  sticky="nsew", columnspan=2)
+        self.single_rec_manual_label.grid           (row=4, column=2, padx=(0, 10), pady=(10, 20),sticky="nsew")
+        self.single_camera_rec_manual_button.grid   (row=4, column=3, padx=(0, 20),  pady=(10, 20),sticky="nsew")
 # *****************************************************************************************************************************
 
         self.multiple_cams_label = customtkinter.CTkLabel(
@@ -704,14 +707,34 @@ class GUI(customtkinter.CTk):
         self.square_size = self.sidebar_entry_get_calib_sq_size.get()
         
     def record_single_camera(self):
-        print(self.single_camera_dur_entry.get())
-        print(self.single_camera_dur_combo_box.get())
+        """This function is called when the record single camera button is pressed"""
+        camera_selected = self.camera_selection_var.get()
+        man_dur = self.single_camera_dur_entry.get()
+        combo_dur = self.single_camera_dur_combo_box.get()
+        single_camera_dur = ''
+        print("Camera: ", camera_selected)
+        
+        if man_dur == "":
+            if combo_dur == "Select":
+                print("Please select a duration")
+            else:
+                single_camera_dur = combo_dur
+                print(f"Duration: {single_camera_dur}")
+        else:
+            single_camera_dur = man_dur
+            print(f"Duration: {single_camera_dur}")
+            
+            
+            
+        
+
+
         
         
-    
     def exit_button_click(self):
-        """This function is called when the exit button is clicked."""""
+        """This function is called when the exit button is clicked."""
         print("Terminated successfully.")
+        subprocess.call('pkill roscore', shell=True)
         self.destroy()
         exit()
 
