@@ -1,11 +1,15 @@
 #!/usr/bin/env python3
 import time
 import tkinter as tk
+from tkinter import filedialog
+
 import roslaunch
 import rospkg
 import rospy
 import customtkinter
 import subprocess
+import datetime
+
 
 subprocess.Popen(['gnome-terminal', '--', '/bin/bash', '-c', 'source /opt/ros/noetic/setup.bash && roscore; exec /bin/bash'])
 
@@ -40,11 +44,14 @@ class GUI(customtkinter.CTk):
         self.check_camera_3_var = tk.StringVar(self, "on")
         self.camera_selection_var = tk.StringVar(self, "Camera 1")
         self.single_camera_duration_var = tk.StringVar(self, 'Select')
+        self.multi_camera_duration_var = tk.StringVar(self, 'Select')
+        self.bagfile_var = tk.StringVar(self)
         
         self.sidebar_entry_get_calib_sq_size_var = tk.StringVar()
         self.sidebar_entry_get_calib_cb_dim_var = tk.StringVar()
         self.board_size = "6x5"
         self.square_size = "0.025"
+        
         
         # ********************************************************************************
         # Path management for Launch files
@@ -98,16 +105,13 @@ class GUI(customtkinter.CTk):
         self.sidebar_frame_cam_calib.grid(row=1, column=0, rowspan=5, pady=10, padx=10)
         self.sidebar_frame_cam_view.grid(row=6, column=0, rowspan=3, pady=10, padx=10)
         self.sidebar_frame_ui.grid(row=9, column=0, rowspan=2, pady=10, padx=10)
-        
         self.sidebar_frame_cam_calib_label = customtkinter.CTkLabel(
             master=self.sidebar_frame,
             text="Camera Calibration",
             font=customtkinter.CTkFont(size=20, weight="normal"),
             text_color='black'
         )
-        
         self.sidebar_frame_cam_calib_label.grid(row=0, column=0, padx=30, pady=(20, 5), sticky="nsew")
-
         self.sidebar_btn_cam_1_calib = customtkinter.CTkButton(
             master=self.sidebar_frame_cam_calib,
             text='Calibrate Camera 1',
@@ -133,9 +137,6 @@ class GUI(customtkinter.CTk):
             placeholder_text_color="#808080",
             width=50
         )
-
-
-
         self.sidebar_entry_get_calib_sq_size_label = customtkinter.CTkLabel(
             master=self.sidebar_frame_cam_calib,
             text="Square size (m):"
@@ -146,7 +147,6 @@ class GUI(customtkinter.CTk):
             placeholder_text_color="#808080",
             width=50
         )
-        
         self.sidebar_btn_set_calib_success_label = customtkinter.CTkLabel(
             master=self.sidebar_frame_cam_calib,
             text="☑",
@@ -154,8 +154,6 @@ class GUI(customtkinter.CTk):
             font=customtkinter.CTkFont(size=25, weight="bold"),
             
         )
-
-
         self.sidebar_btn_set_calib = customtkinter.CTkButton(
             self.sidebar_frame_cam_calib,
             text='Update',
@@ -163,29 +161,19 @@ class GUI(customtkinter.CTk):
             width=85
             
         )
-
-
-
         self.sidebar_entry_get_calib_cb_dim_label.grid  (row=1, column=0, padx=(20, 0), pady=(10, 5), sticky="nsw")
         self.sidebar_entry_get_calib_sq_size_label.grid (row=2, column=0, padx=(20, 0), pady=0, sticky="nsw")
-
         self.sidebar_entry_get_calib_cb_dim.grid        (row=1, column=1, padx=(10, 10), pady=(10,5), sticky="nsw")
         self.sidebar_entry_get_calib_sq_size.grid       (row=2, column=1, padx=(10, 10), pady=0, sticky="nsw")
-
         self.sidebar_btn_set_calib.grid                 (row=3, column=0,padx=(10, 10), pady=(10,10), sticky='e')
         self.sidebar_btn_set_calib_success_label.grid   (row=3, column=1,padx=(20, 0), pady=(10,10), sticky='nsw')
-
         self.sidebar_btn_cam_1_calib.grid               (row=4, column=0, columnspan=2,padx=10, pady=10)
         self.sidebar_btn_cam_2_calib.grid               (row=5, column=0, columnspan=2,padx=10, pady=0)
         self.sidebar_btn_cam_3_calib.grid               (row=6, column=0, columnspan=2,padx=10, pady=(10,20))
-
-
         self.sidebar_frame_cam_view_label = customtkinter.CTkLabel(
             master=self.sidebar_frame_cam_view,
             text="Camera View"
         )
-        
-
         self.sidebar_btn_cam_1_start = customtkinter.CTkButton(
             master=self.sidebar_frame_cam_view,
             text='Start Camera 1',
@@ -205,7 +193,6 @@ class GUI(customtkinter.CTk):
         self.sidebar_btn_cam_1_start.grid       (row=1, column=0, columnspan=2, padx=25, pady=(0,10))
         self.sidebar_btn_cam_2_start.grid       (row=2, column=0, columnspan=2, padx=25, pady=0)
         self.sidebar_btn_cam_3_start.grid       (row=3, column=0, columnspan=2, padx=25, pady=(10, 20))
-
         self.appearance_mode_label = customtkinter.CTkLabel(
             master=self.sidebar_frame_ui,
             text="Appearance:"
@@ -222,34 +209,19 @@ class GUI(customtkinter.CTk):
             command=self.change_color_event,
             width=40
         )
-        
-
         self.ui_color_optionmenu_label = customtkinter.CTkLabel(
             master=self.sidebar_frame_ui,
             text="UI Color:"
         )
-
-        # self.ui_color_optionmenu= customtkinter.CTkOptionMenu(
-        #     master=self.sidebar_frame_ui,
-        #     values=["Dark Blue", "Blue", "Green"],
-        #     command=self.change_color_event,
-        #     width=40
-        # )
         self.appearance_mode_label.grid         (row=0, column=0, padx=(16, 0), pady=(10, 5), sticky="nsw")
         self.appearance_mode_optionemenu.grid   (row=0, column=1, padx=(0,10), pady=(10, 5), sticky="nse")
         self.ui_color_optionmenu_label.grid     (row=1, column=0, padx=(16, 0), pady=(10, 5), sticky="nsw")
         self.ui_color_optionmenu.grid           (row=1, column=1, padx=(0,10), pady=(10, 5), sticky="nse")
 
-
-        # self.main_label.place(relx=0.6, rely=0.055, anchor='center')
-
         self.tabview = customtkinter.CTkTabview(
             master=self,
             fg_color='#C4C3C3'
         )
-
-        self.tabview.grid(row=1, column=1, padx=20, pady=(5,10), sticky="nsew")
-        
         self.main_button_exit = customtkinter.CTkButton(
             master=self,
             text='EXIT',
@@ -258,43 +230,62 @@ class GUI(customtkinter.CTk):
             border_width=2,
             text_color=("#DCE4EE", "gray10")
         )
-        self.main_button_exit.grid(row=2, column=1, padx=(20, 20), pady=(0, 20))
+        self.tabview.grid           (row=1, column=1, padx=20, pady=(5,10), sticky="nsew")
+        self.main_button_exit.grid  (row=2, column=1, padx=(20, 20), pady=(0, 20))
 
-
-        self.tabview.add("Recording Data")
-        self.tabview.add("Post-Processing")
-        self.tabview.add("Displaying Results")
-        self.tabview.tab("Recording Data").grid_columnconfigure(0, weight=1)  # configure grid of individual tabs
-        self.tabview.tab("Post-Processing").grid_columnconfigure(0, weight=1)
-
+        self.tabview.add("Record & Process Data")
+        self.tabview.add("Display Results")
+        self.tabview.tab("Record & Process Data").grid_columnconfigure(0, weight=1)  # configure grid of individual tabs
+        
 
         self.record_label = customtkinter.CTkLabel(
-            master=self.tabview.tab("Recording Data"),
+            master=self.tabview.tab("Record & Process Data"),
             text="Recording from Camera",
             font=customtkinter.CTkFont(size=16),
             text_color='black'
         )
-        self.record_label.grid(row=0, column=0, columnspan=15, padx=20, pady=(5, 0), sticky="nsew")
-
-        self.post_processing_label = customtkinter.CTkLabel(
-            master= self.tabview.tab("Post-Processing"),
-            text="Post-Processing",
-            font=customtkinter.CTkFont(size=16),
-        )
-        self.post_processing_label.grid(row=0, column=0, columnspan=15, padx=20, pady=(5, 0), sticky="nsew")
-        
-        
-        
-        
-        
         self.record_single_frame = customtkinter.CTkFrame(
-            master=self.tabview.tab("Recording Data"),
+            master=self.tabview.tab("Record & Process Data"),
             fg_color=('lightgray', 'gray')
         )
         self.record_multiple_frame = customtkinter.CTkFrame(
-            master=self.tabview.tab("Recording Data"),
+            master=self.tabview.tab("Record & Process Data"),
             fg_color=('lightgray', 'gray')
         )
+        self.process_label = customtkinter.CTkLabel(
+            master=self.tabview.tab("Record & Process Data"),
+            text="Processing Data",
+            font=customtkinter.CTkFont(size=16),
+            text_color='black'
+        )
+        
+        self.process_frame = customtkinter.CTkFrame(
+            master=self.tabview.tab("Record & Process Data"),
+            fg_color=('lightgray', 'gray')
+        )
+        self.record_label.grid              (row=0, column=0, padx=20, pady=(5, 0), sticky="nsew")
+        self.record_single_frame.grid       (row=1, column=0, padx=20, pady=(10,0), sticky="nsew")
+        self.record_multiple_frame.grid     (row=2, column=0, padx=20, pady=(20,0), sticky="nsew")
+        self.process_label.grid             (row=3, column=0, padx=20, pady=10,     sticky="nsew")
+        self.process_frame.grid             (row=4, column=0, padx=20, pady=(0,20), sticky="nsew")
+        # self.record_multiple_frame.rowconfigure(0, weight=1)
+
+        self.process_load_options_label = customtkinter.CTkLabel(
+            master=self.process_frame,
+            text="Load Data:",
+            font=customtkinter.CTkFont(size=14)
+        )
+        self.process_load_button = customtkinter.CTkButton(
+            master=self.process_frame,
+            text="Load",
+            font=customtkinter.CTkFont(size=14),
+            command=self.load_data_button_event
+        )
+        
+        self.process_load_options_label.grid(row=0, column=0, padx=10, pady=(5,5),   sticky="nsew")
+        self.process_load_button.grid       (row=0, column=1, padx=10, pady=(5,5),   sticky="nsew")
+
+         
         self.single_cam_label = customtkinter.CTkLabel(
             master=self.record_single_frame,
             text="Single camera",
@@ -396,9 +387,9 @@ class GUI(customtkinter.CTk):
         self.single_camera_dur_combo_box.grid       (row=2, column=1, padx=0,  pady=(0,5),   sticky="nsew")
         self.single_dur_select_or_label.grid        (row=2, column=2, padx=(0, 10),  pady=(0,5),   sticky="nse")
         self.single_camera_dur_entry.grid           (row=2, column=3, padx=(0, 20),  pady=(0,5),   sticky="nsew")
-        self.single_camera_rec_button.grid          (row=3, column=1, padx=(10), pady=(5, 5),  sticky="nsew", columnspan=2)
-        self.single_rec_manual_label.grid           (row=4, column=2, padx=(0, 10), pady=(10, 20),sticky="nsew")
-        self.single_camera_rec_manual_button.grid   (row=4, column=3, padx=(0, 20),  pady=(10, 20),sticky="nsew")
+        self.single_camera_rec_button.grid          (row=3, column=1, padx=(10), pady=(10, 20),sticky="nsew")
+        self.single_rec_manual_label.grid           (row=3, column=2, padx=(0, 10), pady=(10, 20),sticky="nsew")
+        self.single_camera_rec_manual_button.grid   (row=3, column=3, padx=(0, 20),  pady=(10, 20),sticky="nsew")
 # *****************************************************************************************************************************
 
         self.multiple_cams_label = customtkinter.CTkLabel(
@@ -415,7 +406,7 @@ class GUI(customtkinter.CTk):
         )
         self.multi_dur_select_label = customtkinter.CTkLabel(
             master=self.record_multiple_frame,
-            text="Select duration:",
+            text="Select duration (s):",
             font=customtkinter.CTkFont(size=14),
             # text_color="#707070"
         )
@@ -427,7 +418,7 @@ class GUI(customtkinter.CTk):
         )
         self.multi_dur_select_or_label = customtkinter.CTkLabel(
             master=self.record_multiple_frame,
-            text="or",
+            text="or        Enter manually:",
             font=customtkinter.CTkFont(size=14),
             # text_color="#707070"
         )
@@ -474,21 +465,19 @@ class GUI(customtkinter.CTk):
         )
         self.multi_camera_dur_combo_box = customtkinter.CTkComboBox(
             master=self.record_multiple_frame,
-            values=["Duration: 10s",
-                    "Duration: 20s",
-                    "Duration: 30s",
-                    "Duration: 40s",
-                    "Duration: 50s",
-                    "Duration: 60s"
+            values=['10',
+                    '20',
+                    '30',
+                    '40',
+                    '50',
+                    '60'
                     ],
-            # font=customtkinter.CTkFont(size=14),
-            # dropdown_text_color="#808080",
-            # dropdown_fg_color='#ffffff',
-            # text_color="#303030"
+            variable=self.multi_camera_duration_var
             )
         self.multi_camera_dur_entry = customtkinter.CTkEntry(
             master=self.record_multiple_frame,
-            placeholder_text="Manual entry",
+            placeholder_text="Enter",
+            justify="center",
             # placeholder_text_color="#808080",
             corner_radius=5,
             width=20
@@ -514,25 +503,17 @@ class GUI(customtkinter.CTk):
         self.multi_camera_1_checkbox.grid           (row=1, column=1, padx=5,  pady=(0,5),   sticky="nsew")
         self.multi_camera_2_checkbox.grid           (row=1, column=2, padx=5,  pady=(0,5),   sticky="nsew")
         self.multi_camera_3_checkbox.grid           (row=1, column=3, padx=5,  pady=(0,5),   sticky="nsew")
-        self.multi_dur_select_label.grid            (row=2, column=0, padx=5,  pady=(0,5),   sticky="nsew")
-        self.multi_camera_dur_combo_box.grid        (row=2, column=1, padx=5,  pady=(0,5),   sticky="nsew", columnspan=1)
-        self.multi_dur_select_or_label.grid         (row=2, column=2, padx=5,  pady=(0,5),   sticky="nsew")
-        self.multi_camera_dur_entry.grid            (row=2, column=3, padx=5,  pady=(0,5),   sticky="nsew")
-        self.multi_camera_rec_button.grid           (row=3, column=1, padx=10, pady=(5, 5),  sticky="nsew", columnspan=2)
-        self.multi_rec_manual_label.grid            (row=4, column=2, padx=10, pady=(10, 20),sticky="nsew")
-        self.multi_camera_rec_manual_button.grid    (row=4, column=3, padx=5,  pady=(10, 20),sticky="nsew")
+        self.multi_dur_select_label.grid            (row=2, column=0, padx=(20,5),  pady=(0,5),   sticky="nsew")
+        self.multi_camera_dur_combo_box.grid        (row=2, column=1, padx=0,  pady=(0,5),   sticky="nsew")
+        self.multi_dur_select_or_label.grid         (row=2, column=2, padx=(0, 10),  pady=(0,5),   sticky="nsew")
+        self.multi_camera_dur_entry.grid            (row=2, column=3, padx=(0, 20),  pady=(0,5),   sticky="nsew")
+        self.multi_camera_rec_button.grid           (row=3, column=1, padx=10, pady=(10, 20),  sticky="nsew")
+        self.multi_rec_manual_label.grid            (row=3, column=2, padx=(0, 10), pady=(10, 20),sticky="nsew")
+        self.multi_camera_rec_manual_button.grid    (row=3, column=3, padx=(0, 20),  pady=(10, 20),sticky="nsew")
 
 
 
 
-        self.record_single_frame.grid       (row=1, column=0, padx=20, pady=(10,20), sticky="nsew")
-        self.record_multiple_frame.grid     (row=2, column=0, padx=20, pady=(10,20), sticky="nsew")
-        # self.record_multiple_frame.rowconfigure(0, weight=1)
-
-
-        self.tabview.tab("Recording Data").rowconfigure(1, weight=1)  # add this line to set row 1 to have equal weight
-        self.tabview.tab("Recording Data").rowconfigure(2, weight=1)  # add this line to set row 2 to have equal weight
-        self.tabview.tab("Recording Data").columnconfigure(0, weight=1)  # add this line to set column 0 to have equal weight
 
     def checkbox_event(self):
         pass
@@ -710,6 +691,7 @@ class GUI(customtkinter.CTk):
         """Starts a camera driver and optionally a camera view"""
         time_dur_bag = dur
         camera_num = device_id + 1
+        datetime_var = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
         # bagfile_name = f"cam{camera_num}_bagfile"
 
         camera_launch_args = [f"{self.cam_launch}",
@@ -720,7 +702,8 @@ class GUI(customtkinter.CTk):
         record_launch_args = [
                                 self.record_bag_launch,
                                 f'cam:=camera_{camera_num}',
-                                f'dur:={time_dur_bag}'
+                                f'dur:={time_dur_bag}',
+                                f'bagfile_datetime:={datetime_var}'
                             ]
         # Create a ROS launch file with the camera launch command
         roslaunch_file = [(roslaunch.rlutil.resolve_launch_arguments(camera_launch_args)[0], camera_launch_args[1:])]
@@ -897,6 +880,17 @@ class GUI(customtkinter.CTk):
 
         # Update the camera active states
         self.camera_1_active, self.camera_2_active, self.camera_3_active = camera_active_states
+
+    def load_data_button_event(self):
+        """This function is called when the load data button is clicked."""
+        print("Loading data...")
+        root = tk.Tk()
+        root.withdraw()
+        self.bagfile_var = filedialog.askopenfilename(initialdir=self.bagfile_path)
+        if self.bagfile_var != "":
+            print("Filepath: ", self.bagfile_var)
+            # self.load_data(filepath)
+        
 
         
         
