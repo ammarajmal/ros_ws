@@ -705,10 +705,135 @@ class GUI(customtkinter.CTk):
         """This function is called when the set calibration button is pressed and updates the calibration values"""
         self.board_size = self.sidebar_entry_get_calib_cb_dim.get()
         self.square_size = self.sidebar_entry_get_calib_sq_size.get()
+
+    def start_camera_record(self, camera_name, device_id, calibration_file, dur):
+        """Starts a camera driver and optionally a camera view"""
+        time_dur_bag = dur
+        camera_num = device_id + 1
+        # bagfile_name = f"cam{camera_num}_bagfile"
+
+        camera_launch_args = [f"{self.cam_launch}",
+                            f"cam:={camera_name}",
+                            f"device_id:={device_id}",
+                            f"calib_file:={calibration_file}"
+        ]
+        record_launch_args = [
+                                self.record_bag_launch,
+                                f'cam:=camera_{camera_num}',
+                                f'dur:={time_dur_bag}'
+                            ]
+        # Create a ROS launch file with the camera launch command
+        roslaunch_file = [(roslaunch.rlutil.resolve_launch_arguments(camera_launch_args)[0], camera_launch_args[1:])]
+        cam_driver = roslaunch.parent.ROSLaunchParent(self.uuid, roslaunch_file)
+
+        # Create a ROS launch file with the camera record launch command
+        record_single_cam_file = [(roslaunch.rlutil.resolve_launch_arguments(record_launch_args)[0], record_launch_args[1:])]
+        record_single_cam = roslaunch.parent.ROSLaunchParent(self.uuid, record_single_cam_file)
+
+
+        # Start the camera driver
+        try:
+            cam_driver.start()
+            self.running_processes[f'{camera_name}_driver'] = cam_driver
+
+            # Set camera active flag to True
+            if camera_name == 'camera_1':
+                self.camera_1_active = True
+            elif camera_name == 'camera_2':
+                self.camera_2_active = True
+            elif camera_name == 'camera_3':
+                self.camera_3_active = True
+
+            # Print success message
+            rospy.loginfo(f"{camera_name} camera driver started successfully.")
+            rospy.sleep(2)
+            record_single_cam.start()
+            self.running_processes[f'{camera_name}_record'] = record_single_cam
+            
+            while record_single_cam.pm.is_alive():
+                rospy.sleep(1)
+                print(f"recording {camera_name}...")
+            
+
+            # Shutdown the camera driver
+            try:
+                self.running_processes[f'{camera_name}_driver'].shutdown()
+                if f'{camera_name}_record' in self.running_processes:
+                    self.running_processes[f'{camera_name}_record'].shutdown()
+
+            except roslaunch.RLException as excep_camera:
+                rospy.logerr(f"Error stopping {camera_name} camera driver: {str(excep_camera)}")
+                return
+
+            # Set camera active flag to False
+            if camera_name == 'camera_1':
+                self.camera_1_active = False
+            elif camera_name == 'camera_2':
+                self.camera_2_active = False
+            elif camera_name == 'camera_3':
+                self.camera_3_active = False
+
+            # Remove camera driver from running processes dictionary
+            self.running_processes.pop(f'{camera_name}_driver', None)
+            self.running_processes.pop(f'{camera_name}_record', None)
+            
+            rospy.loginfo(f"{camera_name} camera bag file saved successfully.")
+            
+            
+
+
+        except roslaunch.RLException as excep_camera:
+            rospy.logerr(f"Error starting {camera_name} camera driver: {str(excep_camera)}")
+            return
+
+
+    def stop_camera_record(self, camera_name):
+        """Stop a camera driver."""
+        # Check if camera driver is running
+        if f'{camera_name}_driver' not in self.running_processes:
+            rospy.logwarn(f"{camera_name} camera driver is not running.")
+            return
+
+        # Shutdown the camera driver
+        try:
+            self.running_processes[f'{camera_name}_driver'].shutdown()
+            if f'{camera_name}_record' in self.running_processes:
+                self.running_processes[f'{camera_name}_record'].shutdown()
+
+        except roslaunch.RLException as excep_camera:
+            rospy.logerr(f"Error stopping {camera_name} camera driver: {str(excep_camera)}")
+            return
+
+        # Set camera active flag to False
+        if camera_name == 'camera_1':
+            self.camera_1_active = False
+        elif camera_name == 'camera_2':
+            self.camera_2_active = False
+        elif camera_name == 'camera_3':
+            self.camera_3_active = False
+
+        # Remove camera driver from running processes dictionary
+        self.running_processes.pop(f'{camera_name}_driver', None)
+        self.running_processes.pop(f'{camera_name}_record', None)
         
+        rospy.loginfo(f"{camera_name} camera bag file saved successfully.")
+    
     def record_single_camera(self):
         """This function is called when the record single camera button is pressed"""
+        
+        cameras = [
+            {'camera_name': 'camera_1', 'device_id': 0, 'calibration_file': 'cam1', 'button': self.sidebar_btn_cam_1_start},
+            {'camera_name': 'camera_2', 'device_id': 1, 'calibration_file': 'cam2', 'button': self.sidebar_btn_cam_2_start},
+            {'camera_name': 'camera_3', 'device_id': 2, 'calibration_file': 'cam3', 'button': self.sidebar_btn_cam_3_start}
+        ]
         camera_selected = self.camera_selection_var.get()
+        if camera_selected == "Camera 1":
+            camera_number = 1
+        elif camera_selected == "Camera 2":
+            camera_number = 2
+        else:
+            camera_number = 3
+            
         man_dur = self.single_camera_dur_entry.get()
         combo_dur = self.single_camera_dur_combo_box.get()
         single_camera_dur = ''
@@ -725,9 +850,53 @@ class GUI(customtkinter.CTk):
             print(f"Duration: {single_camera_dur}")
             
             
-            
         
 
+        # Select the camera based on the provided number
+        if camera_number < 1 or camera_number > 3:
+            rospy.logerr(f"Invalid camera number: {camera_number}")
+            return
+
+        camera = cameras[camera_number - 1]
+
+        camera_name = camera['camera_name']
+        device_id = camera['device_id']
+        calibration_file = camera['calibration_file']
+        
+        button = self.single_camera_rec_button
+        # button_name = 'Calibrate' if calibrate_camera else 'Start'
+        
+        
+        # Get the current state of the camera
+        camera_active_states = [self.camera_1_active, self.camera_2_active, self.camera_3_active]
+        camera_active = camera_active_states[camera_number - 1]
+
+        # Start or stop the camera depending on its current state
+        try:
+            if not camera_active:
+
+                # Update button color
+                button.configure(fg_color=("#fa5f5a", "#ba3732"))
+
+                # Set the camera active flag to True
+                camera_active_states[camera_number - 1] = True
+
+                # Start the selected camera
+                self.start_camera_record(camera_name, device_id, calibration_file, single_camera_dur)
+
+
+                # Update button color
+                button.configure(fg_color=themes[color_select])
+
+                # Set the camera active flag to False
+                camera_active_states[camera_number - 1] = False
+
+        except Exception as excep_camera:
+            rospy.logerr(f"Error {'' if camera_active else 'starting'} {camera_name} camera: {str(excep_camera)}")
+            return
+
+        # Update the camera active states
+        self.camera_1_active, self.camera_2_active, self.camera_3_active = camera_active_states
 
         
         
