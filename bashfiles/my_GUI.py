@@ -12,7 +12,7 @@ import datetime
 
 
 subprocess.Popen(['gnome-terminal', '--', '/bin/bash', '-c', 'source /opt/ros/noetic/setup.bash && roscore; exec /bin/bash'])
-
+time.sleep(1)
 
 themes = {'blue': ("#3B8ED0", "#1F6AA5"),
           'green': ("#2CC985", "#2FA572"),
@@ -46,11 +46,20 @@ class GUI(customtkinter.CTk):
         self.single_camera_duration_var = tk.StringVar(self, 'Select')
         self.multi_camera_duration_var = tk.StringVar(self, 'Select')
         self.bagfile_var = tk.StringVar(self)
+        self.datetime_var = ''
+        self.single_camera_dur = ''
+        self.last_recorded_bag_file_name = ''
+        self.last_recorded_bag_file_name_path = ''
+
         
         self.sidebar_entry_get_calib_sq_size_var = tk.StringVar()
         self.sidebar_entry_get_calib_cb_dim_var = tk.StringVar()
         self.board_size = "6x5"
         self.square_size = "0.025"
+        self.maker_size = "0.1"
+        self.var_marker_size = tk.StringVar(self, "0.1")
+        
+         
         
         
         # ********************************************************************************
@@ -177,7 +186,7 @@ class GUI(customtkinter.CTk):
         self.sidebar_btn_cam_1_start = customtkinter.CTkButton(
             master=self.sidebar_frame_cam_view,
             text='Start Camera 1',
-            command=lambda: self.sidebar_camera_btn_event(1, False, False)
+            command=lambda: self.sidebar_camera_btn_event(1, True, False)
         )
         self.sidebar_btn_cam_2_start = customtkinter.CTkButton(
             master=self.sidebar_frame_cam_view,
@@ -203,20 +212,29 @@ class GUI(customtkinter.CTk):
             command=self.change_appearance_mode_event,
             width=40
         )
-        self.ui_color_optionmenu = customtkinter.CTkOptionMenu(
+        # self.ui_color_optionmenu = customtkinter.CTkOptionMenu(
+        #     master=self.sidebar_frame_ui,
+        #     values=["Blue", "Dark Blue", "Green"],
+        #     command=self.change_color_event,
+        #     width=40
+        # )
+        self.sidebar_marker_size_entry = customtkinter.CTkEntry(
             master=self.sidebar_frame_ui,
-            values=["Blue", "Dark Blue", "Green"],
-            command=self.change_color_event,
-            width=40
+            placeholder_text="0.1",
+            textvariable=self.var_marker_size,
+            placeholder_text_color="#808080",
+            width=50
         )
-        self.ui_color_optionmenu_label = customtkinter.CTkLabel(
+        
+        self.sidebar_marker_size_label = customtkinter.CTkLabel(
             master=self.sidebar_frame_ui,
-            text="UI Color:"
+            text="Marker Size (m):"
         )
-        self.appearance_mode_label.grid         (row=0, column=0, padx=(16, 0), pady=(10, 5), sticky="nsw")
-        self.appearance_mode_optionemenu.grid   (row=0, column=1, padx=(0,10), pady=(10, 5), sticky="nse")
-        self.ui_color_optionmenu_label.grid     (row=1, column=0, padx=(16, 0), pady=(10, 5), sticky="nsw")
-        self.ui_color_optionmenu.grid           (row=1, column=1, padx=(0,10), pady=(10, 5), sticky="nse")
+        self.sidebar_marker_size_label.grid     (row=0, column=0, padx=(16, 0), pady=(10, 5), sticky="nsw")
+        self.sidebar_marker_size_entry.grid           (row=0, column=1, padx=(0,10), pady=(10, 5), sticky="nse")
+        self.appearance_mode_label.grid         (row=1, column=0, padx=(16, 0), pady=(10, 5), sticky="nsw")
+        self.appearance_mode_optionemenu.grid   (row=1, column=1, padx=(0,10), pady=(10, 5), sticky="nse")
+
 
         self.tabview = customtkinter.CTkTabview(
             master=self,
@@ -237,6 +255,24 @@ class GUI(customtkinter.CTk):
         self.tabview.add("Display Results")
         self.tabview.tab("Record & Process Data").grid_columnconfigure(0, weight=1)  # configure grid of individual tabs
         
+        # self.results_label = customtkinter.CTkLabel(
+        #     master=self.tabview.add("Display Results"),
+        #     text="Displaying Results",
+        #     font=customtkinter.CTkFont(size=16),
+        #     text_color='black'
+        # )
+        # self.results_single_frame = customtkinter.CTkFrame(
+        #     master=self.tabview.add("Display Results"),
+        #     fg_color=('lightgray', 'gray')
+        # )
+        # self.results_multiple_frame = customtkinter.CTkFrame(
+        #     master=self.tabview.add("Display Results"),
+        #     fg_color=('lightgray', 'gray')
+        # )
+        # self.results_label.grid              (row=0, column=0, padx=20, pady=(5, 0), sticky="nsew")
+        # self.results_single_frame.grid       (row=1, column=0, padx=20, pady=(10,0), sticky="nsew")
+        # self.results_multiple_frame.grid     (row=2, column=0, padx=20, pady=(20,0), sticky="nsew")
+
 
         self.record_label = customtkinter.CTkLabel(
             master=self.tabview.tab("Record & Process Data"),
@@ -270,27 +306,33 @@ class GUI(customtkinter.CTk):
         self.process_frame.grid             (row=4, column=0, padx=20, pady=(0,20), sticky="nsew")
         # self.record_multiple_frame.rowconfigure(0, weight=1)
 
+        self.process_load_last_saved_button = customtkinter.CTkButton(
+            master=self.process_frame,
+            text="Load File",
+            font=customtkinter.CTkFont(size=14),
+            command=self.detect_button_last_saved_event
+        )
         self.process_load_options_label = customtkinter.CTkLabel(
             master=self.process_frame,
-            text="Load Data:",
+            text="Load File from Directory:",
             font=customtkinter.CTkFont(size=14)
         )
         self.process_load_button = customtkinter.CTkButton(
             master=self.process_frame,
-            text="Load File",
+            text="Open File",
             font=customtkinter.CTkFont(size=14),
             command=self.load_data_button_event
         )
         self.process_detect_button = customtkinter.CTkButton(
             master=self.process_frame,
-            text="Post-Process Data",
+            text="Start Post-Processing",
             font=customtkinter.CTkFont(size=14),
             command=self.detect_button_event
         )
-        
-        self.process_load_options_label.grid(row=0, column=0, padx=10, pady=(5,5),   sticky="nsew")
-        self.process_load_button.grid       (row=0, column=1, padx=10, pady=(5,5),   sticky="nsew")
-        self.process_detect_button.grid     (row=0, column=2, padx=10, pady=(5,5),   sticky="nsew")
+        self.process_load_last_saved_button.grid(row=0, column=0, padx=10, pady=10,   sticky="nsew")
+        self.process_load_options_label.grid    (row=0, column=1, padx=10, pady=10,   sticky="nsew")
+        self.process_load_button.grid           (row=0, column=2, padx=10, pady=10,   sticky="nsew")
+        self.process_detect_button.grid         (row=0, column=3, padx=10, pady=10,   sticky="nsew")
 
          
         self.single_cam_label = customtkinter.CTkLabel(
@@ -698,7 +740,7 @@ class GUI(customtkinter.CTk):
         """Starts a camera driver and optionally a camera view"""
         time_dur_bag = dur
         camera_num = device_id + 1
-        datetime_var = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
+        self.datetime_var = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
         # bagfile_name = f"cam{camera_num}_bagfile"
 
         camera_launch_args = [f"{self.cam_launch}",
@@ -710,7 +752,7 @@ class GUI(customtkinter.CTk):
                                 self.record_bag_launch,
                                 f'cam:=camera_{camera_num}',
                                 f'dur:={time_dur_bag}',
-                                f'bagfile_datetime:={datetime_var}'
+                                f'bagfile_datetime:={self.datetime_var}'
                             ]
         # Create a ROS launch file with the camera launch command
         roslaunch_file = [(roslaunch.rlutil.resolve_launch_arguments(camera_launch_args)[0], camera_launch_args[1:])]
@@ -810,6 +852,9 @@ class GUI(customtkinter.CTk):
     
     def record_single_camera(self):
         """This function is called when the record single camera button is pressed"""
+        if self.sidebar_marker_size_entry.get() != "":
+            self.maker_size = self.sidebar_marker_size_entry.get()
+        print(self.maker_size)
         
         cameras = [
             {'camera_name': 'camera_1', 'device_id': 0, 'calibration_file': 'cam1', 'button': self.sidebar_btn_cam_1_start},
@@ -826,21 +871,27 @@ class GUI(customtkinter.CTk):
             
         man_dur = self.single_camera_dur_entry.get()
         combo_dur = self.single_camera_dur_combo_box.get()
-        single_camera_dur = ''
-        print("Camera: ", camera_selected)
+        
+        print('*********************************************')
+        print('********Saving single camera bag file********')
+        print('*********************************************')
+        print("Camera Selected: ", camera_selected)
         
         if man_dur == "":
             if combo_dur == "Select":
                 print("Please select a duration")
+                return
             else:
-                single_camera_dur = combo_dur
-                print(f"Duration: {single_camera_dur}")
+                self.single_camera_dur = combo_dur
+                print(f"Duration: {self.single_camera_dur}")
+                print('******************************************')
         else:
-            single_camera_dur = man_dur
-            print(f"Duration: {single_camera_dur}")
+            self.single_camera_dur = man_dur
+            print(f"Duration: {self.single_camera_dur}")
+            print('******************************************')
             
             
-        
+        time.sleep(1)
 
         # Select the camera based on the provided number
         if camera_number < 1 or camera_number > 3:
@@ -872,7 +923,7 @@ class GUI(customtkinter.CTk):
                 camera_active_states[camera_number - 1] = True
 
                 # Start the selected camera
-                self.start_camera_record(camera_name, device_id, calibration_file, single_camera_dur)
+                self.start_camera_record(camera_name, device_id, calibration_file, self.single_camera_dur)
 
 
                 # Update button color
@@ -890,28 +941,94 @@ class GUI(customtkinter.CTk):
 
     def load_data_button_event(self):
         """This function is called when the load data button is clicked."""
-        print("Loading data...")
+        print('****************************************************')
+        print('********  Loading data for Post-Processing  ********')
+        print('****************************************************')
+        
+
         root = tk.Tk()
         root.withdraw()
         self.bagfile_var = filedialog.askopenfilename(initialdir=self.bagfile_path)
         if self.bagfile_var != "":
             print(f'Loadded File: "{os.path.basename(self.bagfile_var)}" from directory: "{self.bagfile_path}"' )
 
-            # self.load_data(filepath)
-        
+
     def detect_button_event(self):
         """This function is called when the detect button is clicked."""
-        print("Post-processing started...")
+        print('**********************************************************')
+        print('******** Starting Post-Process from Selected File ********')
+        print('**********************************************************')
         try:
             if self.bagfile_var != "":
                 filename = os.fspath(self.bagfile_var)
                 print(f'Processing File: "{os.path.basename(filename)}" from directory: "{self.bagfile_path}"')
         except TypeError:
             print("Error: No file selected, Please load a bag file first.")
+        print(f"Marker Size: {self.sidebar_marker_size_entry.get()}")
+        print(f"Camera: {self.camera_selection_var.get()}")
+        if self.camera_selection_var.get() == 'Camera 1':
+            camera_used = 'camera_1'
+        elif self.camera_selection_var.get() == 'Camera 2':
+            camera_used = 'camera_2'
+        else:
+            camera_used = 'camera_3'
+        parts = os.path.basename(filename).split('_')
+        # Find the part of the filename that contains the duration value
+        for i, part in enumerate(parts):
+            if part.endswith('s'):
+                duration_part = part
+                break
+        # print(duration_part)
+        # Extract the duration value from the duration part
+        duration = duration_part[:-1]
+        print(f"Duration: {duration}s")  # Output: "5"
+        
+        load_bagfile_launch_args = [
+            self.read_bag_launch,
+            f"cam:={camera_used}",
+            f'dur:={duration}'
+        ]
+        roslaunch_file_bagfile = [(roslaunch.rlutil.resolve_launch_arguments(load_bagfile_launch_args)[0], load_bagfile_launch_args[1:])]
+        process_bagfile = f"read_bagfile_{camera_used}"
+        setattr(self, process_bagfile, roslaunch.parent.ROSLaunchParent(self.uuid, roslaunch_file_bagfile))
+        
+        process_bagfile.start()
+        self.running_processes[f'{process_bagfile}'] = process_bagfile
 
-                    
         
         
+        
+        
+    def detect_button_last_saved_event(self):
+        """This function is called when the detect button is clicked."""
+        print('*****************************************************************')
+        print('********  Starting Post-Processing from last saved data  ********')
+        print('*****************************************************************')
+        print("Marker Size: ", self.var_marker_size.get())
+        try:
+            if self.bagfile_var != "":
+                filename = os.fspath(self.bagfile_var)
+                print(f'Processing File: "{os.path.basename(filename)}" from directory: "{self.bagfile_path}"')
+        except TypeError:
+            print("Error: No file selected, Please load a bag file first.")
+        print(self.sidebar_marker_size_entry.get())
+        print(self.datetime_var)
+        print(self.camera_selection_var.get())
+        if self.camera_selection_var.get() == "Camera 1":
+            self.last_recorded_bag_file_name = f"camera_1_{self.single_camera_dur}s_{self.datetime_var}.bag"
+        elif self.camera_selection_var.get() == "Camera 2":
+            self.last_recorded_bag_file_name = f"camera_2_{self.single_camera_dur}s_{self.datetime_var}.bag"
+        else:
+            self.last_recorded_bag_file_name = f"camera_3_{self.single_camera_dur}s_{self.datetime_var}.bag"
+        self.last_recorded_bag_file_name_path = os.path.join(self.bagfile_path, self.last_recorded_bag_file_name)
+        print(self.last_recorded_bag_file_name_path)
+        print(self.single_camera_dur)
+        if self.bagfile_var == self.last_recorded_bag_file_name_path:
+            print(True)
+        else:
+            print(False)
+        
+
     def exit_button_click(self):
         """This function is called when the exit button is clicked."""
         print("Terminated successfully.")

@@ -10,6 +10,9 @@ def image_callback(msg):
     # Convert ROS message to OpenCV image
     img = bridge.imgmsg_to_cv2(msg, desired_encoding='bgr8')
     # Display the image
+     # Display the image in a window called "Camera Output" with size 640x480
+    cv2.namedWindow("Camera Output", cv2.WINDOW_NORMAL)
+    cv2.resizeWindow("Camera Output", 640, 480)
     cv2.imshow("Camera Output", img)
     # Wait for a key press for 1 millisecond
     key = cv2.waitKey(1)

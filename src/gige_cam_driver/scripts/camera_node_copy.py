@@ -49,7 +49,7 @@ class Camera(object):
 		pFrameBuffer = CameraAlignMalloc(FrameBufferSize, 16)
 		CameraSetTriggerMode(hCamera, 0)
 		CameraSetAeState(hCamera, 0)
-		CameraSetExposureTime(hCamera, 150 * 1000)
+		CameraSetExposureTime(hCamera, 10 * 1000)
 		CameraPlay(hCamera)
 		self.hCamera = hCamera
 		self.pFrameBuffer = pFrameBuffer
@@ -96,15 +96,11 @@ class Camera(object):
 		while not rospy.is_shutdown():
 			frame = self.grab()
 			# if frame is not None:
-				# frame = cv2.resize(frame, (640,480), interpolation = cv2.INTER_LINEAR)				
+				# frame = cv2.resize(frame, (640,480), interpolation = cv2.INTER_LINEAR)
 			camera_info = self.camera_info_manager.getCameraInfo()
 			camera_info.header.stamp = rospy.Time.now()
 			camera_info.header.frame_id = self.camera_manager
 			self.camera_info_publisher.publish(camera_info)
-			# Check if the frame is a valid NumPy array
-			if not isinstance(frame, np.ndarray):
-				rospy.logerr(f"Error: Invalid frame type: {type(frame)}")
-				break
 			msg = bridge.cv2_to_imgmsg(frame, "bgr8")
 			msg.header.frame_id = self.camera_manager
 			msg.header.stamp = rospy.Time.now()
