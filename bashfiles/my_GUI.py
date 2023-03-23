@@ -2,7 +2,7 @@
 import time
 import tkinter as tk
 from tkinter import filedialog
-
+import os
 import roslaunch
 import rospkg
 import rospy
@@ -277,13 +277,20 @@ class GUI(customtkinter.CTk):
         )
         self.process_load_button = customtkinter.CTkButton(
             master=self.process_frame,
-            text="Load",
+            text="Load File",
             font=customtkinter.CTkFont(size=14),
             command=self.load_data_button_event
+        )
+        self.process_detect_button = customtkinter.CTkButton(
+            master=self.process_frame,
+            text="Post-Process Data",
+            font=customtkinter.CTkFont(size=14),
+            command=self.detect_button_event
         )
         
         self.process_load_options_label.grid(row=0, column=0, padx=10, pady=(5,5),   sticky="nsew")
         self.process_load_button.grid       (row=0, column=1, padx=10, pady=(5,5),   sticky="nsew")
+        self.process_detect_button.grid     (row=0, column=2, padx=10, pady=(5,5),   sticky="nsew")
 
          
         self.single_cam_label = customtkinter.CTkLabel(
@@ -888,10 +895,21 @@ class GUI(customtkinter.CTk):
         root.withdraw()
         self.bagfile_var = filedialog.askopenfilename(initialdir=self.bagfile_path)
         if self.bagfile_var != "":
-            print("Filepath: ", self.bagfile_var)
+            print(f'Loadded File: "{os.path.basename(self.bagfile_var)}" from directory: "{self.bagfile_path}"' )
+
             # self.load_data(filepath)
         
+    def detect_button_event(self):
+        """This function is called when the detect button is clicked."""
+        print("Post-processing started...")
+        try:
+            if self.bagfile_var != "":
+                filename = os.fspath(self.bagfile_var)
+                print(f'Processing File: "{os.path.basename(filename)}" from directory: "{self.bagfile_path}"')
+        except TypeError:
+            print("Error: No file selected, Please load a bag file first.")
 
+                    
         
         
     def exit_button_click(self):
@@ -899,6 +917,8 @@ class GUI(customtkinter.CTk):
         print("Terminated successfully.")
         subprocess.call('pkill roscore', shell=True)
         self.destroy()
+        os.system("xdotool key ctrl+shift+w")
+
         exit()
 
 
