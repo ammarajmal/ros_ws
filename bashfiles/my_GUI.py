@@ -1,30 +1,38 @@
 #!/usr/bin/env python3
+
+# install camera sdk from: https://minsvision.com/rjxz
+
+import datetime
+import os
+import subprocess
 import time
+
 import tkinter as tk
 from tkinter import filedialog
-import os
+
 import roslaunch
 import rospkg
 import rospy
+
+
 import customtkinter
-import subprocess
-import datetime
 
 
-subprocess.Popen(['gnome-terminal', '--', '/bin/bash', '-c', 'source /opt/ros/noetic/setup.bash && roscore; exec /bin/bash'])
+subprocess.Popen(['gnome-terminal', '--', '/bin/bash', '-c',
+                 'source /opt/ros/noetic/setup.bash && roscore; exec /bin/bash'])
 time.sleep(1)
 
 themes = {'blue': ("#3B8ED0", "#1F6AA5"),
           'green': ("#2CC985", "#2FA572"),
           'dark-blue': ("#3a7ebf", "#1f538d")
-}
-# select value of color_select from (0: blue, 1: green, 2: dark-blue)
-color_select = list(themes.keys())[0]
+          }
+# select value of COLOR_SELECT from (0: blue, 1: green, 2: dark-blue)
+COLOR_SELECT = list(themes.keys())[0]
 
 # Modes: "System" (standard), "Dark", "Light"
 customtkinter.set_appearance_mode("System")
 # Themes: "blue" (standard), "green", "dark-blue"
-customtkinter.set_default_color_theme(color_select)
+customtkinter.set_default_color_theme(COLOR_SELECT)
 
 
 class GUI(customtkinter.CTk):
@@ -51,17 +59,13 @@ class GUI(customtkinter.CTk):
         self.last_recorded_bag_file_name = ''
         self.last_recorded_bag_file_name_path = ''
 
-        
         self.sidebar_entry_get_calib_sq_size_var = tk.StringVar()
         self.sidebar_entry_get_calib_cb_dim_var = tk.StringVar()
         self.board_size = "6x5"
         self.square_size = "0.025"
         self.maker_size = "0.1"
         self.var_marker_size = tk.StringVar(self, "0.1")
-        
-         
-        
-        
+
         # ********************************************************************************
         # Path management for Launch files
         # ********************************************************************************
@@ -90,7 +94,8 @@ class GUI(customtkinter.CTk):
             text="Main Processing",
             font=customtkinter.CTkFont(size=20, weight="bold")
         )
-        self.main_label.grid(row=0, column=1, padx=10, pady=(10,0), sticky="nsew")
+        self.main_label.grid(row=0, column=1, padx=10,
+                             pady=(10, 0), sticky="nsew")
 
         self.sidebar_frame = customtkinter.CTkFrame(
             master=self,
@@ -111,16 +116,20 @@ class GUI(customtkinter.CTk):
             master=self.sidebar_frame,
             fg_color=('lightgray', 'gray')
         )
-        self.sidebar_frame_cam_calib.grid(row=1, column=0, rowspan=5, pady=10, padx=10)
-        self.sidebar_frame_cam_view.grid(row=6, column=0, rowspan=3, pady=10, padx=10)
-        self.sidebar_frame_ui.grid(row=9, column=0, rowspan=2, pady=10, padx=10)
+        self.sidebar_frame_cam_calib.grid(
+            row=1, column=0, rowspan=5, pady=10, padx=10)
+        self.sidebar_frame_cam_view.grid(
+            row=6, column=0, rowspan=3, pady=10, padx=10)
+        self.sidebar_frame_ui.grid(
+            row=9, column=0, rowspan=2, pady=10, padx=10)
         self.sidebar_frame_cam_calib_label = customtkinter.CTkLabel(
             master=self.sidebar_frame,
             text="Camera Calibration",
             font=customtkinter.CTkFont(size=20, weight="normal"),
             text_color='black'
         )
-        self.sidebar_frame_cam_calib_label.grid(row=0, column=0, padx=30, pady=(20, 5), sticky="nsew")
+        self.sidebar_frame_cam_calib_label.grid(
+            row=0, column=0, padx=30, pady=(20, 5), sticky="nsew")
         self.sidebar_btn_cam_1_calib = customtkinter.CTkButton(
             master=self.sidebar_frame_cam_calib,
             text='Calibrate Camera 1',
@@ -141,7 +150,7 @@ class GUI(customtkinter.CTk):
             text="Board size (wxh):"
         )
         self.sidebar_entry_get_calib_cb_dim = customtkinter.CTkEntry(
-            master= self.sidebar_frame_cam_calib,
+            master=self.sidebar_frame_cam_calib,
             placeholder_text="6x5",
             placeholder_text_color="#808080",
             width=50
@@ -151,7 +160,7 @@ class GUI(customtkinter.CTk):
             text="Square size (m):"
         )
         self.sidebar_entry_get_calib_sq_size = customtkinter.CTkEntry(
-            master= self.sidebar_frame_cam_calib,
+            master=self.sidebar_frame_cam_calib,
             placeholder_text="0.025",
             placeholder_text_color="#808080",
             width=50
@@ -161,24 +170,33 @@ class GUI(customtkinter.CTk):
             text="☑",
             text_color='green',
             font=customtkinter.CTkFont(size=25, weight="bold"),
-            
+
         )
         self.sidebar_btn_set_calib = customtkinter.CTkButton(
             self.sidebar_frame_cam_calib,
             text='Update',
             command=self.sidebar_btn_set_calib_event,
             width=85
-            
+
         )
-        self.sidebar_entry_get_calib_cb_dim_label.grid  (row=1, column=0, padx=(20, 0), pady=(10, 5), sticky="nsw")
-        self.sidebar_entry_get_calib_sq_size_label.grid (row=2, column=0, padx=(20, 0), pady=0, sticky="nsw")
-        self.sidebar_entry_get_calib_cb_dim.grid        (row=1, column=1, padx=(10, 10), pady=(10,5), sticky="nsw")
-        self.sidebar_entry_get_calib_sq_size.grid       (row=2, column=1, padx=(10, 10), pady=0, sticky="nsw")
-        self.sidebar_btn_set_calib.grid                 (row=3, column=0,padx=(10, 10), pady=(10,10), sticky='e')
-        self.sidebar_btn_set_calib_success_label.grid   (row=3, column=1,padx=(20, 0), pady=(10,10), sticky='nsw')
-        self.sidebar_btn_cam_1_calib.grid               (row=4, column=0, columnspan=2,padx=10, pady=10)
-        self.sidebar_btn_cam_2_calib.grid               (row=5, column=0, columnspan=2,padx=10, pady=0)
-        self.sidebar_btn_cam_3_calib.grid               (row=6, column=0, columnspan=2,padx=10, pady=(10,20))
+        self.sidebar_entry_get_calib_cb_dim_label.grid(
+            row=1, column=0, padx=(20, 0), pady=(10, 5), sticky="nsw")
+        self.sidebar_entry_get_calib_sq_size_label.grid(
+            row=2, column=0, padx=(20, 0), pady=0, sticky="nsw")
+        self.sidebar_entry_get_calib_cb_dim.grid(
+            row=1, column=1, padx=(10, 10), pady=(10, 5), sticky="nsw")
+        self.sidebar_entry_get_calib_sq_size.grid(
+            row=2, column=1, padx=(10, 10), pady=0, sticky="nsw")
+        self.sidebar_btn_set_calib.grid(
+            row=3, column=0, padx=(10, 10), pady=(10, 10), sticky='e')
+        self.sidebar_btn_set_calib_success_label.grid(
+            row=3, column=1, padx=(20, 0), pady=(10, 10), sticky='nsw')
+        self.sidebar_btn_cam_1_calib.grid(
+            row=4, column=0, columnspan=2, padx=10, pady=10)
+        self.sidebar_btn_cam_2_calib.grid(
+            row=5, column=0, columnspan=2, padx=10, pady=0)
+        self.sidebar_btn_cam_3_calib.grid(
+            row=6, column=0, columnspan=2, padx=10, pady=(10, 20))
         self.sidebar_frame_cam_view_label = customtkinter.CTkLabel(
             master=self.sidebar_frame_cam_view,
             text="Camera View"
@@ -196,12 +214,16 @@ class GUI(customtkinter.CTk):
         self.sidebar_btn_cam_3_start = customtkinter.CTkButton(
             master=self.sidebar_frame_cam_view,
             text='Start Camera 3',
-            command=lambda: self.sidebar_camera_btn_event(3,True, False)
+            command=lambda: self.sidebar_camera_btn_event(3, True, False)
         )
-        self.sidebar_frame_cam_view_label.grid  (row=0, column=0, columnspan=2, padx=25, pady=(10, 10))
-        self.sidebar_btn_cam_1_start.grid       (row=1, column=0, columnspan=2, padx=25, pady=(0,10))
-        self.sidebar_btn_cam_2_start.grid       (row=2, column=0, columnspan=2, padx=25, pady=0)
-        self.sidebar_btn_cam_3_start.grid       (row=3, column=0, columnspan=2, padx=25, pady=(10, 20))
+        self.sidebar_frame_cam_view_label.grid(
+            row=0, column=0, columnspan=2, padx=25, pady=(10, 10))
+        self.sidebar_btn_cam_1_start.grid(
+            row=1, column=0, columnspan=2, padx=25, pady=(0, 10))
+        self.sidebar_btn_cam_2_start.grid(
+            row=2, column=0, columnspan=2, padx=25, pady=0)
+        self.sidebar_btn_cam_3_start.grid(
+            row=3, column=0, columnspan=2, padx=25, pady=(10, 20))
         self.appearance_mode_label = customtkinter.CTkLabel(
             master=self.sidebar_frame_ui,
             text="Appearance:"
@@ -225,16 +247,19 @@ class GUI(customtkinter.CTk):
             placeholder_text_color="#808080",
             width=50
         )
-        
+
         self.sidebar_marker_size_label = customtkinter.CTkLabel(
             master=self.sidebar_frame_ui,
             text="Marker Size (m):"
         )
-        self.sidebar_marker_size_label.grid     (row=0, column=0, padx=(16, 0), pady=(10, 5), sticky="nsw")
-        self.sidebar_marker_size_entry.grid           (row=0, column=1, padx=(0,10), pady=(10, 5), sticky="nse")
-        self.appearance_mode_label.grid         (row=1, column=0, padx=(16, 0), pady=(10, 5), sticky="nsw")
-        self.appearance_mode_optionemenu.grid   (row=1, column=1, padx=(0,10), pady=(10, 5), sticky="nse")
-
+        self.sidebar_marker_size_label.grid(
+            row=0, column=0, padx=(16, 0), pady=(10, 5), sticky="nsw")
+        self.sidebar_marker_size_entry.grid(
+            row=0, column=1, padx=(0, 10), pady=(10, 5), sticky="nse")
+        self.appearance_mode_label.grid(
+            row=1, column=0, padx=(16, 0), pady=(10, 5), sticky="nsw")
+        self.appearance_mode_optionemenu.grid(
+            row=1, column=1, padx=(0, 10), pady=(10, 5), sticky="nse")
 
         self.tabview = customtkinter.CTkTabview(
             master=self,
@@ -248,13 +273,16 @@ class GUI(customtkinter.CTk):
             border_width=2,
             text_color=("#DCE4EE", "gray10")
         )
-        self.tabview.grid           (row=1, column=1, padx=20, pady=(5,10), sticky="nsew")
-        self.main_button_exit.grid  (row=2, column=1, padx=(20, 20), pady=(0, 20))
+        self.tabview.grid(row=1, column=1, padx=20,
+                          pady=(5, 10), sticky="nsew")
+        self.main_button_exit.grid(
+            row=2, column=1, padx=(20, 20), pady=(0, 20))
 
         self.tabview.add("Record & Process Data")
         self.tabview.add("Display Results")
-        self.tabview.tab("Record & Process Data").grid_columnconfigure(0, weight=1)  # configure grid of individual tabs
-        
+        self.tabview.tab("Record & Process Data").grid_columnconfigure(
+            0, weight=1)  # configure grid of individual tabs
+
         # self.results_label = customtkinter.CTkLabel(
         #     master=self.tabview.add("Display Results"),
         #     text="Displaying Results",
@@ -272,7 +300,6 @@ class GUI(customtkinter.CTk):
         # self.results_label.grid              (row=0, column=0, padx=20, pady=(5, 0), sticky="nsew")
         # self.results_single_frame.grid       (row=1, column=0, padx=20, pady=(10,0), sticky="nsew")
         # self.results_multiple_frame.grid     (row=2, column=0, padx=20, pady=(20,0), sticky="nsew")
-
 
         self.record_label = customtkinter.CTkLabel(
             master=self.tabview.tab("Record & Process Data"),
@@ -294,16 +321,21 @@ class GUI(customtkinter.CTk):
             font=customtkinter.CTkFont(size=16),
             text_color='black'
         )
-        
+
         self.process_frame = customtkinter.CTkFrame(
             master=self.tabview.tab("Record & Process Data"),
             fg_color=('lightgray', 'gray')
         )
-        self.record_label.grid              (row=0, column=0, padx=20, pady=(5, 0), sticky="nsew")
-        self.record_single_frame.grid       (row=1, column=0, padx=20, pady=(10,0), sticky="nsew")
-        self.record_multiple_frame.grid     (row=2, column=0, padx=20, pady=(20,0), sticky="nsew")
-        self.process_label.grid             (row=3, column=0, padx=20, pady=10,     sticky="nsew")
-        self.process_frame.grid             (row=4, column=0, padx=20, pady=(0,20), sticky="nsew")
+        self.record_label.grid(row=0, column=0, padx=20,
+                               pady=(5, 0), sticky="nsew")
+        self.record_single_frame.grid(
+            row=1, column=0, padx=20, pady=(10, 0), sticky="nsew")
+        self.record_multiple_frame.grid(
+            row=2, column=0, padx=20, pady=(20, 0), sticky="nsew")
+        self.process_label.grid(row=3, column=0, padx=20,
+                                pady=10,     sticky="nsew")
+        self.process_frame.grid(row=4, column=0, padx=20,
+                                pady=(0, 20), sticky="nsew")
         # self.record_multiple_frame.rowconfigure(0, weight=1)
 
         self.process_load_last_saved_button = customtkinter.CTkButton(
@@ -329,12 +361,15 @@ class GUI(customtkinter.CTk):
             font=customtkinter.CTkFont(size=14),
             command=self.detect_button_event
         )
-        self.process_load_last_saved_button.grid(row=0, column=0, padx=10, pady=10,   sticky="nsew")
-        self.process_load_options_label.grid    (row=0, column=1, padx=10, pady=10,   sticky="nsew")
-        self.process_load_button.grid           (row=0, column=2, padx=10, pady=10,   sticky="nsew")
-        self.process_detect_button.grid         (row=0, column=3, padx=10, pady=10,   sticky="nsew")
+        self.process_load_last_saved_button.grid(
+            row=0, column=0, padx=10, pady=10,   sticky="nsew")
+        self.process_load_options_label.grid(
+            row=0, column=1, padx=10, pady=10,   sticky="nsew")
+        self.process_load_button.grid(
+            row=0, column=2, padx=10, pady=10,   sticky="nsew")
+        self.process_detect_button.grid(
+            row=0, column=3, padx=10, pady=10,   sticky="nsew")
 
-         
         self.single_cam_label = customtkinter.CTkLabel(
             master=self.record_single_frame,
             text="Single camera",
@@ -367,7 +402,7 @@ class GUI(customtkinter.CTk):
             variable=self.camera_selection_var,
             value="Camera 1"
             # text_color="#808080"
-            )
+        )
         self.single_camera_2_radio = customtkinter.CTkRadioButton(
             master=self.record_single_frame,
             text="Camera 2",
@@ -376,7 +411,7 @@ class GUI(customtkinter.CTk):
             variable=self.camera_selection_var,
             value="Camera 2"
             # text_color="#808080"
-            )
+        )
         self.single_camera_3_radio = customtkinter.CTkRadioButton(
             master=self.record_single_frame,
             text="Camera 3",
@@ -385,7 +420,7 @@ class GUI(customtkinter.CTk):
             variable=self.camera_selection_var,
             value="Camera 3"
             # text_color="#808080"
-            )
+        )
         self.single_dur_select_label = customtkinter.CTkLabel(
             master=self.record_single_frame,
             text="Select duration (s):",
@@ -401,11 +436,11 @@ class GUI(customtkinter.CTk):
                     '60'
                     ],
             variable=self.single_camera_duration_var
-            )
+        )
         self.single_camera_dur_entry = customtkinter.CTkEntry(
             master=self.record_single_frame,
             placeholder_text="Enter",
-            justify = 'center',
+            justify='center',
             # placeholder_text_color="#808080",
             corner_radius=5,
             width=20
@@ -425,20 +460,30 @@ class GUI(customtkinter.CTk):
             text_color=("gray10", "#DCE4EE")
         )
 
-
-
-        self.single_cam_label.grid                  (row=0, column=1, padx=10, pady=(10,10), sticky="nsew", columnspan=2, rowspan=1)
-        self.single_cam_select_label.grid           (row=1, column=0, padx=10, pady=(5,5),   sticky="nsew")
-        self.single_camera_1_radio.grid             (row=1, column=1, padx=5,  pady=(0,5),   sticky="nsew")
-        self.single_camera_2_radio.grid             (row=1, column=2, padx=5,  pady=(0,5),   sticky="nsew")
-        self.single_camera_3_radio.grid             (row=1, column=3, padx=5,  pady=(0,5),   sticky="nsew")
-        self.single_dur_select_label.grid           (row=2, column=0, padx=(20, 5),  pady=(0,5),   sticky="nsew")
-        self.single_camera_dur_combo_box.grid       (row=2, column=1, padx=0,  pady=(0,5),   sticky="nsew")
-        self.single_dur_select_or_label.grid        (row=2, column=2, padx=(0, 10),  pady=(0,5),   sticky="nse")
-        self.single_camera_dur_entry.grid           (row=2, column=3, padx=(0, 20),  pady=(0,5),   sticky="nsew")
-        self.single_camera_rec_button.grid          (row=3, column=1, padx=(10), pady=(10, 20),sticky="nsew")
-        self.single_rec_manual_label.grid           (row=3, column=2, padx=(0, 10), pady=(10, 20),sticky="nsew")
-        self.single_camera_rec_manual_button.grid   (row=3, column=3, padx=(0, 20),  pady=(10, 20),sticky="nsew")
+        self.single_cam_label.grid(row=0, column=1, padx=10, pady=(
+            10, 10), sticky="nsew", columnspan=2, rowspan=1)
+        self.single_cam_select_label.grid(
+            row=1, column=0, padx=10, pady=(5, 5),   sticky="nsew")
+        self.single_camera_1_radio.grid(
+            row=1, column=1, padx=5,  pady=(0, 5),   sticky="nsew")
+        self.single_camera_2_radio.grid(
+            row=1, column=2, padx=5,  pady=(0, 5),   sticky="nsew")
+        self.single_camera_3_radio.grid(
+            row=1, column=3, padx=5,  pady=(0, 5),   sticky="nsew")
+        self.single_dur_select_label.grid(
+            row=2, column=0, padx=(20, 5),  pady=(0, 5),   sticky="nsew")
+        self.single_camera_dur_combo_box.grid(
+            row=2, column=1, padx=0,  pady=(0, 5),   sticky="nsew")
+        self.single_dur_select_or_label.grid(
+            row=2, column=2, padx=(0, 10),  pady=(0, 5),   sticky="nse")
+        self.single_camera_dur_entry.grid(
+            row=2, column=3, padx=(0, 20),  pady=(0, 5),   sticky="nsew")
+        self.single_camera_rec_button.grid(
+            row=3, column=1, padx=(10), pady=(10, 20), sticky="nsew")
+        self.single_rec_manual_label.grid(
+            row=3, column=2, padx=(0, 10), pady=(10, 20), sticky="nsew")
+        self.single_camera_rec_manual_button.grid(
+            row=3, column=3, padx=(0, 20),  pady=(10, 20), sticky="nsew")
 # *****************************************************************************************************************************
 
         self.multiple_cams_label = customtkinter.CTkLabel(
@@ -471,8 +516,6 @@ class GUI(customtkinter.CTk):
             font=customtkinter.CTkFont(size=14),
             # text_color="#707070"
         )
-
-
 
         self.multi_camera_1_checkbox = customtkinter.CTkCheckBox(
             master=self.record_multiple_frame,
@@ -522,7 +565,7 @@ class GUI(customtkinter.CTk):
                     '60'
                     ],
             variable=self.multi_camera_duration_var
-            )
+        )
         self.multi_camera_dur_entry = customtkinter.CTkEntry(
             master=self.record_multiple_frame,
             placeholder_text="Enter",
@@ -545,27 +588,34 @@ class GUI(customtkinter.CTk):
             text_color=("gray10", "#DCE4EE")
         )
 
-
-
-        self.multiple_cams_label.grid               (row=0, column=1, padx=10, pady=(10,10), sticky="nsew", columnspan=2, rowspan=1)
-        self.multi_cam_select_label.grid            (row=1, column=0, padx=10, pady=(5,5),   sticky="nsew")
-        self.multi_camera_1_checkbox.grid           (row=1, column=1, padx=5,  pady=(0,5),   sticky="nsew")
-        self.multi_camera_2_checkbox.grid           (row=1, column=2, padx=5,  pady=(0,5),   sticky="nsew")
-        self.multi_camera_3_checkbox.grid           (row=1, column=3, padx=5,  pady=(0,5),   sticky="nsew")
-        self.multi_dur_select_label.grid            (row=2, column=0, padx=(20,5),  pady=(0,5),   sticky="nsew")
-        self.multi_camera_dur_combo_box.grid        (row=2, column=1, padx=0,  pady=(0,5),   sticky="nsew")
-        self.multi_dur_select_or_label.grid         (row=2, column=2, padx=(0, 10),  pady=(0,5),   sticky="nsew")
-        self.multi_camera_dur_entry.grid            (row=2, column=3, padx=(0, 20),  pady=(0,5),   sticky="nsew")
-        self.multi_camera_rec_button.grid           (row=3, column=1, padx=10, pady=(10, 20),  sticky="nsew")
-        self.multi_rec_manual_label.grid            (row=3, column=2, padx=(0, 10), pady=(10, 20),sticky="nsew")
-        self.multi_camera_rec_manual_button.grid    (row=3, column=3, padx=(0, 20),  pady=(10, 20),sticky="nsew")
-
-
-
-
+        self.multiple_cams_label.grid(row=0, column=1, padx=10, pady=(
+            10, 10), sticky="nsew", columnspan=2, rowspan=1)
+        self.multi_cam_select_label.grid(
+            row=1, column=0, padx=10, pady=(5, 5),   sticky="nsew")
+        self.multi_camera_1_checkbox.grid(
+            row=1, column=1, padx=5,  pady=(0, 5),   sticky="nsew")
+        self.multi_camera_2_checkbox.grid(
+            row=1, column=2, padx=5,  pady=(0, 5),   sticky="nsew")
+        self.multi_camera_3_checkbox.grid(
+            row=1, column=3, padx=5,  pady=(0, 5),   sticky="nsew")
+        self.multi_dur_select_label.grid(
+            row=2, column=0, padx=(20, 5),  pady=(0, 5),   sticky="nsew")
+        self.multi_camera_dur_combo_box.grid(
+            row=2, column=1, padx=0,  pady=(0, 5),   sticky="nsew")
+        self.multi_dur_select_or_label.grid(
+            row=2, column=2, padx=(0, 10),  pady=(0, 5),   sticky="nsew")
+        self.multi_camera_dur_entry.grid(
+            row=2, column=3, padx=(0, 20),  pady=(0, 5),   sticky="nsew")
+        self.multi_camera_rec_button.grid(
+            row=3, column=1, padx=10, pady=(10, 20),  sticky="nsew")
+        self.multi_rec_manual_label.grid(
+            row=3, column=2, padx=(0, 10), pady=(10, 20), sticky="nsew")
+        self.multi_camera_rec_manual_button.grid(
+            row=3, column=3, padx=(0, 20),  pady=(10, 20), sticky="nsew")
 
     def checkbox_event(self):
         pass
+
     def record_data(self):
         print('Recording data')
         print(self.optionmenu_1.get())
@@ -589,23 +639,25 @@ class GUI(customtkinter.CTk):
     def start_camera(self, camera_name, device_id, calibration_file, view_camera, calibrate_camera):
         """Starts a camera driver and optionally a camera view"""
         camera_launch_args = [f"{self.cam_launch}",
-                            f"cam:={camera_name}",
-                            f"device_id:={device_id}",
-                            f"calib_file:={calibration_file}"
-        ]
+                              f"cam:={camera_name}",
+                              f"device_id:={device_id}",
+                              f"calib_file:={calibration_file}"
+                              ]
         view_launch_args = [self.view_launch,
                             f"camera_name:={camera_name}"
-        ]
+                            ]
         # print(f"board size: {self.board_size} and square size: {self.square_size}")
         calib_launch_args = [self.calib_launch,
-                            f"cam:={camera_name}",
-                            f"size:={self.board_size}",
-                            f"square:={self.square_size}"
-        ]
+                             f"cam:={camera_name}",
+                             f"size:={self.board_size}",
+                             f"square:={self.square_size}"
+                             ]
 
         # Create a ROS launch file with the camera launch command
-        roslaunch_file = [(roslaunch.rlutil.resolve_launch_arguments(camera_launch_args)[0], camera_launch_args[1:])]
-        cam_driver = roslaunch.parent.ROSLaunchParent(self.uuid, roslaunch_file)
+        roslaunch_file = [(roslaunch.rlutil.resolve_launch_arguments(
+            camera_launch_args)[0], camera_launch_args[1:])]
+        cam_driver = roslaunch.parent.ROSLaunchParent(
+            self.uuid, roslaunch_file)
 
         # Start the camera driver
         try:
@@ -626,23 +678,28 @@ class GUI(customtkinter.CTk):
 
             # If view_camera is True, start the camera view
             if view_camera:
-                view_launch_file = [(roslaunch.rlutil.resolve_launch_arguments(view_launch_args)[0], view_launch_args[1:])]
-                view_output = roslaunch.parent.ROSLaunchParent(self.uuid, view_launch_file)
+                view_launch_file = [(roslaunch.rlutil.resolve_launch_arguments(
+                    view_launch_args)[0], view_launch_args[1:])]
+                view_output = roslaunch.parent.ROSLaunchParent(
+                    self.uuid, view_launch_file)
                 view_output.start()
                 self.running_processes[f'{camera_name}_view'] = view_output
 
             # If calibrate_camera is True, start camera calibration
             if calibrate_camera:
-                rospy.loginfo(f"{camera_name} calibration started successfully.")
-                calibrate_launch_file = [(roslaunch.rlutil.resolve_launch_arguments(calib_launch_args)[0], calib_launch_args[1:])]
-                camera_calibrate = roslaunch.parent.ROSLaunchParent(self.uuid, calibrate_launch_file)
+                rospy.loginfo(
+                    f"{camera_name} calibration started successfully.")
+                calibrate_launch_file = [(roslaunch.rlutil.resolve_launch_arguments(
+                    calib_launch_args)[0], calib_launch_args[1:])]
+                camera_calibrate = roslaunch.parent.ROSLaunchParent(
+                    self.uuid, calibrate_launch_file)
                 camera_calibrate.start()
                 self.running_processes[f'{camera_name}_calibrate'] = camera_calibrate
 
         except roslaunch.RLException as excep_camera:
-            rospy.logerr(f"Error starting {camera_name} camera driver: {str(excep_camera)}")
+            rospy.logerr(
+                f"Error starting {camera_name} camera driver: {str(excep_camera)}")
             return
-
 
     def stop_camera(self, camera_name):
         """Stop a camera driver."""
@@ -659,7 +716,8 @@ class GUI(customtkinter.CTk):
             if f'{camera_name}_calibrate' in self.running_processes:
                 self.running_processes[f'{camera_name}_calibrate'].shutdown()
         except roslaunch.RLException as excep_camera:
-            rospy.logerr(f"Error stopping {camera_name} camera driver: {str(excep_camera)}")
+            rospy.logerr(
+                f"Error stopping {camera_name} camera driver: {str(excep_camera)}")
             return
 
         # Set camera active flag to False
@@ -675,16 +733,18 @@ class GUI(customtkinter.CTk):
         self.running_processes.pop(f'{camera_name}_view', None)
         self.running_processes.pop(f'{camera_name}_calibrate', None)
         # Print success message
-        
-        rospy.loginfo(f"{camera_name} camera driver stopped successfully.")
 
+        rospy.loginfo(f"{camera_name} camera driver stopped successfully.")
 
     def sidebar_camera_btn_event(self, camera_number, show_camera, calibrate_camera):
         """This function is called when a camera button is pressed"""
         cameras = [
-            {'camera_name': 'camera_1', 'device_id': 0, 'calibration_file': 'cam1', 'button': self.sidebar_btn_cam_1_start, 'calibrate_button': self.sidebar_btn_cam_1_calib, 'name': 'Camera 1'},
-            {'camera_name': 'camera_2', 'device_id': 1, 'calibration_file': 'cam2', 'button': self.sidebar_btn_cam_2_start, 'calibrate_button': self.sidebar_btn_cam_2_calib, 'name': 'Camera 2'},
-            {'camera_name': 'camera_3', 'device_id': 2, 'calibration_file': 'cam3', 'button': self.sidebar_btn_cam_3_start, 'calibrate_button': self.sidebar_btn_cam_3_calib, 'name': 'Camera 3'}
+            {'camera_name': 'camera_1', 'device_id': 0, 'calibration_file': 'cam1', 'button': self.sidebar_btn_cam_1_start,
+                'calibrate_button': self.sidebar_btn_cam_1_calib, 'name': 'Camera 1'},
+            {'camera_name': 'camera_2', 'device_id': 1, 'calibration_file': 'cam2', 'button': self.sidebar_btn_cam_2_start,
+                'calibrate_button': self.sidebar_btn_cam_2_calib, 'name': 'Camera 2'},
+            {'camera_name': 'camera_3', 'device_id': 2, 'calibration_file': 'cam3',
+                'button': self.sidebar_btn_cam_3_start, 'calibrate_button': self.sidebar_btn_cam_3_calib, 'name': 'Camera 3'}
         ]
 
         # Select the camera based on the provided number
@@ -700,18 +760,20 @@ class GUI(customtkinter.CTk):
         button = camera['calibrate_button'] if calibrate_camera else camera['button']
         button_name = 'Calibrate' if calibrate_camera else 'Start'
         # Get the current state of the camera
-        camera_active_states = [self.camera_1_active, self.camera_2_active, self.camera_3_active]
+        camera_active_states = [self.camera_1_active,
+                                self.camera_2_active, self.camera_3_active]
         camera_active = camera_active_states[camera_number - 1]
 
         # Start or stop the camera depending on its current state
         try:
             if not camera_active:
                 # Start the selected camera
-                self.start_camera(camera_name, device_id, calibration_file, show_camera, calibrate_camera)
-
+                self.start_camera(camera_name, device_id,
+                                  calibration_file, show_camera, calibrate_camera)
 
                 # Update button text and color
-                button.configure(text=f"Stop {camera['name']}", fg_color=("#fa5f5a", "#ba3732"))
+                button.configure(
+                    text=f"Stop {camera['name']}", fg_color=("#fa5f5a", "#ba3732"))
 
                 # Set the camera active flag to True
                 camera_active_states[camera_number - 1] = True
@@ -720,12 +782,14 @@ class GUI(customtkinter.CTk):
                 self.stop_camera(camera_name)
 
                 # Update button text and color
-                button.configure(text=f"{button_name} {camera['name']}", fg_color=themes[color_select])
+                button.configure(
+                    text=f"{button_name} {camera['name']}", fg_color=themes[COLOR_SELECT])
 
                 # Set the camera active flag to False
                 camera_active_states[camera_number - 1] = False
         except Exception as excep_camera:
-            rospy.logerr(f"Error {'' if camera_active else 'starting'} {camera_name} camera: {str(excep_camera)}")
+            rospy.logerr(
+                f"Error {'' if camera_active else 'starting'} {camera_name} camera: {str(excep_camera)}")
             return
 
         # Update the camera active states
@@ -744,24 +808,27 @@ class GUI(customtkinter.CTk):
         # bagfile_name = f"cam{camera_num}_bagfile"
 
         camera_launch_args = [f"{self.cam_launch}",
-                            f"cam:={camera_name}",
-                            f"device_id:={device_id}",
-                            f"calib_file:={calibration_file}"
-        ]
+                              f"cam:={camera_name}",
+                              f"device_id:={device_id}",
+                              f"calib_file:={calibration_file}"
+                              ]
         record_launch_args = [
-                                self.record_bag_launch,
-                                f'cam:=camera_{camera_num}',
-                                f'dur:={time_dur_bag}',
-                                f'bagfile_datetime:={self.datetime_var}'
-                            ]
+            self.record_bag_launch,
+            f'cam:=camera_{camera_num}',
+            f'dur:={time_dur_bag}',
+            f'bagfile_datetime:={self.datetime_var}'
+        ]
         # Create a ROS launch file with the camera launch command
-        roslaunch_file = [(roslaunch.rlutil.resolve_launch_arguments(camera_launch_args)[0], camera_launch_args[1:])]
-        cam_driver = roslaunch.parent.ROSLaunchParent(self.uuid, roslaunch_file)
+        roslaunch_file = [(roslaunch.rlutil.resolve_launch_arguments(
+            camera_launch_args)[0], camera_launch_args[1:])]
+        cam_driver = roslaunch.parent.ROSLaunchParent(
+            self.uuid, roslaunch_file)
 
         # Create a ROS launch file with the camera record launch command
-        record_single_cam_file = [(roslaunch.rlutil.resolve_launch_arguments(record_launch_args)[0], record_launch_args[1:])]
-        record_single_cam = roslaunch.parent.ROSLaunchParent(self.uuid, record_single_cam_file)
-
+        record_single_cam_file = [(roslaunch.rlutil.resolve_launch_arguments(
+            record_launch_args)[0], record_launch_args[1:])]
+        record_single_cam = roslaunch.parent.ROSLaunchParent(
+            self.uuid, record_single_cam_file)
 
         # Start the camera driver
         try:
@@ -781,11 +848,10 @@ class GUI(customtkinter.CTk):
             rospy.sleep(2)
             record_single_cam.start()
             self.running_processes[f'{camera_name}_record'] = record_single_cam
-            
+
             while record_single_cam.pm.is_alive():
                 rospy.sleep(1)
                 print(f"recording {camera_name}...")
-            
 
             # Shutdown the camera driver
             try:
@@ -794,7 +860,8 @@ class GUI(customtkinter.CTk):
                     self.running_processes[f'{camera_name}_record'].shutdown()
 
             except roslaunch.RLException as excep_camera:
-                rospy.logerr(f"Error stopping {camera_name} camera driver: {str(excep_camera)}")
+                rospy.logerr(
+                    f"Error stopping {camera_name} camera driver: {str(excep_camera)}")
                 return
 
             # Set camera active flag to False
@@ -808,16 +875,13 @@ class GUI(customtkinter.CTk):
             # Remove camera driver from running processes dictionary
             self.running_processes.pop(f'{camera_name}_driver', None)
             self.running_processes.pop(f'{camera_name}_record', None)
-            
-            rospy.loginfo(f"{camera_name} camera bag file saved successfully.")
-            
-            
 
+            rospy.loginfo(f"{camera_name} camera bag file saved successfully.")
 
         except roslaunch.RLException as excep_camera:
-            rospy.logerr(f"Error starting {camera_name} camera driver: {str(excep_camera)}")
+            rospy.logerr(
+                f"Error starting {camera_name} camera driver: {str(excep_camera)}")
             return
-
 
     def stop_camera_record(self, camera_name):
         """Stop a camera driver."""
@@ -833,7 +897,8 @@ class GUI(customtkinter.CTk):
                 self.running_processes[f'{camera_name}_record'].shutdown()
 
         except roslaunch.RLException as excep_camera:
-            rospy.logerr(f"Error stopping {camera_name} camera driver: {str(excep_camera)}")
+            rospy.logerr(
+                f"Error stopping {camera_name} camera driver: {str(excep_camera)}")
             return
 
         # Set camera active flag to False
@@ -847,19 +912,22 @@ class GUI(customtkinter.CTk):
         # Remove camera driver from running processes dictionary
         self.running_processes.pop(f'{camera_name}_driver', None)
         self.running_processes.pop(f'{camera_name}_record', None)
-        
+
         rospy.loginfo(f"{camera_name} camera bag file saved successfully.")
-    
+
     def record_single_camera(self):
         """This function is called when the record single camera button is pressed"""
         if self.sidebar_marker_size_entry.get() != "":
             self.maker_size = self.sidebar_marker_size_entry.get()
         print(self.maker_size)
-        
+
         cameras = [
-            {'camera_name': 'camera_1', 'device_id': 0, 'calibration_file': 'cam1', 'button': self.sidebar_btn_cam_1_start},
-            {'camera_name': 'camera_2', 'device_id': 1, 'calibration_file': 'cam2', 'button': self.sidebar_btn_cam_2_start},
-            {'camera_name': 'camera_3', 'device_id': 2, 'calibration_file': 'cam3', 'button': self.sidebar_btn_cam_3_start}
+            {'camera_name': 'camera_1', 'device_id': 0,
+                'calibration_file': 'cam1', 'button': self.sidebar_btn_cam_1_start},
+            {'camera_name': 'camera_2', 'device_id': 1,
+                'calibration_file': 'cam2', 'button': self.sidebar_btn_cam_2_start},
+            {'camera_name': 'camera_3', 'device_id': 2,
+                'calibration_file': 'cam3', 'button': self.sidebar_btn_cam_3_start}
         ]
         camera_selected = self.camera_selection_var.get()
         if camera_selected == "Camera 1":
@@ -868,15 +936,15 @@ class GUI(customtkinter.CTk):
             camera_number = 2
         else:
             camera_number = 3
-            
+
         man_dur = self.single_camera_dur_entry.get()
         combo_dur = self.single_camera_dur_combo_box.get()
-        
+
         print('*********************************************')
         print('********Saving single camera bag file********')
         print('*********************************************')
         print("Camera Selected: ", camera_selected)
-        
+
         if man_dur == "":
             if combo_dur == "Select":
                 print("Please select a duration")
@@ -889,8 +957,7 @@ class GUI(customtkinter.CTk):
             self.single_camera_dur = man_dur
             print(f"Duration: {self.single_camera_dur}")
             print('******************************************')
-            
-            
+
         time.sleep(1)
 
         # Select the camera based on the provided number
@@ -903,13 +970,13 @@ class GUI(customtkinter.CTk):
         camera_name = camera['camera_name']
         device_id = camera['device_id']
         calibration_file = camera['calibration_file']
-        
+
         button = self.single_camera_rec_button
         # button_name = 'Calibrate' if calibrate_camera else 'Start'
-        
-        
+
         # Get the current state of the camera
-        camera_active_states = [self.camera_1_active, self.camera_2_active, self.camera_3_active]
+        camera_active_states = [self.camera_1_active,
+                                self.camera_2_active, self.camera_3_active]
         camera_active = camera_active_states[camera_number - 1]
 
         # Start or stop the camera depending on its current state
@@ -923,17 +990,18 @@ class GUI(customtkinter.CTk):
                 camera_active_states[camera_number - 1] = True
 
                 # Start the selected camera
-                self.start_camera_record(camera_name, device_id, calibration_file, self.single_camera_dur)
-
+                self.start_camera_record(
+                    camera_name, device_id, calibration_file, self.single_camera_dur)
 
                 # Update button color
-                button.configure(fg_color=themes[color_select])
+                button.configure(fg_color=themes[COLOR_SELECT])
 
                 # Set the camera active flag to False
                 camera_active_states[camera_number - 1] = False
 
         except Exception as excep_camera:
-            rospy.logerr(f"Error {'' if camera_active else 'starting'} {camera_name} camera: {str(excep_camera)}")
+            rospy.logerr(
+                f"Error {'' if camera_active else 'starting'} {camera_name} camera: {str(excep_camera)}")
             return
 
         # Update the camera active states
@@ -944,14 +1012,14 @@ class GUI(customtkinter.CTk):
         print('****************************************************')
         print('********  Loading data for Post-Processing  ********')
         print('****************************************************')
-        
 
         root = tk.Tk()
         root.withdraw()
-        self.bagfile_var = filedialog.askopenfilename(initialdir=self.bagfile_path)
+        self.bagfile_var = filedialog.askopenfilename(
+            initialdir=self.bagfile_path)
         if self.bagfile_var != "":
-            print(f'Loadded File: "{os.path.basename(self.bagfile_var)}" from directory: "{self.bagfile_path}"' )
-
+            print(
+                f'Loadded File: "{os.path.basename(self.bagfile_var)}" from directory: "{self.bagfile_path}"')
 
     def detect_button_event(self):
         """This function is called when the detect button is clicked."""
@@ -961,7 +1029,8 @@ class GUI(customtkinter.CTk):
         try:
             if self.bagfile_var != "":
                 filename = os.fspath(self.bagfile_var)
-                print(f'Processing File: "{os.path.basename(filename)}" from directory: "{self.bagfile_path}"')
+                print(
+                    f'Processing File: "{os.path.basename(filename)}" from directory: "{self.bagfile_path}"')
         except TypeError:
             print("Error: No file selected, Please load a bag file first.")
         print(f"Marker Size: {self.sidebar_marker_size_entry.get()}")
@@ -982,23 +1051,21 @@ class GUI(customtkinter.CTk):
         # Extract the duration value from the duration part
         duration = duration_part[:-1]
         print(f"Duration: {duration}s")  # Output: "5"
-        
+
         load_bagfile_launch_args = [
             self.read_bag_launch,
             f"cam:={camera_used}",
             f'dur:={duration}'
         ]
-        roslaunch_file_bagfile = [(roslaunch.rlutil.resolve_launch_arguments(load_bagfile_launch_args)[0], load_bagfile_launch_args[1:])]
+        roslaunch_file_bagfile = [(roslaunch.rlutil.resolve_launch_arguments(
+            load_bagfile_launch_args)[0], load_bagfile_launch_args[1:])]
         process_bagfile = f"read_bagfile_{camera_used}"
-        setattr(self, process_bagfile, roslaunch.parent.ROSLaunchParent(self.uuid, roslaunch_file_bagfile))
-        
+        setattr(self, process_bagfile, roslaunch.parent.ROSLaunchParent(
+            self.uuid, roslaunch_file_bagfile))
+
         process_bagfile.start()
         self.running_processes[f'{process_bagfile}'] = process_bagfile
 
-        
-        
-        
-        
     def detect_button_last_saved_event(self):
         """This function is called when the detect button is clicked."""
         print('*****************************************************************')
@@ -1008,7 +1075,8 @@ class GUI(customtkinter.CTk):
         try:
             if self.bagfile_var != "":
                 filename = os.fspath(self.bagfile_var)
-                print(f'Processing File: "{os.path.basename(filename)}" from directory: "{self.bagfile_path}"')
+                print(
+                    f'Processing File: "{os.path.basename(filename)}" from directory: "{self.bagfile_path}"')
         except TypeError:
             print("Error: No file selected, Please load a bag file first.")
         print(self.sidebar_marker_size_entry.get())
@@ -1020,14 +1088,14 @@ class GUI(customtkinter.CTk):
             self.last_recorded_bag_file_name = f"camera_2_{self.single_camera_dur}s_{self.datetime_var}.bag"
         else:
             self.last_recorded_bag_file_name = f"camera_3_{self.single_camera_dur}s_{self.datetime_var}.bag"
-        self.last_recorded_bag_file_name_path = os.path.join(self.bagfile_path, self.last_recorded_bag_file_name)
+        self.last_recorded_bag_file_name_path = os.path.join(
+            self.bagfile_path, self.last_recorded_bag_file_name)
         print(self.last_recorded_bag_file_name_path)
         print(self.single_camera_dur)
         if self.bagfile_var == self.last_recorded_bag_file_name_path:
             print(True)
         else:
             print(False)
-        
 
     def exit_button_click(self):
         """This function is called when the exit button is clicked."""
