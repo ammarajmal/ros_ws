@@ -133,17 +133,17 @@ class GUI(customtkinter.CTk):
         self.sidebar_btn_cam_1_calib = customtkinter.CTkButton(
             master=self.sidebar_frame_cam_calib,
             text='Calibrate Camera 1',
-            command=lambda: self.sidebar_camera_btn_event(1, False, True)
+            command=lambda: self.camera_calibration(1)
         )
         self.sidebar_btn_cam_2_calib = customtkinter.CTkButton(
             master=self.sidebar_frame_cam_calib,
             text='Calibrate Camera 2',
-            command=lambda: self.sidebar_camera_btn_event(2, False, True)
+            command=lambda: self.camera_calibration(2)
         )
         self.sidebar_btn_cam_3_calib = customtkinter.CTkButton(
             self.sidebar_frame_cam_calib,
             text='Calibrate Camera 3',
-            command=lambda: self.sidebar_camera_btn_event(3, False, True)
+            command=lambda: self.camera_calibration(3)
         )
         self.sidebar_entry_get_calib_cb_dim_label = customtkinter.CTkLabel(
             master=self.sidebar_frame_cam_calib,
@@ -175,7 +175,7 @@ class GUI(customtkinter.CTk):
         self.sidebar_btn_set_calib = customtkinter.CTkButton(
             self.sidebar_frame_cam_calib,
             text='Update',
-            command=self.sidebar_btn_set_calib_event,
+            command=self.sidebar_btn_update_calib_event,
             width=85
 
         )
@@ -340,7 +340,7 @@ class GUI(customtkinter.CTk):
 
         self.process_load_last_saved_button = customtkinter.CTkButton(
             master=self.process_frame,
-            text="Load File",
+            text="Load Current File",
             font=customtkinter.CTkFont(size=14),
             command=self.detect_button_last_saved_event
         )
@@ -647,11 +647,11 @@ class GUI(customtkinter.CTk):
                             f"camera_name:={camera_name}"
                             ]
         # print(f"board size: {self.board_size} and square size: {self.square_size}")
-        calib_launch_args = [self.calib_launch,
-                             f"cam:={camera_name}",
-                             f"size:={self.board_size}",
-                             f"square:={self.square_size}"
-                             ]
+        # calib_launch_args = [self.calib_launch,
+        #                      f"cam:={camera_name}",
+        #                      f"size:={self.board_size}",
+        #                      f"square:={self.square_size}"
+        #                      ]
 
         # Create a ROS launch file with the camera launch command
         roslaunch_file = [(roslaunch.rlutil.resolve_launch_arguments(
@@ -686,15 +686,15 @@ class GUI(customtkinter.CTk):
                 self.running_processes[f'{camera_name}_view'] = view_output
 
             # If calibrate_camera is True, start camera calibration
-            if calibrate_camera:
-                rospy.loginfo(
-                    f"{camera_name} calibration started successfully.")
-                calibrate_launch_file = [(roslaunch.rlutil.resolve_launch_arguments(
-                    calib_launch_args)[0], calib_launch_args[1:])]
-                camera_calibrate = roslaunch.parent.ROSLaunchParent(
-                    self.uuid, calibrate_launch_file)
-                camera_calibrate.start()
-                self.running_processes[f'{camera_name}_calibrate'] = camera_calibrate
+            # if calibrate_camera:
+            #     rospy.loginfo(
+            #         f"{camera_name} calibration started successfully.")
+            #     calibrate_launch_file = [(roslaunch.rlutil.resolve_launch_arguments(
+            #         calib_launch_args)[0], calib_launch_args[1:])]
+            #     camera_calibrate = roslaunch.parent.ROSLaunchParent(
+            #         self.uuid, calibrate_launch_file)
+            #     camera_calibrate.start()
+            #     self.running_processes[f'{camera_name}_calibrate'] = camera_calibrate
 
         except roslaunch.RLException as excep_camera:
             rospy.logerr(
@@ -713,8 +713,8 @@ class GUI(customtkinter.CTk):
             self.running_processes[f'{camera_name}_driver'].shutdown()
             if f'{camera_name}_view' in self.running_processes:
                 self.running_processes[f'{camera_name}_view'].shutdown()
-            if f'{camera_name}_calibrate' in self.running_processes:
-                self.running_processes[f'{camera_name}_calibrate'].shutdown()
+            # if f'{camera_name}_calibrate' in self.running_processes:
+            #     self.running_processes[f'{camera_name}_calibrate'].shutdown()
         except roslaunch.RLException as excep_camera:
             rospy.logerr(
                 f"Error stopping {camera_name} camera driver: {str(excep_camera)}")
@@ -731,7 +731,7 @@ class GUI(customtkinter.CTk):
         # Remove camera driver from running processes dictionary
         self.running_processes.pop(f'{camera_name}_driver', None)
         self.running_processes.pop(f'{camera_name}_view', None)
-        self.running_processes.pop(f'{camera_name}_calibrate', None)
+        # self.running_processes.pop(f'{camera_name}_calibrate', None)
         # Print success message
 
         rospy.loginfo(f"{camera_name} camera driver stopped successfully.")
@@ -761,7 +761,8 @@ class GUI(customtkinter.CTk):
         button_name = 'Calibrate' if calibrate_camera else 'Start'
         # Get the current state of the camera
         camera_active_states = [self.camera_1_active,
-                                self.camera_2_active, self.camera_3_active]
+                                self.camera_2_active,
+                                self.camera_3_active]
         camera_active = camera_active_states[camera_number - 1]
 
         # Start or stop the camera depending on its current state
@@ -795,7 +796,7 @@ class GUI(customtkinter.CTk):
         # Update the camera active states
         self.camera_1_active, self.camera_2_active, self.camera_3_active = camera_active_states
 
-    def sidebar_btn_set_calib_event(self):
+    def sidebar_btn_update_calib_event(self):
         """This function is called when the set calibration button is pressed and updates the calibration values"""
         self.board_size = self.sidebar_entry_get_calib_cb_dim.get()
         self.square_size = self.sidebar_entry_get_calib_sq_size.get()
@@ -1063,8 +1064,8 @@ class GUI(customtkinter.CTk):
         setattr(self, process_bagfile, roslaunch.parent.ROSLaunchParent(
             self.uuid, roslaunch_file_bagfile))
 
-        process_bagfile.start()
-        self.running_processes[f'{process_bagfile}'] = process_bagfile
+        # process_bagfile.start()
+        # self.running_processes[f'{process_bagfile}'] = process_bagfile
 
     def detect_button_last_saved_event(self):
         """This function is called when the detect button is clicked."""
@@ -1097,6 +1098,33 @@ class GUI(customtkinter.CTk):
         else:
             print(False)
 
+    def camera_calibration(self, cam_number):
+        cb_dim = self.board_size
+        sq_size = self.square_size
+        print('****************************************************')
+        print('********  Starting Camera 1 Calibration     ********')
+        print('****************************************************')
+        cam_name = {1:'camera_1',
+                    2:'camera_2',
+                    3:'camera_3'}
+        
+        print(cam_name[cam_number])
+        
+        # print("Board Size: ", cb_dim, "manual: ", self.sidebar_entry_get_calib_cb_dim.get())
+        # print("Square Size: ", sq_size, "manual: ", self.sidebar_entry_get_calib_sq_size.get())
+        # return
+        self.sidebar_camera_btn_event(cam_number, False, False)
+        
+        cmd = ['rosrun', 'camera_calibration', 'cameracalibrator.py',
+       '--size', cb_dim, '--square', sq_size, '--k-coefficients=2',
+       '--fix-principal-point', 'i', '--fix-aspect-ratio',
+       f'image:=/{cam_name[cam_number]}/image_raw', f'camera:=/{cam_name[cam_number]}']
+
+        # Execute the command
+        subprocess.call(cmd)
+        self.sidebar_camera_btn_event(cam_number, False, False)
+        
+        
     def exit_button_click(self):
         """This function is called when the exit button is clicked."""
         print("Terminated successfully.")

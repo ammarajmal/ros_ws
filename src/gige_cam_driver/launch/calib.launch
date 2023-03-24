@@ -1,17 +1,19 @@
 <launch>
   <arg name="cam" default="camera_1" />
-  <arg name="size" default="6x5" />
-  <arg name="square" default="0.025" />
-
-  <node pkg="camera_calibration"
-        name="$(arg cam)_calibration"
+  <arg name="cb_size" default="6x5" />
+  <arg name="cb_square" default="0.025" />
+  <!-- Set the node name and package -->
+  <node name="camera_calibration"
+        pkg="camera_calibration"
         type="cameracalibrator.py"
-        output="screen">
-    <param name="size" value="$(arg size)" />
-    <param name="square" value="$(arg square)" />
-    <param name="k-coefficients" value="2"/>
-    <param name="fix-principal-point" value="i"/>
-    <param name="fix-aspect-ratio" value="true"/>
+        >
+    <!-- Set the calibration target parameters -->
+    <param name="size" value="$(arg cb_size)"/>
+    <param name="square" value="$(arg cb_square)"/>
+    <param name="k_coefficients" value="2"/>
+    <param name="fix_principal_point" value="true"/>
+    <param name="fix_aspect_ratio" value="true"/>
+    <!-- Set the camera topics -->
     <remap from="image" to="/$(arg cam)/image_raw"/>
     <remap from="camera" to="/$(arg cam)"/>
   </node>
