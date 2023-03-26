@@ -167,36 +167,29 @@ class GUI(customtkinter.CTk):
         )
         self.sidebar_btn_set_calib_success_label = customtkinter.CTkLabel(
             master=self.sidebar_frame_cam_calib,
-            text="☑",
+            text="",
             text_color='green',
             font=customtkinter.CTkFont(size=25, weight="bold"),
 
         )
         self.sidebar_btn_set_calib = customtkinter.CTkButton(
             self.sidebar_frame_cam_calib,
-            text='Update',
+            text="Update",
             command=self.sidebar_btn_update_calib_event,
             width=85
+            
 
         )
-        self.sidebar_entry_get_calib_cb_dim_label.grid(
-            row=1, column=0, padx=(20, 0), pady=(10, 5), sticky="nsw")
-        self.sidebar_entry_get_calib_sq_size_label.grid(
-            row=2, column=0, padx=(20, 0), pady=0, sticky="nsw")
-        self.sidebar_entry_get_calib_cb_dim.grid(
-            row=1, column=1, padx=(10, 10), pady=(10, 5), sticky="nsw")
-        self.sidebar_entry_get_calib_sq_size.grid(
-            row=2, column=1, padx=(10, 10), pady=0, sticky="nsw")
-        self.sidebar_btn_set_calib.grid(
-            row=3, column=0, padx=(10, 10), pady=(10, 10), sticky='e')
-        self.sidebar_btn_set_calib_success_label.grid(
-            row=3, column=1, padx=(20, 0), pady=(10, 10), sticky='nsw')
-        self.sidebar_btn_cam_1_calib.grid(
-            row=4, column=0, columnspan=2, padx=10, pady=10)
-        self.sidebar_btn_cam_2_calib.grid(
-            row=5, column=0, columnspan=2, padx=10, pady=0)
-        self.sidebar_btn_cam_3_calib.grid(
-            row=6, column=0, columnspan=2, padx=10, pady=(10, 20))
+        self.sidebar_entry_get_calib_cb_dim_label.grid  (row=1, column=0, padx=(20, 0),  pady=(10, 5), sticky="nsw")
+        self.sidebar_entry_get_calib_sq_size_label.grid (row=2, column=0, padx=(20, 0),  pady=0, sticky="nsw")
+        self.sidebar_entry_get_calib_cb_dim.grid        (row=1, column=1, padx=(10, 10), pady=(10, 5), sticky="nsw")
+        self.sidebar_entry_get_calib_sq_size.grid       (row=2, column=1, padx=(10, 10), pady=0, sticky="nsw")
+        self.sidebar_btn_set_calib.grid                 (row=3, column=0, padx=(10, 10), pady=(10, 0), sticky='e')
+        self.sidebar_btn_set_calib_success_label.grid   (row=3, column=1, padx=(20, 0), pady=(10, 0), sticky='nsw')
+        self.sidebar_btn_cam_1_calib.grid               (row=4, column=0, padx=10, pady=10, columnspan=2)
+        self.sidebar_btn_cam_2_calib.grid               (row=5, column=0, padx=10, pady=0, columnspan=2)
+        self.sidebar_btn_cam_3_calib.grid               (row=6, column=0, padx=10, pady=(10, 20), columnspan=2)
+        
         self.sidebar_frame_cam_view_label = customtkinter.CTkLabel(
             master=self.sidebar_frame_cam_view,
             text="Camera View"
@@ -798,8 +791,19 @@ class GUI(customtkinter.CTk):
 
     def sidebar_btn_update_calib_event(self):
         """This function is called when the set calibration button is pressed and updates the calibration values"""
-        self.board_size = self.sidebar_entry_get_calib_cb_dim.get()
-        self.square_size = self.sidebar_entry_get_calib_sq_size.get()
+        self.board_size = self.sidebar_entry_get_calib_cb_dim.get() if self.sidebar_entry_get_calib_cb_dim.get() != '' else self.board_size
+        self.square_size = self.sidebar_entry_get_calib_sq_size.get() if self.sidebar_entry_get_calib_sq_size.get() != '' else self.square_size
+        if self.board_size == '6x5' and self.square_size == '0.025':
+                rospy.logerr('Please new values')
+        else:
+                rospy.loginfo('Checkerboard parameters updated successfully')
+                self.sidebar_btn_set_calib_success_label.configure(text="☑")
+                print('board size', self.board_size)
+                print('square size', self.square_size)
+
+
+
+        
 
     def start_camera_record(self, camera_name, device_id, calibration_file, dur):
         """Starts a camera driver and optionally a camera view"""
