@@ -794,7 +794,7 @@ class GUI(customtkinter.CTk):
         self.board_size = self.sidebar_entry_get_calib_cb_dim.get() if self.sidebar_entry_get_calib_cb_dim.get() != '' else self.board_size
         self.square_size = self.sidebar_entry_get_calib_sq_size.get() if self.sidebar_entry_get_calib_sq_size.get() != '' else self.square_size
         if self.board_size == '6x5' and self.square_size == '0.025':
-                rospy.logerr('Please new values')
+                rospy.logerr('Please enter new calibtration parameters!')
         else:
                 rospy.loginfo('Checkerboard parameters updated successfully')
                 self.sidebar_btn_set_calib_success_label.configure(text="☑")
@@ -1036,40 +1036,43 @@ class GUI(customtkinter.CTk):
                 filename = os.fspath(self.bagfile_var)
                 print(
                     f'Processing File: "{os.path.basename(filename)}" from directory: "{self.bagfile_path}"')
+                print(f"Marker Size: {self.sidebar_marker_size_entry.get()}")
+                print(f"Camera: {self.camera_selection_var.get()}")
+                if self.camera_selection_var.get() == 'Camera 1':
+                    camera_used = 'camera_1'
+                elif self.camera_selection_var.get() == 'Camera 2':
+                    camera_used = 'camera_2'
+                else:
+                    camera_used = 'camera_3'
+                parts = os.path.basename(filename).split('_')
+                # Find the part of the filename that contains the duration value
+                for i, part in enumerate(parts):
+                    if part.endswith('s'):
+                        duration_part = part
+                        break
+                # print(duration_part)
+                # Extract the duration value from the duration part
+                duration = duration_part[:-1]
+                print(f"Duration: {duration}s")  # Output: "5"
+                load_bagfile_launch_args = [
+                    self.read_bag_launch,
+                    f"cam:={camera_used}",
+                    f'dur:={duration}'
+                ]
+                roslaunch_file_bagfile = [(roslaunch.rlutil.resolve_launch_arguments(
+                    load_bagfile_launch_args)[0], load_bagfile_launch_args[1:])]
+                process_bagfile = f"read_bagfile_{camera_used}"
+                setattr(self, process_bagfile, roslaunch.parent.ROSLaunchParent(
+                    self.uuid, roslaunch_file_bagfile))
+
+                process_bagfile.start()
+                self.running_processes[f'{process_bagfile}'] = process_bagfile
+        
         except TypeError:
-            print("Error: No file selected, Please load a bag file first.")
-        print(f"Marker Size: {self.sidebar_marker_size_entry.get()}")
-        print(f"Camera: {self.camera_selection_var.get()}")
-        if self.camera_selection_var.get() == 'Camera 1':
-            camera_used = 'camera_1'
-        elif self.camera_selection_var.get() == 'Camera 2':
-            camera_used = 'camera_2'
-        else:
-            camera_used = 'camera_3'
-        parts = os.path.basename(filename).split('_')
-        # Find the part of the filename that contains the duration value
-        for i, part in enumerate(parts):
-            if part.endswith('s'):
-                duration_part = part
-                break
-        # print(duration_part)
-        # Extract the duration value from the duration part
-        duration = duration_part[:-1]
-        print(f"Duration: {duration}s")  # Output: "5"
+            rospy.logerr("No file selected, Please load a bag file first.")
+        
 
-        load_bagfile_launch_args = [
-            self.read_bag_launch,
-            f"cam:={camera_used}",
-            f'dur:={duration}'
-        ]
-        roslaunch_file_bagfile = [(roslaunch.rlutil.resolve_launch_arguments(
-            load_bagfile_launch_args)[0], load_bagfile_launch_args[1:])]
-        process_bagfile = f"read_bagfile_{camera_used}"
-        setattr(self, process_bagfile, roslaunch.parent.ROSLaunchParent(
-            self.uuid, roslaunch_file_bagfile))
 
-        # process_bagfile.start()
-        # self.running_processes[f'{process_bagfile}'] = process_bagfile
 
     def detect_button_last_saved_event(self):
         """This function is called when the detect button is clicked."""
