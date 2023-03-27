@@ -73,12 +73,14 @@ class GUI(customtkinter.CTk):
         self.camera_selection_var = tk.StringVar(self, "Camera 1")
         self.single_camera_duration_var = tk.StringVar(self, 'Select')
         self.multi_camera_duration_var = tk.StringVar(self, 'Select')
-        self.opened_bagfile_var = tk.StringVar(self)
+        self.opened_bagfile_var = tk.StringVar(self, '')
         self.recorded_datetime_var = ''
         self.single_camera_dur = ''
-        self.last_recorded_bag_file_name = ''
-        self.last_recorded_bag_file_name_path = os.path.join(
-                    self.bagfile_path, self.last_recorded_bag_file_name)
+        self.last_recorded_bag_file_name_with_path = ''
+        self.loaded_last_file_flag = False
+        self.opened_file_flag = False
+        # self.last_recorded_bag_file_name_path = os.path.join(
+        #             self.bagfile_path, self.last_recorded_bag_file_name)
 
         self.sidebar_entry_get_calib_sq_size_var = tk.StringVar()
         self.sidebar_entry_get_calib_cb_dim_var = tk.StringVar()
@@ -868,12 +870,15 @@ class GUI(customtkinter.CTk):
                 self.running_processes[f'{camera_name}_driver'].shutdown()
                 if f'{camera_name}_record' in self.running_processes:
                     self.running_processes[f'{camera_name}_record'].shutdown()
-                    self.last_recorded_bag_file_name = f"{camera_name}_{time_dur_bag}s_{self.recorded_datetime_var}.bag"
-                    print(f"Successfully saved bag file to {self.last_recorded_bag_file_name}")
+                    
+                    saved_bagfile = f"{camera_name}_{time_dur_bag}s_{self.recorded_datetime_var}.bag"
+                    self.last_recorded_bag_file_name_with_path = os.path.join(self.bagfile_path, saved_bagfile)
+                    print(f"\033[94mSuccessfully saved bag file as: {self.last_recorded_bag_file_name_with_path}\033[0m")
+                    
+                    
 
             except roslaunch.RLException as excep_camera:
-                rospy.logerr(
-                    f"Error stopping {camera_name} camera driver: {str(excep_camera)}")
+                rospy.logerr(f"Error stopping {camera_name} camera driver: {str(excep_camera)}")
                 return
 
             # Set camera active flag to False
@@ -888,7 +893,8 @@ class GUI(customtkinter.CTk):
             self.running_processes.pop(f'{camera_name}_driver', None)
             self.running_processes.pop(f'{camera_name}_record', None)
 
-            rospy.loginfo(f"{camera_name} camera bag file saved successfully.")
+            print(f"\033[94m{camera_name} camera bag file saved successfully.\033[0m")
+            
 
         except roslaunch.RLException as excep_camera:
             rospy.logerr(
@@ -951,10 +957,11 @@ class GUI(customtkinter.CTk):
 
         man_dur = self.single_camera_dur_entry.get()
         combo_dur = self.single_camera_dur_combo_box.get()
-
-        print('*********************************************')
-        print('********Saving single camera bag file********')
-        print('*********************************************')
+        print()
+        print("\033[92m*********************************************\033[0m")
+        print("\033[92m******  Saving single camera bag file  ******\033[0m")
+        print("\033[92m*********************************************\033[0m")
+        print()
         print("Camera Selected: ", camera_selected)
 
         if man_dur == "":
@@ -1021,100 +1028,111 @@ class GUI(customtkinter.CTk):
 
     def load_data_button_event(self):
         """This function is called when the load data button is clicked."""
-        print('****************************************************')
-        print('********  Loading data for Post-Processing  ********')
-        print('****************************************************')
+        print('\033[92m***************************************************')
+        print('********  Loading Bag File from Directory  ********')
+        print('***************************************************')
 
         root = tk.Tk()
         root.withdraw()
         self.opened_bagfile_var = filedialog.askopenfilename(
             initialdir=self.bagfile_path)
+        bagfile_name = os.path.basename(self.opened_bagfile_var)
+        parts = bagfile_name.split('_')
+                # Find the part of the bagfile_name that contains the duration value
+        for i, part in enumerate(parts):
+            if part.endswith('s'):
+                duration_part = part
+                break
+        
         if self.opened_bagfile_var != "":
-            print(
-                f'Loadded File: "{os.path.basename(self.opened_bagfile_var)}" from directory: "{self.bagfile_path}"')
-        print(f"Complete file: {self.opened_bagfile_var}")
-
+            
+            print("\033[93mSuccessfully loaded bag file from directory!")
+            print('')
+            print(f"Camera: {parts[0].title()} {parts[1]}")
+            print(f"Duration: {duration_part}")
+            print(f"Marker Size: {self.var_marker_size.get()}")
+            print(f"Recorded Time: {parts[3]}_{parts[-1].split('.')[0]}")
+            print(f"Loadded Bagfile Name: {'_'.join(parts)}")
+            print(f"Directory: {self.bagfile_path}")
+            print('****************************************************\033[0m')
+            self.opened_file_flag = True
+        
     def detect_button_event(self):
         """This function is called when the detect button is clicked."""
+        print('\033[92m**********************************************************')
+        print('******* Starting Post-Processing from Selected File ******')
         print('**********************************************************')
-        print('******** Starting Post-Process from Selected File ********')
+        print()
+        print("\033[93mself.opened_file_flag:", self.opened_file_flag)
+        print("self.opened_bagfile_var:", self.opened_bagfile_var)
+        print()
+        print("self.loaded_last_file_flag:", self.loaded_last_file_flag)
+        print("self.last_recorded_bag_file_name_with_path:", self.last_recorded_bag_file_name_with_path)
         print('**********************************************************')
         try:
-            if self.opened_bagfile_var != "":
-                filename = os.fspath(self.opened_bagfile_var)
-                print(
-                    f'Processing File: "{os.path.basename(filename)}" from directory: "{self.bagfile_path}"')
-                print(f"Marker Size: {self.sidebar_marker_size_entry.get()}")
-                print(f"Camera: {self.camera_selection_var.get()}")
-                if self.camera_selection_var.get() == 'Camera 1':
-                    camera_used = 'camera_1'
-                elif self.camera_selection_var.get() == 'Camera 2':
-                    camera_used = 'camera_2'
-                else:
-                    camera_used = 'camera_3'
-                parts = os.path.basename(filename).split('_')
-                # Find the part of the filename that contains the duration value
-                for i, part in enumerate(parts):
-                    if part.endswith('s'):
-                        duration_part = part
-                        break
-                # print(duration_part)
-                # Extract the duration value from the duration part
-                duration = duration_part[:-1]
-                print(f"Duration: {duration}s")  # Output: "5"
-                load_bagfile_launch_args = [
-                    self.read_bag_launch,
-                    f"cam:={camera_used}",
-                    f'dur:={duration}'
-                ]
-                roslaunch_file_bagfile = [(roslaunch.rlutil.resolve_launch_arguments(
-                    load_bagfile_launch_args)[0], load_bagfile_launch_args[1:])]
-                process_bagfile = f"read_bagfile_{camera_used}"
-                setattr(self, process_bagfile, roslaunch.parent.ROSLaunchParent(
-                    self.uuid, roslaunch_file_bagfile))
+            if self.opened_bagfile_var.get() != "":
+                filename = os.fspath(self.opened_bagfile_var.get())
+                print('opened: ', filename)
+            elif self.last_recorded_bag_file_name_with_path != "":
+                filename = self.last_recorded_bag_file_name_with_path
+                print('recorded: ', filename)
+        except (TypeError, AttributeError):
+                rospy.logerr("No file selected, Please load a bag file first.")
+                return
+                
+        print(
+            f'Processing File: "{os.path.basename(filename)}" from directory: "{self.bagfile_path}"')
+        parts = os.path.basename(filename).split('_')
+        # Find the part of the filename that contains the duration value
+        for i, part in enumerate(parts):
+            if part.endswith('s'):
+                duration_part = part
+                break
+        duration = duration_part[:-1]
+        print(f"Camera: {parts[0].title()} {parts[1]}")
+        print(f"Duration: {duration}s")  # Output: "5"
+        print(f"Marker Size: {self.sidebar_marker_size_entry.get()}")
+                    
+        print("\033[94mSuccessfully completed post-processing!\033[0m")
 
-                # process_bagfile.start()
-                # self.running_processes[f'{process_bagfile}'] = process_bagfile
+
+
         
-        except TypeError:
-            rospy.logerr("No file selected, Please load a bag file first.")
+            
         
 
 
 
     def load_last_saved_button_event(self):
         """This function is called when the detect button is clicked."""
+        print('\033[92m*****************************************************************')
+        print('********  Loading last saved bag file for post-processing  ******')
         print('*****************************************************************')
-        print('********  Starting Post-Processing from last saved data  ********')
-        print('*****************************************************************')
-        print("Marker Size: ", self.var_marker_size.get())
+
         try:
-            if self.last_recorded_bag_file_name != "":
-                filename = os.fspath(self.last_recorded_bag_file_name)
-                print(
-                    f'Processing File: "{os.path.basename(filename)}" from directory: "{self.bagfile_path}"')
-                print(f"Marker Size: {self.var_marker_size.get()}")
-                print(f"Recorded Time: {self.recorded_datetime_var}s")
+            if self.last_recorded_bag_file_name_with_path != "":
+                # filename = os.fspath(self.last_recorded_bag_file_name)
+                # print(
+                #     f'Processing File: "{os.path.basename(filename)}" from directory: "{self.bagfile_path}"')
+                print("\033[93mSuccessfully loaded last recorded bag file!")
                 print(f"Camera: {self.camera_selection_var.get()}")
-                
-                # if self.camera_selection_var.get() == "Camera 1":
-                #     self.last_recorded_bag_file_name = f"camera_1_{self.single_camera_dur}s_{self.recorded_datetime_var}.bag"
-                # elif self.camera_selection_var.get() == "Camera 2":
-                #     self.last_recorded_bag_file_name = f"camera_2_{self.single_camera_dur}s_{self.recorded_datetime_var}.bag"
-                # else:
-                #     self.last_recorded_bag_file_name = f"camera_3_{self.single_camera_dur}s_{self.recorded_datetime_var}.bag"
-                
-                print(f"Last Recorded Bag File Name: {self.last_recorded_bag_file_name_path}")
-                
+                print(f"Marker Size: {self.var_marker_size.get()}")
+                print(f"Recorded Time: {self.recorded_datetime_var}")
+                print(f"Loaded Bag File: {self.last_recorded_bag_file_name_with_path}")
+                print('****************************************************\033[0m')
+                self.loaded_last_file_flag = True
                 # print(self.single_camera_dur)
                 
                 # if self.opened_bagfile_var == self.last_recorded_bag_file_name_path:
                 #     print("Loaded file is the last recorded file")
                 # else:
                 #     print("Loaded file is not the last recorded file")
-        except TypeError:
+            else:
+                raise NameError("Variable self.last_recorded_bag_file_name is not defined or is an empty string.")
+        except NameError:
             rospy.logerr("No file selected, please load a bag file first.")
-        
+
+            
 
 
     def camera_calibration(self, cam_number):
