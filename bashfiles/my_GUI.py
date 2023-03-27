@@ -47,25 +47,7 @@ class GUI(customtkinter.CTk):
 
         rospy.init_node('launch_handle', anonymous=False)
         self.package = 'gige_cam_driver'
-        self.check_camera_1_var = tk.StringVar(self, "on")
-        self.check_camera_2_var = tk.StringVar(self, "on")
-        self.check_camera_3_var = tk.StringVar(self, "on")
-        self.camera_selection_var = tk.StringVar(self, "Camera 1")
-        self.single_camera_duration_var = tk.StringVar(self, 'Select')
-        self.multi_camera_duration_var = tk.StringVar(self, 'Select')
-        self.bagfile_var = tk.StringVar(self)
-        self.datetime_var = ''
-        self.single_camera_dur = ''
-        self.last_recorded_bag_file_name = ''
-        self.last_recorded_bag_file_name_path = ''
-
-        self.sidebar_entry_get_calib_sq_size_var = tk.StringVar()
-        self.sidebar_entry_get_calib_cb_dim_var = tk.StringVar()
-        self.board_size = "6x5"
-        self.square_size = "0.025"
-        self.maker_size = "0.1"
-        self.var_marker_size = tk.StringVar(self, "0.1")
-
+        
         # ********************************************************************************
         # Path management for Launch files
         # ********************************************************************************
@@ -83,6 +65,29 @@ class GUI(customtkinter.CTk):
         self.view_launch = f"{self.launch_path}viewcam.launch"
         self.calib_launch = f"{self.launch_path}calib.launch"
         self.detect_launch = f"{self.detect_launch_path}detect.launch"
+        
+        
+        self.check_camera_1_var = tk.StringVar(self, "on")
+        self.check_camera_2_var = tk.StringVar(self, "on")
+        self.check_camera_3_var = tk.StringVar(self, "on")
+        self.camera_selection_var = tk.StringVar(self, "Camera 1")
+        self.single_camera_duration_var = tk.StringVar(self, 'Select')
+        self.multi_camera_duration_var = tk.StringVar(self, 'Select')
+        self.opened_bagfile_var = tk.StringVar(self)
+        self.recorded_datetime_var = ''
+        self.single_camera_dur = ''
+        self.last_recorded_bag_file_name = ''
+        self.last_recorded_bag_file_name_path = os.path.join(
+                    self.bagfile_path, self.last_recorded_bag_file_name)
+
+        self.sidebar_entry_get_calib_sq_size_var = tk.StringVar()
+        self.sidebar_entry_get_calib_cb_dim_var = tk.StringVar()
+        self.board_size = "6x5"
+        self.square_size = "0.025"
+        self.maker_size = "0.1"
+        self.var_marker_size = tk.StringVar(self, "0.1")
+
+
         self.running_processes = {}
         self.camera_1_active = False
         self.camera_2_active = False
@@ -335,7 +340,7 @@ class GUI(customtkinter.CTk):
             master=self.process_frame,
             text="Load Current File",
             font=customtkinter.CTkFont(size=14),
-            command=self.detect_button_last_saved_event
+            command=self.load_last_saved_button_event
         )
         self.process_load_options_label = customtkinter.CTkLabel(
             master=self.process_frame,
@@ -361,7 +366,7 @@ class GUI(customtkinter.CTk):
         self.process_load_button.grid(
             row=0, column=2, padx=10, pady=10,   sticky="nsew")
         self.process_detect_button.grid(
-            row=0, column=3, padx=10, pady=10,   sticky="nsew")
+            row=1, column=1, padx=10, pady=10,   sticky="nsew")
 
         self.single_cam_label = customtkinter.CTkLabel(
             master=self.record_single_frame,
@@ -809,7 +814,7 @@ class GUI(customtkinter.CTk):
         """Starts a camera driver and optionally a camera view"""
         time_dur_bag = dur
         camera_num = device_id + 1
-        self.datetime_var = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
+        self.recorded_datetime_var = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
         # bagfile_name = f"cam{camera_num}_bagfile"
 
         camera_launch_args = [f"{self.cam_launch}",
@@ -821,7 +826,7 @@ class GUI(customtkinter.CTk):
             self.record_bag_launch,
             f'cam:=camera_{camera_num}',
             f'dur:={time_dur_bag}',
-            f'bagfile_datetime:={self.datetime_var}'
+            f'bagfile_datetime:={self.recorded_datetime_var}'
         ]
         # Create a ROS launch file with the camera launch command
         roslaunch_file = [(roslaunch.rlutil.resolve_launch_arguments(
@@ -856,13 +861,15 @@ class GUI(customtkinter.CTk):
 
             while record_single_cam.pm.is_alive():
                 rospy.sleep(1)
-                print(f"recording {camera_name}...")
+                print(f"Recording from {camera_name}...")
 
             # Shutdown the camera driver
             try:
                 self.running_processes[f'{camera_name}_driver'].shutdown()
                 if f'{camera_name}_record' in self.running_processes:
                     self.running_processes[f'{camera_name}_record'].shutdown()
+                    self.last_recorded_bag_file_name = f"{camera_name}_{time_dur_bag}s_{self.recorded_datetime_var}.bag"
+                    print(f"Successfully saved bag file to {self.last_recorded_bag_file_name}")
 
             except roslaunch.RLException as excep_camera:
                 rospy.logerr(
@@ -1020,11 +1027,12 @@ class GUI(customtkinter.CTk):
 
         root = tk.Tk()
         root.withdraw()
-        self.bagfile_var = filedialog.askopenfilename(
+        self.opened_bagfile_var = filedialog.askopenfilename(
             initialdir=self.bagfile_path)
-        if self.bagfile_var != "":
+        if self.opened_bagfile_var != "":
             print(
-                f'Loadded File: "{os.path.basename(self.bagfile_var)}" from directory: "{self.bagfile_path}"')
+                f'Loadded File: "{os.path.basename(self.opened_bagfile_var)}" from directory: "{self.bagfile_path}"')
+        print(f"Complete file: {self.opened_bagfile_var}")
 
     def detect_button_event(self):
         """This function is called when the detect button is clicked."""
@@ -1032,8 +1040,8 @@ class GUI(customtkinter.CTk):
         print('******** Starting Post-Process from Selected File ********')
         print('**********************************************************')
         try:
-            if self.bagfile_var != "":
-                filename = os.fspath(self.bagfile_var)
+            if self.opened_bagfile_var != "":
+                filename = os.fspath(self.opened_bagfile_var)
                 print(
                     f'Processing File: "{os.path.basename(filename)}" from directory: "{self.bagfile_path}"')
                 print(f"Marker Size: {self.sidebar_marker_size_entry.get()}")
@@ -1065,8 +1073,8 @@ class GUI(customtkinter.CTk):
                 setattr(self, process_bagfile, roslaunch.parent.ROSLaunchParent(
                     self.uuid, roslaunch_file_bagfile))
 
-                process_bagfile.start()
-                self.running_processes[f'{process_bagfile}'] = process_bagfile
+                # process_bagfile.start()
+                # self.running_processes[f'{process_bagfile}'] = process_bagfile
         
         except TypeError:
             rospy.logerr("No file selected, Please load a bag file first.")
@@ -1074,36 +1082,40 @@ class GUI(customtkinter.CTk):
 
 
 
-    def detect_button_last_saved_event(self):
+    def load_last_saved_button_event(self):
         """This function is called when the detect button is clicked."""
         print('*****************************************************************')
         print('********  Starting Post-Processing from last saved data  ********')
         print('*****************************************************************')
         print("Marker Size: ", self.var_marker_size.get())
         try:
-            if self.bagfile_var != "":
-                filename = os.fspath(self.bagfile_var)
+            if self.last_recorded_bag_file_name != "":
+                filename = os.fspath(self.last_recorded_bag_file_name)
                 print(
                     f'Processing File: "{os.path.basename(filename)}" from directory: "{self.bagfile_path}"')
+                print(f"Marker Size: {self.var_marker_size.get()}")
+                print(f"Recorded Time: {self.recorded_datetime_var}s")
+                print(f"Camera: {self.camera_selection_var.get()}")
+                
+                # if self.camera_selection_var.get() == "Camera 1":
+                #     self.last_recorded_bag_file_name = f"camera_1_{self.single_camera_dur}s_{self.recorded_datetime_var}.bag"
+                # elif self.camera_selection_var.get() == "Camera 2":
+                #     self.last_recorded_bag_file_name = f"camera_2_{self.single_camera_dur}s_{self.recorded_datetime_var}.bag"
+                # else:
+                #     self.last_recorded_bag_file_name = f"camera_3_{self.single_camera_dur}s_{self.recorded_datetime_var}.bag"
+                
+                print(f"Last Recorded Bag File Name: {self.last_recorded_bag_file_name_path}")
+                
+                # print(self.single_camera_dur)
+                
+                # if self.opened_bagfile_var == self.last_recorded_bag_file_name_path:
+                #     print("Loaded file is the last recorded file")
+                # else:
+                #     print("Loaded file is not the last recorded file")
         except TypeError:
-            print("Error: No file selected, Please load a bag file first.")
-        print(self.sidebar_marker_size_entry.get())
-        print(self.datetime_var)
-        print(self.camera_selection_var.get())
-        if self.camera_selection_var.get() == "Camera 1":
-            self.last_recorded_bag_file_name = f"camera_1_{self.single_camera_dur}s_{self.datetime_var}.bag"
-        elif self.camera_selection_var.get() == "Camera 2":
-            self.last_recorded_bag_file_name = f"camera_2_{self.single_camera_dur}s_{self.datetime_var}.bag"
-        else:
-            self.last_recorded_bag_file_name = f"camera_3_{self.single_camera_dur}s_{self.datetime_var}.bag"
-        self.last_recorded_bag_file_name_path = os.path.join(
-            self.bagfile_path, self.last_recorded_bag_file_name)
-        print(self.last_recorded_bag_file_name_path)
-        print(self.single_camera_dur)
-        if self.bagfile_var == self.last_recorded_bag_file_name_path:
-            print(True)
-        else:
-            print(False)
+            rospy.logerr("No file selected, please load a bag file first.")
+        
+
 
     def camera_calibration(self, cam_number):
         cb_dim = self.board_size

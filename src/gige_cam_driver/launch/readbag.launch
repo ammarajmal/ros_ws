@@ -1,17 +1,11 @@
 <launch>
+  <!-- Define arguments -->
+  <arg name="bag_file_path" />
+  <arg name="playback_rate" default="10"/>
 
-<arg name="cam" default="camera_1" />
-<arg name="hz" default="1" />
-<arg name="dur" default="5" />
-<arg name="bag_file_path" default="$(find gige_cam_driver)/bagfiles/'$(arg cam)'_$(arg dur)s.bag" />
-
-
-<!-- <arg name="bag_file_path" default="$(find gige_cam_driver)/bagfiles/'$(arg cam)'.bag" /> -->
-
-
-  <node name="$(arg cam)_rosbag_play"
-  pkg="rosbag" type="play" respawn="false" output="log"
-  args="--clock  --hz=$(arg hz) '$(arg bag_file_path)' " />
+  <!-- Play the ROS bag file -->
+  <node pkg="rosbag" type="play" name="rosbag_player" output="log"
+        args="-r $(arg playback_rate) $(arg bag_file_path)"/>
 </launch>
 
 
