@@ -1141,6 +1141,9 @@ class GUI(customtkinter.CTk):
         print('****************************************************')
         print('********  Starting Camera 1 Calibration     ********')
         print('****************************************************')
+        print('Board Size: ', cb_dim)
+        print('Square Size: ', sq_size)
+        print("Starting Camera Calibration for Camera ", cam_number, '...\n')
         cam_name = {1:'camera_1',
                     2:'camera_2',
                     3:'camera_3'}

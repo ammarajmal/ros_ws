@@ -95,12 +95,12 @@ class Camera(object):
 		rospy.loginfo(f"Camera {self.dev_id} initialized successfully")
 		while not rospy.is_shutdown():
 			frame = self.grab()
-			# if frame is not None:
-				# frame = cv2.resize(frame, (640,480), interpolation = cv2.INTER_LINEAR)				
-			camera_info = self.camera_info_manager.getCameraInfo()
-			camera_info.header.stamp = rospy.Time.now()
-			camera_info.header.frame_id = self.camera_manager
-			self.camera_info_publisher.publish(camera_info)
+			if frame is not None:
+				frame = cv2.resize(frame, (640,480), interpolation = cv2.INTER_LINEAR)				
+				camera_info = self.camera_info_manager.getCameraInfo()
+				camera_info.header.stamp = rospy.Time.now()
+				camera_info.header.frame_id = self.camera_manager
+				self.camera_info_publisher.publish(camera_info)
 			# Check if the frame is a valid NumPy array
 			if not isinstance(frame, np.ndarray):
 				rospy.logerr(f"Error: Invalid frame type: {type(frame)}")
