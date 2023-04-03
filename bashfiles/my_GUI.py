@@ -13,6 +13,7 @@ from tkinter import filedialog
 import roslaunch
 import rospkg
 import rospy
+import rosbag
 
 
 import customtkinter
@@ -1090,8 +1091,11 @@ class GUI(customtkinter.CTk):
         cli_args = [self.detect_launch, f'camera:={camera_name}']
         roslaunch_file = [(roslaunch.rlutil.resolve_launch_arguments(cli_args)[0], cli_args[1:])]
         return roslaunch.parent.ROSLaunchParent(self.uuid, roslaunch_file)
+    
     def detection(self, camera_name):
+        """This function is called to launch the marker detection node."""
         print ('bagfile received: ', camera_name)
+        print('now starting marker detection..')
         if camera_name == 'camera_1':
             marker_detect_camera_1 = self.launch_marker_detector('camera_1')
             marker_detect_camera_1.start()
@@ -1122,58 +1126,29 @@ class GUI(customtkinter.CTk):
         # print("Last recorded file: ", self.last_recorded_bag_file_name_with_path)
         
         filename_ = self.get_bagfile()
-        print('filename: ', filename_)
+        print('filename: ', filename_, 'type: ', type(filename_))
+
+        readbag_cli_args = [self.read_bag_launch,f"bag_file_path:={filename_}", "playback_rate:=10"]
+        roslaunch_args = readbag_cli_args[1:]
+        roslaunch_file = [(roslaunch.rlutil.resolve_launch_arguments(readbag_cli_args)[0], roslaunch_args)]
+
+        readbag_parent = roslaunch.parent.ROSLaunchParent(self.uuid, roslaunch_file)
+
+        try:
+            # Start the roslaunch parent object
+            readbag_parent.start()
+
+            # Wait for the roslaunch parent object to finish
+            readbag_parent.spin()
+
+        except roslaunch.RLException as e_error:
+            rospy.logerr("Error: %s", e_error)
         
+        finally:
+            # Shutdown the roslaunch parent object
+            readbag_parent.shutdown()
         
 
-        
-        # Step # 01: Run the bag file
-        # Step # 02: Run the detect function
-        self.detection(filename_)
-        
-        
-        # Initialize filename to None
-                
-        
-        
-
-        # try:
-        #     if self.opened_bagfile_var != "":
-        #         filename = self.opened_bagfile_var
-        #         print(f'File name:  {os.path.basename(self.opened_bagfile_var.get())}')
-        #         print(f'Directory:  {os.path.dirname(self.opened_bagfile_var.get())}')
-        #     elif self.last_recorded_bag_file_name_with_path != "":
-        #         filename = self.last_recorded_bag_file_name_with_path
-        #         print('recorded: ', filename)
-        # except (TypeError, AttributeError):
-        #     rospy.logerr("No file selected, Please load a bag file first.")
-        #     return
-        # print(filename)
-        # # Check if filename is None before using it
-        # if filename is None:
-        #     rospy.logerr("No file selected or recorded, Please load or record a bag file first.")
-        #     return
-
-        # parts = os.path.basename(filename).split('_')
-        # # Find the part of the filename that contains the duration value
-        # for i, part in enumerate(parts):
-        #     if part.endswith('s'):
-        #         duration_part = part
-        #         break
-        # duration = duration_part[:-1]
-        # print(f"Camera: {parts[0].title()} {parts[1]}")
-        # print(f"Duration: {duration}s")  # Output: "5"
-        # print(f"Marker Size: {self.sidebar_marker_size_entry.get()}")
-        # print(f'Processing File: "{os.path.basename(filename)}"')
-        # print(f'Directory: "{self.bagfile_path}"')
-
-        
-
-
-
-        
-            
-        
 
 
 
@@ -1206,7 +1181,7 @@ class GUI(customtkinter.CTk):
             else:
                 raise NameError("Variable self.last_recorded_bag_file_name_with_path is not defined or is an empty string.")
         except NameError:
-            rospy.logerr("No file selected, please record a bag file first.")
+            rospy.logerr("No fileself.read_bag_launch selected, please record a bag file first.")
 
             
 
