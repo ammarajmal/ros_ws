@@ -1115,40 +1115,51 @@ class GUI(customtkinter.CTk):
             print('camera_3 marker detection launched')
         
         
-        
+    def get_camera_name(self, string_cam):
+        try:
+            camera_name =  "_".join(string_cam.split('/')[-1].split('_')[:2])
+            return camera_name
+        except:
+            return None
+    
     def detect_button_event(self):
         """This function is called when the detect button is clicked."""
         print('\033[92m**********************************************************')
         print('******* Starting Post-Processing from Selected File ******')
         print('**********************************************************\033[93m')
         print()
-        # print('Opened file: ', self.opened_bagfile_var)
-        # print("Last recorded file: ", self.last_recorded_bag_file_name_with_path)
-        
+        bag_play_rate = 1
         filename_ = self.get_bagfile()
-        print('filename: ', filename_, 'type: ', type(filename_))
-
-        readbag_cli_args = [self.read_bag_launch,f"bag_file_path:={filename_}", "playback_rate:=10"]
-        roslaunch_args = readbag_cli_args[1:]
-        roslaunch_file = [(roslaunch.rlutil.resolve_launch_arguments(readbag_cli_args)[0], roslaunch_args)]
-
-        readbag_parent = roslaunch.parent.ROSLaunchParent(self.uuid, roslaunch_file)
-
-        try:
-            # Start the roslaunch parent object
-            readbag_parent.start()
-
-            # Wait for the roslaunch parent object to finish
-            readbag_parent.spin()
-
-        except roslaunch.RLException as e_error:
-            rospy.logerr("Error: %s", e_error)
-        
-        finally:
-            # Shutdown the roslaunch parent object
-            readbag_parent.shutdown()
-        
-
+        camera_name = self.get_camera_name(filename_)
+        if filename_ is not None:
+            readbag_cli_args = [self.read_bag_launch,f"bag_file_path:={filename_}", f"playback_rate:={bag_play_rate}"]
+            roslaunch_args = readbag_cli_args[1:]
+            roslaunch_file = [(roslaunch.rlutil.resolve_launch_arguments(readbag_cli_args)[0], roslaunch_args)]
+            rosbag_reading = roslaunch.parent.ROSLaunchParent(self.uuid, roslaunch_file)
+            
+            aruco_detect_cli_args = [self.detect_launch, f'camera:={camera_name}', 'dictionary:=3', f'aruco_marker_size:={self.var_marker_size.get()}']
+            roslaunch_args = aruco_detect_cli_args[1:]
+            roslaunch_file = [(roslaunch.rlutil.resolve_launch_arguments(aruco_detect_cli_args)[0], roslaunch_args)]
+            marker_detection = roslaunch.parent.ROSLaunchParent(self.uuid, roslaunch_file)
+            try:
+                # Start the roslaunch parent object
+                rosbag_reading.start()
+                print(f'\033[93mPlaying bag file at {bag_play_rate}x speed..\033[0m')
+                try:
+                    marker_detection.start()
+                    time.sleep(1)
+                except roslaunch.RLException as e_error:
+                    rospy.logerr("Error: %s", e_error)
+                    
+                # Wait for the roslaunch parent object to finish
+                rosbag_reading.spin()
+            except roslaunch.RLException as e_error:
+                rospy.logerr("Error: %s", e_error)
+            finally:
+                # Shutdown the roslaunch parent object
+                rosbag_reading.shutdown()
+        else:
+            return
 
 
 
