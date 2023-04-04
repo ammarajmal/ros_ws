@@ -1,0 +1,3 @@
+<launch>
+  <node pkg="aruco_detect" type="markertocsv.py" name="marker_to_csv" output="screen"/>
+</launch>

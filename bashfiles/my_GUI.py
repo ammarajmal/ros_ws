@@ -11,9 +11,10 @@ import tkinter as tk
 from tkinter import filedialog
 
 import roslaunch
+
 import rospkg
 import rospy
-import rosbag
+
 
 
 import customtkinter
@@ -65,7 +66,7 @@ class GUI(customtkinter.CTk):
         self.cam_launch = f"{self.launch_path}cam.launch"
         self.view_launch = f"{self.launch_path}viewcam.launch"
         self.calib_launch = f"{self.launch_path}calib.launch"
-        self.detect_launch = f"{self.detect_launch_path}detect.launch"
+        self.detect_launch = f"{self.detect_launch_path}aruco_detect.launch"
         
         
         self.check_camera_1_var = tk.StringVar(self, "on")
@@ -1088,6 +1089,7 @@ class GUI(customtkinter.CTk):
             return loaded_file
     
     def launch_marker_detector(self, camera_name):
+        """This function is called to launch the marker detection node."""
         cli_args = [self.detect_launch, f'camera:={camera_name}']
         roslaunch_file = [(roslaunch.rlutil.resolve_launch_arguments(cli_args)[0], cli_args[1:])]
         return roslaunch.parent.ROSLaunchParent(self.uuid, roslaunch_file)
@@ -1129,7 +1131,9 @@ class GUI(customtkinter.CTk):
         print('**********************************************************\033[93m')
         print()
         bag_play_rate = 1
+        
         filename_ = self.get_bagfile()
+        print(filename_)
         camera_name = self.get_camera_name(filename_)
         if filename_ is not None:
             readbag_cli_args = [self.read_bag_launch,f"bag_file_path:={filename_}", f"playback_rate:={bag_play_rate}"]
@@ -1144,10 +1148,14 @@ class GUI(customtkinter.CTk):
             try:
                 # Start the roslaunch parent object
                 rosbag_reading.start()
+                self.running_processes.update({f"rosbag_reading_{camera_name}": rosbag_reading})
                 print(f'\033[93mPlaying bag file at {bag_play_rate}x speed..\033[0m')
                 try:
                     marker_detection.start()
+                    self.running_processes.update({f"marker_detection_{camera_name}": marker_detection})
                     time.sleep(1)
+                    print(f'### Marker detected successfully from bag file of {camera_name}')
+                    
                 except roslaunch.RLException as e_error:
                     rospy.logerr("Error: %s", e_error)
                     

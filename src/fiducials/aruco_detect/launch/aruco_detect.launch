@@ -1,10 +1,10 @@
 <!-- Run the aruco_detect node -->
 <launch>
   <!-- namespace for camera input -->
-  <arg name="camera" default="/raspicam_node"/>
+  <arg name="camera" default="/camera_1"/>
   <arg name="image" default="image"/>
   <arg name="transport" default="raw"/>
-  <arg name="fiducial_len" default="0.05"/>
+  <arg name="fiducial_len" default="0.1"/>
   <arg name="dictionary" default="1"/>
   <arg name="do_pose_estimation" default="true"/>
   <arg name="vis_msgs" default="false"/>
