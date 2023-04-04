@@ -55,6 +55,7 @@ class GUI(customtkinter.CTk):
         # ********************************************************************************
 
         self.launch_path = rospkg.RosPack().get_path('gige_cam_driver') + '/launch/'
+        self.csv_file_path = rospkg.RosPack().get_path('gige_cam_driver') + '/csvfiles/'
         self.detect_launch_path = rospkg.RosPack().get_path('aruco_detect') + '/launch/'
         self.bagfile_path = self.launch_path.replace("launch/", "bagfiles/")
 
@@ -1074,7 +1075,7 @@ class GUI(customtkinter.CTk):
         if self.opened_bagfile_var == "" and self.last_recorded_bag_file_name_with_path == "":
             rospy.logerr("No file selected, Please load a bag file first")
             print('\033[92m**********************************************************\n\033[0m')
-            return
+            return None
         elif self.opened_bagfile_var != "" and self.last_recorded_bag_file_name_with_path == "":
             loaded_file = self.opened_bagfile_var
             print('Opening Bagfile from directory')
@@ -1120,7 +1121,8 @@ class GUI(customtkinter.CTk):
     def get_camera_name(self, string_cam):
         try:
             camera_name =  "_".join(string_cam.split('/')[-1].split('_')[:2])
-            return camera_name
+            complete_filename = string_cam.split('/')[-1].split('.')[0]
+            return [camera_name, complete_filename]
         except:
             return None
     
@@ -1130,44 +1132,111 @@ class GUI(customtkinter.CTk):
         print('******* Starting Post-Processing from Selected File ******')
         print('**********************************************************\033[93m')
         print()
-        bag_play_rate = 1
+        bag_play_rate = 6
         
         filename_ = self.get_bagfile()
         print(filename_)
-        camera_name = self.get_camera_name(filename_)
-        if filename_ is not None:
-            readbag_cli_args = [self.read_bag_launch,f"bag_file_path:={filename_}", f"playback_rate:={bag_play_rate}"]
-            roslaunch_args = readbag_cli_args[1:]
-            roslaunch_file = [(roslaunch.rlutil.resolve_launch_arguments(readbag_cli_args)[0], roslaunch_args)]
-            rosbag_reading = roslaunch.parent.ROSLaunchParent(self.uuid, roslaunch_file)
+        [camera_name, complete_filename] = self.get_camera_name(filename_)
+        if camera_name is not None:
             
-            aruco_detect_cli_args = [self.detect_launch, f'camera:={camera_name}', 'dictionary:=3', f'aruco_marker_size:={self.var_marker_size.get()}']
-            roslaunch_args = aruco_detect_cli_args[1:]
-            roslaunch_file = [(roslaunch.rlutil.resolve_launch_arguments(aruco_detect_cli_args)[0], roslaunch_args)]
-            marker_detection = roslaunch.parent.ROSLaunchParent(self.uuid, roslaunch_file)
-            try:
+            just_filename = complete_filename
+            print(complete_filename)
+            csv_file_path = os.path.join(self.csv_file_path, just_filename + '.csv')
+            topic_name = '/fiducial_transforms'
+            rostopic_echo_command = f'rostopic echo -p {topic_name} > {csv_file_path}'
+            print(just_filename)
+            
+            if filename_ is not None:
+                readbag_cli_args = [self.read_bag_launch,f"bag_file_path:={filename_}", f"playback_rate:={bag_play_rate}"]
+                roslaunch_args = readbag_cli_args[1:]
+                roslaunch_file = [(roslaunch.rlutil.resolve_launch_arguments(readbag_cli_args)[0], roslaunch_args)]
+                rosbag_reading = roslaunch.parent.ROSLaunchParent(self.uuid, roslaunch_file)
+                
+                aruco_detect_cli_args = [self.detect_launch, f'camera:={camera_name}', 'dictionary:=3', f'aruco_marker_size:={self.var_marker_size.get()}']
+                roslaunch_args = aruco_detect_cli_args[1:]
+                roslaunch_file = [(roslaunch.rlutil.resolve_launch_arguments(aruco_detect_cli_args)[0], roslaunch_args)]
+                marker_detection = roslaunch.parent.ROSLaunchParent(self.uuid, roslaunch_file)
                 # Start the roslaunch parent object
-                rosbag_reading.start()
-                self.running_processes.update({f"rosbag_reading_{camera_name}": rosbag_reading})
-                print(f'\033[93mPlaying bag file at {bag_play_rate}x speed..\033[0m')
+                
                 try:
-                    marker_detection.start()
-                    self.running_processes.update({f"marker_detection_{camera_name}": marker_detection})
+                    rosbag_reading.start()
+                    self.running_processes[f"{camera_name}_rosbag_reading"] = rosbag_reading
                     time.sleep(1)
-                    print(f'### Marker detected successfully from bag file of {camera_name}')
-                    
+                    print(f'\033[93mPlaying bag file at {bag_play_rate}x speed..\033[0m')
+                    try:
+                        marker_detection.start()
+                        print('\033[93mStarted marker detection..\033[0m')
+                        self.running_processes[f"{camera_name}_marker_detection"] = marker_detection
+                        time.sleep(1)
+                        print('\033[93mSaving data into a CSV file..\033[0m')
+                        with open(csv_file_path, 'w') as f:
+                            rostopic_process =subprocess.Popen(['rostopic', 'echo', '-p', topic_name], stdout=f)
+                        time.sleep(1)
+                        # rostopic_process = subprocess.Popen(rostopic_echo_command.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                        # self.running_processes[f"{camera_name}_rostopic_process"] = rostopic_process
+                        print('\033[93mFinished..\033[0m')
+                        while rosbag_reading.pm.is_alive():
+                            # print('is still alive...')
+                            pass
+                        print('finished the reading bagfile process')
+                        # print('\033[93mRosbag reading finished.. Now stopping marker detection..\033[0m')
+                        rostopic_process.terminate()
+                        marker_detection.shutdown()
+                        
+                        # Remove the processes from running_processes dictionary
+                        self.running_processes.pop(f"{camera_name}_rosbag_reading")
+                        self.running_processes.pop(f"{camera_name}_marker_detection")
+                        # self.running_processes.pop(f"{camera_name}_rostopic_process")
+                        print(csv_file_path)
+                        print('\033[93mRosbag reading finished.. Marker detection and rostopic process stopped..\033[0m')
+                    except roslaunch.RLException as e_error:
+                        rospy.logerr(f"Error:{e_error} in running :{camera_name}_marker_detection")
                 except roslaunch.RLException as e_error:
-                    rospy.logerr("Error: %s", e_error)
+                    rospy.logerr(f"Error:{e_error} in reading and marker detection from:{camera_name}_rosbag_reading")
+                
+                
+                
+
+                    # rostopic_process.kill()
+                    # self.running_processes[f"{camera_name}_rosbag_reading"].shutdown()
+                    # self.running_processes[f"{camera_name}_marker_detection"].shutdown()
+
+                
+            #         try:
+            #             marker_detection.start()
+            #             # self.running_processes.update({f"{camera_name}_marker_detection": marker_detection})
+            #             self.running_processes[f"{camera_name}_marker_detection"] = marker_detection
+            #             time.sleep(1)
+            #             print(f'### Marker detected successfully from bag file of {camera_name}')
+            #             rostopic_process = subprocess.Popen(rostopic_echo_command.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                        
+            #             # wait for process to finish 
+            #             rostopic_process.wait()
+            #             try:
+            #                 self.running_processes[f"{camera_name}_rosbag_reading"].shutdown()
+            #                 if self.running_processes[f"{camera_name}_marker_detection"] is not None:
+            #                     self.running_processes[f"{camera_name}_marker_detection"].shutdown()
+            #             except roslaunch.RLException as e_error:
+            #                 rospy.logerr("Error: %s", e_error)
+                                
+                        
+            #         except roslaunch.RLException as e_error:
+            #             rospy.logerr("Error: %s", e_error)
+                        
+            #         # Wait for the roslaunch parent object to finish
+            #         rosbag_reading.spin()
+            #     except roslaunch.RLException as e_error:
+            #         rospy.logerr("Error: %s", e_error)
+            #     finally:
+            #         self.running_processes.pop(f"{camera_name}_rosbag_reading")
+            #         self.running_processes.pop(f"{camera_name}_marker_detection")
+            #     #     # Shutdown the roslaunch parent object
+            #     #     rostopic_process.terminate()
+            #     #     rosbag_reading.shutdown()
+            #     #     marker_detection.shutdown()
                     
-                # Wait for the roslaunch parent object to finish
-                rosbag_reading.spin()
-            except roslaunch.RLException as e_error:
-                rospy.logerr("Error: %s", e_error)
-            finally:
-                # Shutdown the roslaunch parent object
-                rosbag_reading.shutdown()
-        else:
-            return
+            # else:
+            #     return
 
 
 
