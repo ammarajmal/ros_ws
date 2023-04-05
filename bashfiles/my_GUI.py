@@ -6,6 +6,11 @@ import datetime
 import os
 import subprocess
 import time
+import pandas as pd
+import matplotlib.pyplot as plt
+from scipy import signal
+import numpy as np
+from PIL import Image, ImageTk
 
 import tkinter as tk
 from tkinter import filedialog
@@ -14,7 +19,6 @@ import roslaunch
 
 import rospkg
 import rospy
-
 
 
 import customtkinter
@@ -49,7 +53,7 @@ class GUI(customtkinter.CTk):
 
         rospy.init_node('launch_handle', anonymous=False)
         self.package = 'gige_cam_driver'
-        
+
         # ********************************************************************************
         # Path management for Launch files
         # ********************************************************************************
@@ -68,8 +72,7 @@ class GUI(customtkinter.CTk):
         self.view_launch = f"{self.launch_path}viewcam.launch"
         self.calib_launch = f"{self.launch_path}calib.launch"
         self.detect_launch = f"{self.detect_launch_path}aruco_detect.launch"
-        
-        
+
         self.check_camera_1_var = tk.StringVar(self, "on")
         self.check_camera_2_var = tk.StringVar(self, "on")
         self.check_camera_3_var = tk.StringVar(self, "on")
@@ -91,7 +94,6 @@ class GUI(customtkinter.CTk):
         self.square_size = "0.025"
         self.maker_size = "0.1"
         self.var_marker_size = tk.StringVar(self, "0.1")
-
 
         self.running_processes = {}
         self.camera_1_active = False
@@ -187,19 +189,28 @@ class GUI(customtkinter.CTk):
             text="Update",
             command=self.sidebar_btn_update_calib_event,
             width=85
-            
+
 
         )
-        self.sidebar_entry_get_calib_cb_dim_label.grid  (row=1, column=0, padx=(20, 0),  pady=(10, 5), sticky="nsw")
-        self.sidebar_entry_get_calib_sq_size_label.grid (row=2, column=0, padx=(20, 0),  pady=0, sticky="nsw")
-        self.sidebar_entry_get_calib_cb_dim.grid        (row=1, column=1, padx=(10, 10), pady=(10, 5), sticky="nsw")
-        self.sidebar_entry_get_calib_sq_size.grid       (row=2, column=1, padx=(10, 10), pady=0, sticky="nsw")
-        self.sidebar_btn_set_calib.grid                 (row=3, column=0, padx=(10, 10), pady=(10, 0), sticky='e')
-        self.sidebar_btn_set_calib_success_label.grid   (row=3, column=1, padx=(20, 0), pady=(10, 0), sticky='nsw')
-        self.sidebar_btn_cam_1_calib.grid               (row=4, column=0, padx=10, pady=10, columnspan=2)
-        self.sidebar_btn_cam_2_calib.grid               (row=5, column=0, padx=10, pady=0, columnspan=2)
-        self.sidebar_btn_cam_3_calib.grid               (row=6, column=0, padx=10, pady=(10, 20), columnspan=2)
-        
+        self.sidebar_entry_get_calib_cb_dim_label.grid(
+            row=1, column=0, padx=(20, 0),  pady=(10, 5), sticky="nsw")
+        self.sidebar_entry_get_calib_sq_size_label.grid(
+            row=2, column=0, padx=(20, 0),  pady=0, sticky="nsw")
+        self.sidebar_entry_get_calib_cb_dim.grid(
+            row=1, column=1, padx=(10, 10), pady=(10, 5), sticky="nsw")
+        self.sidebar_entry_get_calib_sq_size.grid(
+            row=2, column=1, padx=(10, 10), pady=0, sticky="nsw")
+        self.sidebar_btn_set_calib.grid(
+            row=3, column=0, padx=(10, 10), pady=(10, 0), sticky='e')
+        self.sidebar_btn_set_calib_success_label.grid(
+            row=3, column=1, padx=(20, 0), pady=(10, 0), sticky='nsw')
+        self.sidebar_btn_cam_1_calib.grid(
+            row=4, column=0, padx=10, pady=10, columnspan=2)
+        self.sidebar_btn_cam_2_calib.grid(
+            row=5, column=0, padx=10, pady=0, columnspan=2)
+        self.sidebar_btn_cam_3_calib.grid(
+            row=6, column=0, padx=10, pady=(10, 20), columnspan=2)
+
         self.sidebar_frame_cam_view_label = customtkinter.CTkLabel(
             master=self.sidebar_frame_cam_view,
             text="Camera View"
@@ -285,25 +296,24 @@ class GUI(customtkinter.CTk):
         self.tabview.add("Display Results")
         self.tabview.tab("Record & Process Data").grid_columnconfigure(
             0, weight=1)  # configure grid of individual tabs
+        self.tabview.tab("Display Results").grid_columnconfigure(
+            0, weight=1)  # configure grid of individual tabs
 
-        # self.results_label = customtkinter.CTkLabel(
-        #     master=self.tabview.add("Display Results"),
-        #     text="Displaying Results",
-        #     font=customtkinter.CTkFont(size=16),
-        #     text_color='black'
-        # )
-        # self.results_single_frame = customtkinter.CTkFrame(
-        #     master=self.tabview.add("Display Results"),
-        #     fg_color=('lightgray', 'gray')
-        # )
-        # self.results_multiple_frame = customtkinter.CTkFrame(
-        #     master=self.tabview.add("Display Results"),
-        #     fg_color=('lightgray', 'gray')
-        # )
-        # self.results_label.grid              (row=0, column=0, padx=20, pady=(5, 0), sticky="nsew")
-        # self.results_single_frame.grid       (row=1, column=0, padx=20, pady=(10,0), sticky="nsew")
-        # self.results_multiple_frame.grid     (row=2, column=0, padx=20, pady=(20,0), sticky="nsew")
+        self.result_label = customtkinter.CTkLabel(
+            master=self.tabview.tab("Display Results"),
+            text="Results",
+            font=customtkinter.CTkFont(size=16),
+            text_color='black'
+        )
+        self.result_frame = customtkinter.CTkFrame(
+            master=self.tabview.tab("Display Results"),
+            fg_color=('lightgray', 'gray')
+        )
 
+        self.result_label.grid(row=0, column=0, padx=20,
+                               pady=(5, 0), sticky="nsew")
+        self.result_frame.grid(
+            row=1, column=0, columnspan=2, padx=20, pady=(10, 0), sticky="nsew")
         self.record_label = customtkinter.CTkLabel(
             master=self.tabview.tab("Record & Process Data"),
             text="Recording from Camera",
@@ -364,6 +374,19 @@ class GUI(customtkinter.CTk):
             font=customtkinter.CTkFont(size=14),
             command=self.detect_button_event
         )
+        self.process_detect_label = customtkinter.CTkLabel(
+            master=self.process_frame,
+            text="Completed Successfully",
+            state="disabled"
+        )
+        self.process_show_results_button = customtkinter.CTkButton(
+            master=self.process_frame,
+            text="Show Results",
+            state = 'disabled',
+            font=customtkinter.CTkFont(size=14),
+            command=self.show_results_button_event
+        )
+
         self.process_load_last_saved_button.grid(
             row=0, column=0, padx=10, pady=10,   sticky="nsew")
         self.process_load_options_label.grid(
@@ -372,6 +395,10 @@ class GUI(customtkinter.CTk):
             row=0, column=2, padx=10, pady=10,   sticky="nsew")
         self.process_detect_button.grid(
             row=1, column=1, padx=10, pady=10,   sticky="nsew")
+        self.process_detect_label.grid(
+            row=1, column=2, padx=10, pady=10,   sticky="nsew")
+        self.process_show_results_button.grid(
+            row=1, column=3, padx=10, pady=10,   sticky="nsew")
 
         self.single_cam_label = customtkinter.CTkLabel(
             master=self.record_single_frame,
@@ -801,19 +828,17 @@ class GUI(customtkinter.CTk):
 
     def sidebar_btn_update_calib_event(self):
         """This function is called when the set calibration button is pressed and updates the calibration values"""
-        self.board_size = self.sidebar_entry_get_calib_cb_dim.get() if self.sidebar_entry_get_calib_cb_dim.get() != '' else self.board_size
-        self.square_size = self.sidebar_entry_get_calib_sq_size.get() if self.sidebar_entry_get_calib_sq_size.get() != '' else self.square_size
+        self.board_size = self.sidebar_entry_get_calib_cb_dim.get(
+        ) if self.sidebar_entry_get_calib_cb_dim.get() != '' else self.board_size
+        self.square_size = self.sidebar_entry_get_calib_sq_size.get(
+        ) if self.sidebar_entry_get_calib_sq_size.get() != '' else self.square_size
         if self.board_size == '6x5' and self.square_size == '0.025':
-                rospy.logerr('Please enter new calibtration parameters!')
+            rospy.logerr('Please enter new calibtration parameters!')
         else:
-                rospy.loginfo('Checkerboard parameters updated successfully')
-                self.sidebar_btn_set_calib_success_label.configure(text="☑")
-                print('board size', self.board_size)
-                print('square size', self.square_size)
-
-
-
-        
+            rospy.loginfo('Checkerboard parameters updated successfully')
+            self.sidebar_btn_set_calib_success_label.configure(text="☑")
+            print('board size', self.board_size)
+            print('square size', self.square_size)
 
     def start_camera_record(self, camera_name, device_id, calibration_file, dur):
         """Starts a camera driver and optionally a camera view"""
@@ -863,30 +888,33 @@ class GUI(customtkinter.CTk):
             rospy.sleep(2)
             record_single_cam.start()
             self.running_processes[f'{camera_name}_record'] = record_single_cam
-            rec_time=0
+            rec_time = 0
             while record_single_cam.pm.is_alive():
                 rospy.sleep(1)
-                rec_time+=1
-                if rec_time<=int(time_dur_bag):
-                    print(f"\033[93mRecording from {camera_name}...{rec_time}/{time_dur_bag}s\033[0m")
+                rec_time += 1
+                if rec_time <= int(time_dur_bag):
+                    print(
+                        f"\033[93mRecording from {camera_name}...{rec_time}/{time_dur_bag}s\033[0m")
 
             # Shutdown the camera driver
             try:
                 self.running_processes[f'{camera_name}_driver'].shutdown()
                 if f'{camera_name}_record' in self.running_processes:
                     self.running_processes[f'{camera_name}_record'].shutdown()
-                    
+
                     saved_bagfile = f"{camera_name}_{time_dur_bag}s_{self.recorded_datetime_var}.bag"
-                    self.last_recorded_bag_file_name_with_path = os.path.join(self.bagfile_path, saved_bagfile)
+                    self.last_recorded_bag_file_name_with_path = os.path.join(
+                        self.bagfile_path, saved_bagfile)
                     print("\033[93mSaved Data: \033[0m")
                     print("\033[93m------------\033[0m")
-                    print(f"\033[93mBagfile Name: {os.path.basename(self.last_recorded_bag_file_name_with_path)} \033[0m")
-                    print(f"\033[93mDirectory: {os.path.dirname(self.last_recorded_bag_file_name_with_path)} \033[0m")
-                    
-                    
+                    print(
+                        f"\033[93mBagfile Name: {os.path.basename(self.last_recorded_bag_file_name_with_path)} \033[0m")
+                    print(
+                        f"\033[93mDirectory: {os.path.dirname(self.last_recorded_bag_file_name_with_path)} \033[0m")
 
             except roslaunch.RLException as excep_camera:
-                rospy.logerr(f"Error stopping {camera_name} camera driver: {str(excep_camera)}")
+                rospy.logerr(
+                    f"Error stopping {camera_name} camera driver: {str(excep_camera)}")
                 return
 
             # Set camera active flag to False
@@ -901,11 +929,9 @@ class GUI(customtkinter.CTk):
             self.running_processes.pop(f'{camera_name}_driver', None)
             self.running_processes.pop(f'{camera_name}_record', None)
 
-            
             print(f"\033[92m\nSuccessfully saved bag file from {camera_name}!")
-            print('***************************************************\n\033[0m')
-            
-            
+            print(
+                '***************************************************\n\033[0m')
 
         except roslaunch.RLException as excep_camera:
             rospy.logerr(
@@ -1050,15 +1076,14 @@ class GUI(customtkinter.CTk):
         bagfile_name = os.path.basename(self.opened_bagfile_var)
         bagfile_dir = os.path.dirname(self.opened_bagfile_var)
         parts = bagfile_name.split('_')
-                # Find the part of the bagfile_name that contains the duration value
+        # Find the part of the bagfile_name that contains the duration value
         for i, part in enumerate(parts):
             if part.endswith('s'):
                 duration_part = part
                 break
-        
+
         if self.opened_bagfile_var != "":
-            
-            
+
             print('\033[93m')
             print(f"Camera: {parts[0].title()} {parts[1]}")
             print(f"Duration: {duration_part}")
@@ -1067,14 +1092,16 @@ class GUI(customtkinter.CTk):
             print(f"Bagfile Name: {bagfile_name}")
             print(f"Directory: {bagfile_dir}")
             print("\033[92m\nSuccessfully loaded bag file from directory!")
-            print('***************************************************\n\033[0m')
+            print(
+                '***************************************************\n\033[0m')
             self.opened_file_flag = True
-        
+
     def get_bagfile(self):
         """This function is called to load bagfile."""
         if self.opened_bagfile_var == "" and self.last_recorded_bag_file_name_with_path == "":
             rospy.logerr("No file selected, Please load a bag file first")
-            print('\033[92m**********************************************************\n\033[0m')
+            print(
+                '\033[92m**********************************************************\n\033[0m')
             return None
         elif self.opened_bagfile_var != "" and self.last_recorded_bag_file_name_with_path == "":
             loaded_file = self.opened_bagfile_var
@@ -1088,16 +1115,17 @@ class GUI(customtkinter.CTk):
             loaded_file = self.last_recorded_bag_file_name_with_path
             print("found both files.. but loading last recorded file")
             return loaded_file
-    
+
     def launch_marker_detector(self, camera_name):
         """This function is called to launch the marker detection node."""
         cli_args = [self.detect_launch, f'camera:={camera_name}']
-        roslaunch_file = [(roslaunch.rlutil.resolve_launch_arguments(cli_args)[0], cli_args[1:])]
+        roslaunch_file = [
+            (roslaunch.rlutil.resolve_launch_arguments(cli_args)[0], cli_args[1:])]
         return roslaunch.parent.ROSLaunchParent(self.uuid, roslaunch_file)
-    
+
     def detection(self, camera_name):
         """This function is called to launch the marker detection node."""
-        print ('bagfile received: ', camera_name)
+        print('bagfile received: ', camera_name)
         print('now starting marker detection..')
         if camera_name == 'camera_1':
             marker_detect_camera_1 = self.launch_marker_detector('camera_1')
@@ -1116,133 +1144,196 @@ class GUI(customtkinter.CTk):
             marker_detect_camera_3.start()
             self.running_processes.update(marker_detect_camera_3)
             print('camera_3 marker detection launched')
-        
-        
+
     def get_camera_name(self, string_cam):
         try:
-            camera_name =  "_".join(string_cam.split('/')[-1].split('_')[:2])
+            camera_name = "_".join(string_cam.split('/')[-1].split('_')[:2])
             complete_filename = string_cam.split('/')[-1].split('.')[0]
             return [camera_name, complete_filename]
         except:
             return None
-    
+
     def detect_button_event(self):
         """This function is called when the detect button is clicked."""
         print('\033[92m**********************************************************')
         print('******* Starting Post-Processing from Selected File ******')
-        print('**********************************************************\033[93m')
+        print(
+            '**********************************************************\033[93m')
         print()
-        bag_play_rate = 6
-        
+        bag_play_rate = 3
+
         filename_ = self.get_bagfile()
         print(filename_)
         [camera_name, complete_filename] = self.get_camera_name(filename_)
         if camera_name is not None:
-            
+
             just_filename = complete_filename
             print(complete_filename)
-            csv_file_path = os.path.join(self.csv_file_path, just_filename + '.csv')
+            csv_file_path = os.path.join(
+                self.csv_file_path, just_filename + '.csv')
             topic_name = '/fiducial_transforms'
-            rostopic_echo_command = f'rostopic echo -p {topic_name} > {csv_file_path}'
+            # rostopic_echo_command = f'rostopic echo -p {topic_name} > {csv_file_path}'
             print(just_filename)
-            
+
             if filename_ is not None:
-                readbag_cli_args = [self.read_bag_launch,f"bag_file_path:={filename_}", f"playback_rate:={bag_play_rate}"]
+                readbag_cli_args = [
+                    self.read_bag_launch, f"bag_file_path:={filename_}", f"playback_rate:={bag_play_rate}"]
                 roslaunch_args = readbag_cli_args[1:]
-                roslaunch_file = [(roslaunch.rlutil.resolve_launch_arguments(readbag_cli_args)[0], roslaunch_args)]
-                rosbag_reading = roslaunch.parent.ROSLaunchParent(self.uuid, roslaunch_file)
-                
-                aruco_detect_cli_args = [self.detect_launch, f'camera:={camera_name}', 'dictionary:=3', f'aruco_marker_size:={self.var_marker_size.get()}']
+                roslaunch_file = [(roslaunch.rlutil.resolve_launch_arguments(
+                    readbag_cli_args)[0], roslaunch_args)]
+                rosbag_reading = roslaunch.parent.ROSLaunchParent(
+                    self.uuid, roslaunch_file)
+
+                aruco_detect_cli_args = [
+                    self.detect_launch, f'camera:={camera_name}', 'dictionary:=3', f'aruco_marker_size:={self.var_marker_size.get()}']
                 roslaunch_args = aruco_detect_cli_args[1:]
-                roslaunch_file = [(roslaunch.rlutil.resolve_launch_arguments(aruco_detect_cli_args)[0], roslaunch_args)]
-                marker_detection = roslaunch.parent.ROSLaunchParent(self.uuid, roslaunch_file)
+                roslaunch_file = [(roslaunch.rlutil.resolve_launch_arguments(
+                    aruco_detect_cli_args)[0], roslaunch_args)]
+                marker_detection = roslaunch.parent.ROSLaunchParent(
+                    self.uuid, roslaunch_file)
                 # Start the roslaunch parent object
-                
+
                 try:
                     rosbag_reading.start()
                     self.running_processes[f"{camera_name}_rosbag_reading"] = rosbag_reading
-                    time.sleep(1)
-                    print(f'\033[93mPlaying bag file at {bag_play_rate}x speed..\033[0m')
+                    print(
+                        f'\033[93mPlaying bag file at {bag_play_rate}x speed..\033[0m')
                     try:
                         marker_detection.start()
                         print('\033[93mStarted marker detection..\033[0m')
                         self.running_processes[f"{camera_name}_marker_detection"] = marker_detection
-                        time.sleep(1)
                         print('\033[93mSaving data into a CSV file..\033[0m')
                         with open(csv_file_path, 'w') as f:
-                            rostopic_process =subprocess.Popen(['rostopic', 'echo', '-p', topic_name], stdout=f)
-                        time.sleep(1)
+                            rostopic_process = subprocess.Popen(
+                                ['rostopic', 'echo', '-p', topic_name], stdout=f)
                         # rostopic_process = subprocess.Popen(rostopic_echo_command.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                         # self.running_processes[f"{camera_name}_rostopic_process"] = rostopic_process
                         print('\033[93mFinished..\033[0m')
                         while rosbag_reading.pm.is_alive():
                             # print('is still alive...')
                             pass
+                        self.process_detect_label.configure(text='Completed Successfully!',
+                                                            state='normal',
+                                                            text_color='green',
+                                                            font=customtkinter.CTkFont(
+                                                                size=12, weight='bold')
+                                                            )
+                        self.process_show_results_button.configure(state =  'normal')
                         print('finished the reading bagfile process')
                         # print('\033[93mRosbag reading finished.. Now stopping marker detection..\033[0m')
                         rostopic_process.terminate()
                         marker_detection.shutdown()
-                        
+
                         # Remove the processes from running_processes dictionary
-                        self.running_processes.pop(f"{camera_name}_rosbag_reading")
-                        self.running_processes.pop(f"{camera_name}_marker_detection")
+                        self.running_processes.pop(
+                            f"{camera_name}_rosbag_reading")
+                        self.running_processes.pop(
+                            f"{camera_name}_marker_detection")
                         # self.running_processes.pop(f"{camera_name}_rostopic_process")
-                        print(csv_file_path)
-                        print('\033[93mRosbag reading finished.. Marker detection and rostopic process stopped..\033[0m')
+                        self.csv_plotting(csv_file_path)
+
+                        print(
+                            '\033[93mRosbag reading finished.. Marker detection and rostopic process stopped..\033[0m')
+                        # print(csv_file_path)
+
                     except roslaunch.RLException as e_error:
-                        rospy.logerr(f"Error:{e_error} in running :{camera_name}_marker_detection")
+                        rospy.logerr(
+                            f"Error:{e_error} in running :{camera_name}_marker_detection")
                 except roslaunch.RLException as e_error:
-                    rospy.logerr(f"Error:{e_error} in reading and marker detection from:{camera_name}_rosbag_reading")
-                
-                
-                
+                    rospy.logerr(
+                        f"Error:{e_error} in reading and marker detection from:{camera_name}_rosbag_reading")
 
-                    # rostopic_process.kill()
-                    # self.running_processes[f"{camera_name}_rosbag_reading"].shutdown()
-                    # self.running_processes[f"{camera_name}_marker_detection"].shutdown()
+    def csv_plotting(self, csv_file):
+        """This function plots the data from the csv file passed as input argument"""
+        fs = 200
+        upsample_factor = 200
+        camera, path = self.get_camera_name(csv_file)
+        data = pd.read_csv(csv_file)
+        jpg_file = csv_file.replace('.csv', '.png')
+        # Extract the columns from the csv file
+        camera_name = data['field.header.frame_id']
+        marker_id = data['field.transforms0.fiducial_id']
+        image_seq = data['field.image_seq']
+        x_disp = data['field.transforms0.transform.translation.x'] - \
+            data['field.transforms0.transform.translation.x'][0]
+        y_disp = data['field.transforms0.transform.translation.y'] - \
+            data['field.transforms0.transform.translation.y'][0]
+        z_disp = data['field.transforms0.transform.translation.z'] - \
+            data['field.transforms0.transform.translation.z'][0]
+        # finding the length of x_disp
+        # len_disp = len(x_disp)
+        time_vector = range(len(x_disp))
 
-                
-            #         try:
-            #             marker_detection.start()
-            #             # self.running_processes.update({f"{camera_name}_marker_detection": marker_detection})
-            #             self.running_processes[f"{camera_name}_marker_detection"] = marker_detection
-            #             time.sleep(1)
-            #             print(f'### Marker detected successfully from bag file of {camera_name}')
-            #             rostopic_process = subprocess.Popen(rostopic_echo_command.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-                        
-            #             # wait for process to finish 
-            #             rostopic_process.wait()
-            #             try:
-            #                 self.running_processes[f"{camera_name}_rosbag_reading"].shutdown()
-            #                 if self.running_processes[f"{camera_name}_marker_detection"] is not None:
-            #                     self.running_processes[f"{camera_name}_marker_detection"].shutdown()
-            #             except roslaunch.RLException as e_error:
-            #                 rospy.logerr("Error: %s", e_error)
-                                
-                        
-            #         except roslaunch.RLException as e_error:
-            #             rospy.logerr("Error: %s", e_error)
-                        
-            #         # Wait for the roslaunch parent object to finish
-            #         rosbag_reading.spin()
-            #     except roslaunch.RLException as e_error:
-            #         rospy.logerr("Error: %s", e_error)
-            #     finally:
-            #         self.running_processes.pop(f"{camera_name}_rosbag_reading")
-            #         self.running_processes.pop(f"{camera_name}_marker_detection")
-            #     #     # Shutdown the roslaunch parent object
-            #     #     rostopic_process.terminate()
-            #     #     rosbag_reading.shutdown()
-            #     #     marker_detection.shutdown()
-                    
-            # else:
-            #     return
+        # upsample the time vector
+        up_factor = upsample_factor
+        # upsampled_time = np.linspace(0, len(t) - 1, len(t) * up_factor)
+        upsampled_time = np.linspace(
+            time_vector[0], time_vector[-1], len(time_vector) * up_factor)
 
+        # Now, upsample the displacement signals using linear interpolation.
+        x_disp_up = np.interp(upsampled_time, time_vector, x_disp)
+        y_disp_up = np.interp(upsampled_time, time_vector, y_disp)
+        z_disp_up = np.interp(upsampled_time, time_vector, z_disp)
 
+        f_x_disp, Pxx = signal.csd(x_disp_up, x_disp_up, fs, nfft=2048)
+        f_y_disp, Pyy = signal.csd(y_disp_up, y_disp_up, fs, nfft=2048)
+        f_z_disp, Pzz = signal.csd(z_disp_up, z_disp_up, fs, nfft=2048)
+
+        fig, axis_plot = plt.subplots(nrows=3, ncols=2)
+
+        # set the title of the figure
+        fig.suptitle(
+            f'3D displacement using ARUCO marker detection - {camera}')
+
+        # Plotting the x, y, z displacement
+        axis_plot[0, 0].plot([t/100 for t in time_vector], x_disp, 'r')
+        axis_plot[0, 0].set_title('X displacement', loc='left', fontdict={
+            'fontsize': 12, 'fontweight': 'bold'})
+        axis_plot[0, 0].set_xlabel('Time (sec)')
+
+        axis_plot[1, 0].plot([t/100 for t in time_vector], y_disp, 'g')
+        axis_plot[1, 0].set_title('Y displacement', loc='left', fontdict={
+            'fontsize': 12, 'fontweight': 'bold'})
+        axis_plot[1, 0].set_xlabel('Time (sec)')
+
+        axis_plot[2, 0].plot([t/100 for t in time_vector], z_disp, 'b')
+        axis_plot[2, 0].set_title('Z displacement', loc='left', fontdict={
+            'fontsize': 12, 'fontweight': 'bold'})
+        axis_plot[2, 0].set_xlabel('Time (sec)')
+
+        axis_plot[0, 0].grid(True)
+        axis_plot[1, 0].grid(True)
+        axis_plot[2, 0].grid(True)
+
+        # Plotting the frequency response
+        axis_plot[0, 1].semilogy(f_x_disp, np.abs(Pxx))
+        axis_plot[0, 1].set_title('X-disp freq response', loc='left', fontdict={
+            'fontsize': 12, 'fontweight': 'bold'})
+        axis_plot[0, 1].set_xlabel('Frequency (Hz)')
+
+        axis_plot[1, 1].semilogy(f_y_disp, np.abs(Pyy))
+        axis_plot[1, 1].set_title('Y-disp freq response', loc='left', fontdict={
+            'fontsize': 12, 'fontweight': 'bold'})
+        axis_plot[1, 1].set_xlabel('Frequency (Hz)')
+
+        axis_plot[2, 1].semilogy(f_z_disp, np.abs(Pzz))
+        axis_plot[2, 1].set_title('Z-disp freq response', loc='left', fontdict={
+            'fontsize': 12, 'fontweight': 'bold'})
+        axis_plot[2, 1].set_xlabel('Frequency (Hz)')
+
+        axis_plot[0, 1].grid(True)
+        axis_plot[1, 1].grid(True)
+        axis_plot[2, 1].grid(True)
+
+        # Saving the plot with a given name
+        fig.savefig(jpg_file)
+        print('Close the figure to continue..')
+        plt.show()
 
     def load_last_saved_button_event(self):
         """This function is called when the detect button is clicked."""
-        print('\033[92m*****************************************************************')
+        print(
+            '\033[92m*****************************************************************')
         print('********  Loading last saved bag file for post-processing  ******')
         print('*****************************************************************')
 
@@ -1255,24 +1346,26 @@ class GUI(customtkinter.CTk):
                 print(f"Camera: {self.camera_selection_var.get()}")
                 print(f"Marker Size: {self.var_marker_size.get()}")
                 print(f"Recorded Time: {self.recorded_datetime_var}")
-                print(f"Loaded Bag File: {self.last_recorded_bag_file_name_with_path}")
-                
-                print(f"\033[92m\nSuccessfully loaded bag file recorded from {self.camera_selection_var.get()}!")
-                print('*****************************************************************\n\033[0m')
+                print(
+                    f"Loaded Bag File: {self.last_recorded_bag_file_name_with_path}")
+
+                print(
+                    f"\033[92m\nSuccessfully loaded bag file recorded from {self.camera_selection_var.get()}!")
+                print(
+                    '*****************************************************************\n\033[0m')
                 self.loaded_last_file_flag = True
                 # print(self.single_camera_dur)
-                
+
                 # if self.opened_bagfile_var == self.last_recorded_bag_file_name_path:
                 #     print("Loaded file is the last recorded file")
                 # else:
                 #     print("Loaded file is not the last recorded file")
             else:
-                raise NameError("Variable self.last_recorded_bag_file_name_with_path is not defined or is an empty string.")
+                raise NameError(
+                    "Variable self.last_recorded_bag_file_name_with_path is not defined or is an empty string.")
         except NameError:
-            rospy.logerr("No fileself.read_bag_launch selected, please record a bag file first.")
-
-            
-
+            rospy.logerr(
+                "No fileself.read_bag_launch selected, please record a bag file first.")
 
     def camera_calibration(self, cam_number):
         cb_dim = self.board_size
@@ -1283,27 +1376,26 @@ class GUI(customtkinter.CTk):
         print('Board Size: ', cb_dim)
         print('Square Size: ', sq_size)
         print("Starting Camera Calibration for Camera ", cam_number, '...\n')
-        cam_name = {1:'camera_1',
-                    2:'camera_2',
-                    3:'camera_3'}
-        
+        cam_name = {1: 'camera_1',
+                    2: 'camera_2',
+                    3: 'camera_3'}
+
         print(cam_name[cam_number])
-        
+
         # print("Board Size: ", cb_dim, "manual: ", self.sidebar_entry_get_calib_cb_dim.get())
         # print("Square Size: ", sq_size, "manual: ", self.sidebar_entry_get_calib_sq_size.get())
         # return
         self.sidebar_camera_btn_event(cam_number, False, False)
-        
+
         cmd = ['rosrun', 'camera_calibration', 'cameracalibrator.py',
-       '--size', cb_dim, '--square', sq_size, '--k-coefficients=2',
-       '--fix-principal-point', 'i', '--fix-aspect-ratio',
-       f'image:=/{cam_name[cam_number]}/image_raw', f'camera:=/{cam_name[cam_number]}']
+               '--size', cb_dim, '--square', sq_size, '--k-coefficients=2',
+               '--fix-principal-point', 'i', '--fix-aspect-ratio',
+               f'image:=/{cam_name[cam_number]}/image_raw', f'camera:=/{cam_name[cam_number]}']
 
         # Execute the command
         subprocess.call(cmd)
         self.sidebar_camera_btn_event(cam_number, False, False)
-        
-        
+
     def exit_button_click(self):
         """This function is called when the exit button is clicked."""
         print("Terminated successfully.")
@@ -1312,7 +1404,15 @@ class GUI(customtkinter.CTk):
         os.system("xdotool key ctrl+shift+w")
 
         exit()
-
+    def show_results_button_event(self):
+        path_image = '/home/agcam/ros_ws/src/gige_cam_driver/csvfiles/camera_1_20s_2023-04-05_11-34-18.png'
+        image = Image.open(path_image)
+        image = image.resize((800, 600), Image.ANTIALIAS)
+        photo = ImageTk.PhotoImage(image)
+        label = customtkinter.CTkLabel(master=self.tabview.tab("Display Results"), image=photo)
+        label.image = photo
+        label.pack()
+        
 
 if __name__ == "__main__":
     app = GUI()
