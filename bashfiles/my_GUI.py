@@ -23,7 +23,7 @@ import rospy
 
 import customtkinter
 
-
+# rosrun camera_calibration cameracalibrator.py --size 6x5 --square 0.025 --k-coefficients=2 --fix-principal-point i --fix-aspect-ratio image:=/camera_1/image_raw camera:=/camera_1
 subprocess.Popen(['gnome-terminal', '--', '/bin/bash', '-c',
                  'source /opt/ros/noetic/setup.bash && roscore; exec /bin/bash'])
 time.sleep(1)
@@ -94,6 +94,7 @@ class GUI(customtkinter.CTk):
         self.square_size = "0.025"
         self.maker_size = "0.1"
         self.var_marker_size = tk.StringVar(self, "0.1")
+        self.var_dictionary = tk.StringVar(self, "1")
 
         self.running_processes = {}
         self.camera_1_active = False
@@ -266,14 +267,43 @@ class GUI(customtkinter.CTk):
             master=self.sidebar_frame_ui,
             text="Marker Size (m):"
         )
+        self.sidebar_dictionary_label = customtkinter.CTkLabel(
+            master=self.sidebar_frame_ui,
+            text="Dictionary:"
+        )
+        self.sidebar_dictionary_entry = customtkinter.CTkEntry(
+            master=self.sidebar_frame_ui,
+            placeholder_text="1",
+            textvariable=self.var_dictionary,
+            placeholder_text_color="#808080",
+            width=50
+        )
+        self.sidebar_set_dictionary_btn = customtkinter.CTkButton(
+            master=self.sidebar_frame_ui,
+            text="Set Dictionary",
+            command=self.sidebar_set_dictionary_btn_event
+        )
+        self.sidebar_dictionary_explain_label = customtkinter.CTkLabel(
+            master=self.sidebar_frame_ui,
+            text= 'Dictionary values:\n1 = (DICT_4X4_100)\n5  = (DICT_5X5_100)\n9  = (DICT_6X6_100)\n13 = (DICT_7X7_100)\nhttp://wiki.ros.org/aruco_detect')
+        
         self.sidebar_marker_size_label.grid(
             row=0, column=0, padx=(16, 0), pady=(10, 5), sticky="nsw")
         self.sidebar_marker_size_entry.grid(
             row=0, column=1, padx=(0, 10), pady=(10, 5), sticky="nse")
+        self.sidebar_dictionary_label.grid(
+            row=1, column=0, padx=(16, 0), pady=(0, 5), sticky="nsw")
+        self.sidebar_dictionary_entry.grid(
+            row=1, column=1, padx=(0, 10), pady=(0, 5), sticky="nse")
+        self.sidebar_set_dictionary_btn.grid(
+            row=2, column=0, columnspan=2, padx=(0, 10), pady=(0, 5), sticky="nse")
         self.appearance_mode_label.grid(
-            row=1, column=0, padx=(16, 0), pady=(10, 5), sticky="nsw")
+            row=3, column=0, padx=(16, 0), pady=(0, 5), sticky="nsw")
         self.appearance_mode_optionemenu.grid(
-            row=1, column=1, padx=(0, 10), pady=(10, 5), sticky="nse")
+            row=3, column=1, padx=(0, 10), pady=(0, 5), sticky="nse")
+        self.sidebar_dictionary_explain_label.grid(
+            row=4, column=0, columnspan=2, padx=(16, 0), pady=(0, 5), sticky="nsw")
+        
 
         self.tabview = customtkinter.CTkTabview(
             master=self,
@@ -1404,6 +1434,14 @@ class GUI(customtkinter.CTk):
         os.system("xdotool key ctrl+shift+w")
 
         exit()
+    def sidebar_set_dictionary_btn_event(self):
+        """This function is called when the set dictionary button is clicked."""
+        print("Setting detection parameters...")
+        self.var_marker_size = self.sidebar_marker_size_entry.get()
+        self.var_dictionary = self.sidebar_dictionary_entry.get()
+        print("Dictionary set to: ", self.var_dictionary)
+        print("Marker size set to: ", self.var_marker_size)
+        
     def show_results_button_event(self):
         path_image = '/home/agcam/ros_ws/src/gige_cam_driver/csvfiles/camera_1_20s_2023-04-05_11-34-18.png'
         image = Image.open(path_image)
@@ -1412,6 +1450,7 @@ class GUI(customtkinter.CTk):
         label = customtkinter.CTkLabel(master=self.tabview.tab("Display Results"), image=photo)
         label.image = photo
         label.pack()
+    
         
 
 if __name__ == "__main__":
