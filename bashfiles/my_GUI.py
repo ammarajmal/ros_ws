@@ -93,8 +93,8 @@ class GUI(customtkinter.CTk):
         self.board_size = "6x5"
         self.square_size = "0.025"
         self.maker_size = "0.1"
-        self.var_marker_size = tk.StringVar(self, "0.1")
-        self.var_dictionary = tk.StringVar(self, "1")
+        self.var_marker_size = tk.StringVar(self, "0.05")
+        self.var_dictionary = tk.StringVar(self, "4")
 
         self.running_processes = {}
         self.camera_1_active = False
@@ -301,8 +301,8 @@ class GUI(customtkinter.CTk):
             row=3, column=0, padx=(16, 0), pady=(0, 5), sticky="nsw")
         self.appearance_mode_optionemenu.grid(
             row=3, column=1, padx=(0, 10), pady=(0, 5), sticky="nse")
-        self.sidebar_dictionary_explain_label.grid(
-            row=4, column=0, columnspan=2, padx=(16, 0), pady=(0, 5), sticky="nsw")
+        # self.sidebar_dictionary_explain_label.grid(
+            # row=4, column=0, columnspan=2, padx=(16, 0), pady=(0, 5), sticky="nsw")
         
 
         self.tabview = customtkinter.CTkTabview(
@@ -1103,7 +1103,11 @@ class GUI(customtkinter.CTk):
         root.withdraw()
         self.opened_bagfile_var = filedialog.askopenfilename(
             initialdir=self.bagfile_path)
-        bagfile_name = os.path.basename(self.opened_bagfile_var)
+        try:
+            bagfile_name = os.path.basename(self.opened_bagfile_var)
+        except:
+            rospy.logerr("No bag file selected")
+            return
         bagfile_dir = os.path.dirname(self.opened_bagfile_var)
         parts = bagfile_name.split('_')
         # Find the part of the bagfile_name that contains the duration value
@@ -1117,7 +1121,7 @@ class GUI(customtkinter.CTk):
             print('\033[93m')
             print(f"Camera: {parts[0].title()} {parts[1]}")
             print(f"Duration: {duration_part}")
-            print(f"Marker Size: {self.var_marker_size.get()}")
+            print(f"Marker Size: {self.var_marker_size}")
             print(f"Recorded Time: {parts[3]}_{parts[-1].split('.')[0]}")
             print(f"Bagfile Name: {bagfile_name}")
             print(f"Directory: {bagfile_dir}")
@@ -1215,7 +1219,7 @@ class GUI(customtkinter.CTk):
                     self.uuid, roslaunch_file)
 
                 aruco_detect_cli_args = [
-                    self.detect_launch, f'camera:={camera_name}', 'dictionary:=3', f'aruco_marker_size:={self.var_marker_size.get()}']
+                    self.detect_launch, f'camera:={camera_name}', f'dictionary:={self.var_dictionary}', f'aruco_marker_size:={self.var_marker_size}']
                 roslaunch_args = aruco_detect_cli_args[1:]
                 roslaunch_file = [(roslaunch.rlutil.resolve_launch_arguments(
                     aruco_detect_cli_args)[0], roslaunch_args)]
@@ -1259,12 +1263,13 @@ class GUI(customtkinter.CTk):
                             f"{camera_name}_rosbag_reading")
                         self.running_processes.pop(
                             f"{camera_name}_marker_detection")
-                        # self.running_processes.pop(f"{camera_name}_rostopic_process")
-                        self.csv_plotting(csv_file_path)
-
-                        print(
-                            '\033[93mRosbag reading finished.. Marker detection and rostopic process stopped..\033[0m')
-                        # print(csv_file_path)
+                    # self.running_processes.pop(f"{camera_name}_rostopic_process")
+                        try:
+                            if self.csv_plotting(csv_file_path) is not None:
+                                print(
+                                '\033[93mRosbag reading finished.. Marker detection and rostopic process stopped..\033[0m')
+                        except:
+                                return
 
                     except roslaunch.RLException as e_error:
                         rospy.logerr(
@@ -1280,85 +1285,89 @@ class GUI(customtkinter.CTk):
         camera, path = self.get_camera_name(csv_file)
         data = pd.read_csv(csv_file)
         jpg_file = csv_file.replace('.csv', '.png')
-        # Extract the columns from the csv file
-        camera_name = data['field.header.frame_id']
-        marker_id = data['field.transforms0.fiducial_id']
-        image_seq = data['field.image_seq']
-        x_disp = data['field.transforms0.transform.translation.x'] - \
-            data['field.transforms0.transform.translation.x'][0]
-        y_disp = data['field.transforms0.transform.translation.y'] - \
-            data['field.transforms0.transform.translation.y'][0]
-        z_disp = data['field.transforms0.transform.translation.z'] - \
-            data['field.transforms0.transform.translation.z'][0]
-        # finding the length of x_disp
-        # len_disp = len(x_disp)
-        time_vector = range(len(x_disp))
+        try:    
+            # Extract the columns from the csv file
+            camera_name = data['field.header.frame_id']
+            marker_id = data['field.transforms0.fiducial_id']
+            image_seq = data['field.image_seq']
+            x_disp = data['field.transforms0.transform.translation.x'] - \
+                data['field.transforms0.transform.translation.x'][0]
+            y_disp = data['field.transforms0.transform.translation.y'] - \
+                data['field.transforms0.transform.translation.y'][0]
+            z_disp = data['field.transforms0.transform.translation.z'] - \
+                data['field.transforms0.transform.translation.z'][0]
+            # finding the length of x_disp
+            # len_disp = len(x_disp)
+            time_vector = range(len(x_disp))
 
-        # upsample the time vector
-        up_factor = upsample_factor
-        # upsampled_time = np.linspace(0, len(t) - 1, len(t) * up_factor)
-        upsampled_time = np.linspace(
-            time_vector[0], time_vector[-1], len(time_vector) * up_factor)
+            # upsample the time vector
+            up_factor = upsample_factor
+            # upsampled_time = np.linspace(0, len(t) - 1, len(t) * up_factor)
+            upsampled_time = np.linspace(
+                time_vector[0], time_vector[-1], len(time_vector) * up_factor)
 
-        # Now, upsample the displacement signals using linear interpolation.
-        x_disp_up = np.interp(upsampled_time, time_vector, x_disp)
-        y_disp_up = np.interp(upsampled_time, time_vector, y_disp)
-        z_disp_up = np.interp(upsampled_time, time_vector, z_disp)
+            # Now, upsample the displacement signals using linear interpolation.
+            x_disp_up = np.interp(upsampled_time, time_vector, x_disp)
+            y_disp_up = np.interp(upsampled_time, time_vector, y_disp)
+            z_disp_up = np.interp(upsampled_time, time_vector, z_disp)
 
-        f_x_disp, Pxx = signal.csd(x_disp_up, x_disp_up, fs, nfft=2048)
-        f_y_disp, Pyy = signal.csd(y_disp_up, y_disp_up, fs, nfft=2048)
-        f_z_disp, Pzz = signal.csd(z_disp_up, z_disp_up, fs, nfft=2048)
+            f_x_disp, Pxx = signal.csd(x_disp_up, x_disp_up, fs, nfft=2048)
+            f_y_disp, Pyy = signal.csd(y_disp_up, y_disp_up, fs, nfft=2048)
+            f_z_disp, Pzz = signal.csd(z_disp_up, z_disp_up, fs, nfft=2048)
 
-        fig, axis_plot = plt.subplots(nrows=3, ncols=2)
+            fig, axis_plot = plt.subplots(nrows=3, ncols=2)
 
-        # set the title of the figure
-        fig.suptitle(
-            f'3D displacement using ARUCO marker detection - {camera}')
+            # set the title of the figure
+            fig.suptitle(
+                f'3D displacement using ARUCO marker detection - {camera}')
 
-        # Plotting the x, y, z displacement
-        axis_plot[0, 0].plot([t/100 for t in time_vector], x_disp, 'r')
-        axis_plot[0, 0].set_title('X displacement', loc='left', fontdict={
-            'fontsize': 12, 'fontweight': 'bold'})
-        axis_plot[0, 0].set_xlabel('Time (sec)')
+            # Plotting the x, y, z displacement
+            axis_plot[0, 0].plot([t/100 for t in time_vector], x_disp, 'r')
+            axis_plot[0, 0].set_title('X displacement', loc='left', fontdict={
+                'fontsize': 12, 'fontweight': 'bold'})
+            axis_plot[0, 0].set_xlabel('Time (sec)')
 
-        axis_plot[1, 0].plot([t/100 for t in time_vector], y_disp, 'g')
-        axis_plot[1, 0].set_title('Y displacement', loc='left', fontdict={
-            'fontsize': 12, 'fontweight': 'bold'})
-        axis_plot[1, 0].set_xlabel('Time (sec)')
+            axis_plot[1, 0].plot([t/100 for t in time_vector], y_disp, 'g')
+            axis_plot[1, 0].set_title('Y displacement', loc='left', fontdict={
+                'fontsize': 12, 'fontweight': 'bold'})
+            axis_plot[1, 0].set_xlabel('Time (sec)')
 
-        axis_plot[2, 0].plot([t/100 for t in time_vector], z_disp, 'b')
-        axis_plot[2, 0].set_title('Z displacement', loc='left', fontdict={
-            'fontsize': 12, 'fontweight': 'bold'})
-        axis_plot[2, 0].set_xlabel('Time (sec)')
+            axis_plot[2, 0].plot([t/100 for t in time_vector], z_disp, 'b')
+            axis_plot[2, 0].set_title('Z displacement', loc='left', fontdict={
+                'fontsize': 12, 'fontweight': 'bold'})
+            axis_plot[2, 0].set_xlabel('Time (sec)')
 
-        axis_plot[0, 0].grid(True)
-        axis_plot[1, 0].grid(True)
-        axis_plot[2, 0].grid(True)
+            axis_plot[0, 0].grid(True)
+            axis_plot[1, 0].grid(True)
+            axis_plot[2, 0].grid(True)
 
-        # Plotting the frequency response
-        axis_plot[0, 1].semilogy(f_x_disp, np.abs(Pxx))
-        axis_plot[0, 1].set_title('X-disp freq response', loc='left', fontdict={
-            'fontsize': 12, 'fontweight': 'bold'})
-        axis_plot[0, 1].set_xlabel('Frequency (Hz)')
+            # Plotting the frequency response
+            axis_plot[0, 1].semilogy(f_x_disp, np.abs(Pxx))
+            axis_plot[0, 1].set_title('X-disp freq response', loc='left', fontdict={
+                'fontsize': 12, 'fontweight': 'bold'})
+            axis_plot[0, 1].set_xlabel('Frequency (Hz)')
 
-        axis_plot[1, 1].semilogy(f_y_disp, np.abs(Pyy))
-        axis_plot[1, 1].set_title('Y-disp freq response', loc='left', fontdict={
-            'fontsize': 12, 'fontweight': 'bold'})
-        axis_plot[1, 1].set_xlabel('Frequency (Hz)')
+            axis_plot[1, 1].semilogy(f_y_disp, np.abs(Pyy))
+            axis_plot[1, 1].set_title('Y-disp freq response', loc='left', fontdict={
+                'fontsize': 12, 'fontweight': 'bold'})
+            axis_plot[1, 1].set_xlabel('Frequency (Hz)')
 
-        axis_plot[2, 1].semilogy(f_z_disp, np.abs(Pzz))
-        axis_plot[2, 1].set_title('Z-disp freq response', loc='left', fontdict={
-            'fontsize': 12, 'fontweight': 'bold'})
-        axis_plot[2, 1].set_xlabel('Frequency (Hz)')
+            axis_plot[2, 1].semilogy(f_z_disp, np.abs(Pzz))
+            axis_plot[2, 1].set_title('Z-disp freq response', loc='left', fontdict={
+                'fontsize': 12, 'fontweight': 'bold'})
+            axis_plot[2, 1].set_xlabel('Frequency (Hz)')
 
-        axis_plot[0, 1].grid(True)
-        axis_plot[1, 1].grid(True)
-        axis_plot[2, 1].grid(True)
+            axis_plot[0, 1].grid(True)
+            axis_plot[1, 1].grid(True)
+            axis_plot[2, 1].grid(True)
 
-        # Saving the plot with a given name
-        fig.savefig(jpg_file)
-        print('Close the figure to continue..')
-        plt.show()
+            # Saving the plot with a given name
+            fig.savefig(jpg_file)
+            print('Close the figure to continue..')
+            plt.show()
+        except Exception as e:
+            rospy.logerr('Error in reading file/detection: %s', e)
+            return False
 
     def load_last_saved_button_event(self):
         """This function is called when the detect button is clicked."""
@@ -1373,8 +1382,8 @@ class GUI(customtkinter.CTk):
                 # print(
                 #     f'Processing File: "{os.path.basename(filename)}" from directory: "{self.bagfile_path}"')
                 print("\033[93m")
-                print(f"Camera: {self.camera_selection_var.get()}")
-                print(f"Marker Size: {self.var_marker_size.get()}")
+                print(f"Camera: {self.camera_selection_var}")
+                print(f"Marker Size: {self.var_marker_size}")
                 print(f"Recorded Time: {self.recorded_datetime_var}")
                 print(
                     f"Loaded Bag File: {self.last_recorded_bag_file_name_with_path}")
