@@ -11,7 +11,8 @@ import matplotlib.pyplot as plt
 from scipy import signal
 import numpy as np
 from PIL import Image, ImageTk
-
+from scipy.fft import fft
+from scipy.fft import fftfreq
 import tkinter as tk
 from tkinter import filedialog
 
@@ -22,11 +23,14 @@ import rospy
 
 
 import customtkinter
+import warnings
+warnings.filterwarnings("ignore", category=FutureWarning)
+
 
 # rosrun camera_calibration cameracalibrator.py --size 6x5 --square 0.025 --k-coefficients=2 --fix-principal-point i --fix-aspect-ratio image:=/camera_1/image_raw camera:=/camera_1
-subprocess.Popen(['gnome-terminal', '--', '/bin/bash', '-c',
-                 'source /opt/ros/noetic/setup.bash && roscore; exec /bin/bash'])
-time.sleep(1)
+# subprocess.Popen(['gnome-terminal', '--', '/bin/bash', '-c',
+#                  'source /opt/ros/noetic/setup.bash && roscore; exec /bin/bash'])
+time.sleep(2)
 
 themes = {'blue': ("#3B8ED0", "#1F6AA5"),
           'green': ("#2CC985", "#2FA572"),
@@ -1105,8 +1109,8 @@ class GUI(customtkinter.CTk):
             initialdir=self.bagfile_path)
         try:
             bagfile_name = os.path.basename(self.opened_bagfile_var)
-        except:
-            rospy.logerr("No bag file selected")
+        except Exception as error_load:
+            rospy.logerr(f"No bag file selected, {error_load}")
             return
         bagfile_dir = os.path.dirname(self.opened_bagfile_var)
         parts = bagfile_name.split('_')
@@ -1194,7 +1198,7 @@ class GUI(customtkinter.CTk):
         print(
             '**********************************************************\033[93m')
         print()
-        bag_play_rate = 3
+        bag_play_rate = 1
 
         filename_ = self.get_bagfile()
         print(filename_)
@@ -1264,12 +1268,15 @@ class GUI(customtkinter.CTk):
                         self.running_processes.pop(
                             f"{camera_name}_marker_detection")
                     # self.running_processes.pop(f"{camera_name}_rostopic_process")
-                        try:
-                            if self.csv_plotting(csv_file_path) is not None:
-                                print(
-                                '\033[93mRosbag reading finished.. Marker detection and rostopic process stopped..\033[0m')
-                        except:
-                                return
+                        # try:
+                        #     if self.csv_plotting_v2(csv_file_path) is not None:
+                        #         print(
+                        #         '\033[93mRosbag reading finished.. Marker detection and rostopic process stopped..\033[0m')
+                        # except:
+                        #         return
+
+                        print(
+                        '\033[93mRosbag reading finished.. Marker detection and rostopic process stopped..\033[0m')
 
                     except roslaunch.RLException as e_error:
                         rospy.logerr(
@@ -1277,7 +1284,60 @@ class GUI(customtkinter.CTk):
                 except roslaunch.RLException as e_error:
                     rospy.logerr(
                         f"Error:{e_error} in reading and marker detection from:{camera_name}_rosbag_reading")
-
+    def csv_plotting_v2(self, csv_file):
+        fs = 200
+        camera, path = self.get_camera_name(csv_file)
+        data = pd.read_csv(csv_file)
+        jpg_file = csv_file.replace('.csv', '.png')
+        try:
+            camera_name = data['field.header.frame_id']
+            marker_id = data['field.transforms0.fiducial_id']
+            image_seq = data['field.image_seq']
+            x_disp = data['field.transforms0.transform.translation.x']
+            y_disp = data['field.transforms0.transform.translation.y']
+            z_disp = data['field.transforms0.transform.translation.z']
+            
+            x_disp = data['field.transforms0.transform.translation.x'] - data['field.transforms0.transform.translation.x'][0]
+            y_disp = data['field.transforms0.transform.translation.y'] - data['field.transforms0.transform.translation.y'][0]
+            z_disp = data['field.transforms0.transform.translation.z'] - data['field.transforms0.transform.translation.z'][0]
+            
+            x_disp = x_disp - np.mean(x_disp)
+            y_disp = y_disp - np.mean(y_disp)
+            z_disp = z_disp - np.mean(z_disp)
+            
+            # Plotting
+            fig, axs = plt.subplots(2, 1, figsize=(10, 8))
+            
+            # Time domain plot
+            axs[0].plot(x_disp, label='x_disp')
+            axs[0].plot(y_disp, label='y_disp')
+            axs[0].plot(z_disp, label='z_disp')
+            axs[0].set_xlabel('Time (s)')
+            axs[0].set_ylabel('Displacement (m)')
+            axs[0].set_title('Camera: {}, Marker ID: {}, Image Seq: {}'.format(camera_name[0], marker_id[0], image_seq[0]))
+            axs[0].legend()
+            
+            # Frequency domain plot
+            n = len(x_disp)
+            yf = fft(x_disp)
+            xf = fftfreq(n, 1/fs)[:n//2]
+            axs[1].plot(xf, 2.0/n * np.abs(yf[0:n//2]), label='x_disp')
+            yf = fft(y_disp)
+            axs[1].plot(xf, 2.0/n * np.abs(yf[0:n//2]), label='y_disp')
+            yf = fft(z_disp)
+            axs[1].plot(xf, 2.0/n * np.abs(yf[0:n//2]), label='z_disp')
+            axs[1].set_xlabel('Frequency (Hz)')
+            axs[1].set_ylabel('Magnitude')
+            axs[1].set_title('Frequency domain')
+            axs[1].legend()
+            
+            # Save the figure
+            plt.savefig(jpg_file)
+            
+        except Exception as e:
+            print('Error: ', str(e))
+        
+        
     def csv_plotting(self, csv_file):
         """This function plots the data from the csv file passed as input argument"""
         fs = 200
@@ -1290,14 +1350,23 @@ class GUI(customtkinter.CTk):
             camera_name = data['field.header.frame_id']
             marker_id = data['field.transforms0.fiducial_id']
             image_seq = data['field.image_seq']
-            x_disp = data['field.transforms0.transform.translation.x'] - \
-                data['field.transforms0.transform.translation.x'][0]
-            y_disp = data['field.transforms0.transform.translation.y'] - \
-                data['field.transforms0.transform.translation.y'][0]
-            z_disp = data['field.transforms0.transform.translation.z'] - \
-                data['field.transforms0.transform.translation.z'][0]
+            x_disp = data['field.transforms0.transform.translation.x'] 
+            y_disp = data['field.transforms0.transform.translation.y'] 
+            z_disp = data['field.transforms0.transform.translation.z']
+            x_disp = data['field.transforms0.transform.translation.x'] - data['field.transforms0.transform.translation.x'][0]
+            y_disp = data['field.transforms0.transform.translation.y'] - data['field.transforms0.transform.translation.y'][0]
+            z_disp = data['field.transforms0.transform.translation.z'] - data['field.transforms0.transform.translation.z'][0]
+            
+            x_disp =  x_disp - np.mean(x_disp)
+            y_disp = y_disp - np.mean(y_disp)
+            z_disp = z_disp - np.mean(z_disp)
+            
+
+            
+            
             # finding the length of x_disp
             # len_disp = len(x_disp)
+            
             time_vector = range(len(x_disp))
 
             # upsample the time vector
@@ -1306,10 +1375,14 @@ class GUI(customtkinter.CTk):
             upsampled_time = np.linspace(
                 time_vector[0], time_vector[-1], len(time_vector) * up_factor)
 
-            # Now, upsample the displacement signals using linear interpolation.
-            x_disp_up = np.interp(upsampled_time, time_vector, x_disp)
-            y_disp_up = np.interp(upsampled_time, time_vector, y_disp)
-            z_disp_up = np.interp(upsampled_time, time_vector, z_disp)
+            # # Now, upsample the displacement signals using linear interpolation.
+            # x_disp_up = np.interp(upsampled_time, time_vector, x_disp)
+            # y_disp_up = np.interp(upsampled_time, time_vector, y_disp)
+            # z_disp_up = np.interp(upsampled_time, time_vector, z_disp)
+
+            x_disp_up = x_disp
+            y_disp_up = y_disp
+            z_disp_up = z_disp
 
             f_x_disp, Pxx = signal.csd(x_disp_up, x_disp_up, fs, nfft=2048)
             f_y_disp, Pyy = signal.csd(y_disp_up, y_disp_up, fs, nfft=2048)
@@ -1326,6 +1399,8 @@ class GUI(customtkinter.CTk):
             axis_plot[0, 0].set_title('X displacement', loc='left', fontdict={
                 'fontsize': 12, 'fontweight': 'bold'})
             axis_plot[0, 0].set_xlabel('Time (sec)')
+            
+            
 
             axis_plot[1, 0].plot([t/100 for t in time_vector], y_disp, 'g')
             axis_plot[1, 0].set_title('Y displacement', loc='left', fontdict={
@@ -1438,9 +1513,9 @@ class GUI(customtkinter.CTk):
     def exit_button_click(self):
         """This function is called when the exit button is clicked."""
         print("Terminated successfully.")
-        subprocess.call('pkill roscore', shell=True)
-        self.destroy()
-        os.system("xdotool key ctrl+shift+w")
+        # subprocess.call('pkill roscore', shell=True)
+        # self.destroy()
+        # os.system("xdotool key ctrl+shift+w")
 
         exit()
     def sidebar_set_dictionary_btn_event(self):
