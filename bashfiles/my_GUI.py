@@ -11,8 +11,8 @@ import matplotlib.pyplot as plt
 from scipy import signal
 import numpy as np
 from PIL import Image, ImageTk
-from scipy.fft import fft
-from scipy.fft import fftfreq
+# from scipy.fft import fft
+# from scipy.fft import fftfreq
 import tkinter as tk
 from tkinter import filedialog
 
@@ -222,17 +222,17 @@ class GUI(customtkinter.CTk):
         )
         self.sidebar_btn_cam_1_start = customtkinter.CTkButton(
             master=self.sidebar_frame_cam_view,
-            text='Start Camera 1',
+            text="Start Camera 1",
             command=lambda: self.sidebar_camera_btn_event(1, True, False)
         )
         self.sidebar_btn_cam_2_start = customtkinter.CTkButton(
             master=self.sidebar_frame_cam_view,
-            text='Start Camera 2',
+            text="Start Camera 2",
             command=lambda: self.sidebar_camera_btn_event(2, True, False)
         )
         self.sidebar_btn_cam_3_start = customtkinter.CTkButton(
             master=self.sidebar_frame_cam_view,
-            text='Start Camera 3',
+            text="Start Camera 3",
             command=lambda: self.sidebar_camera_btn_event(3, True, False)
         )
         self.sidebar_frame_cam_view_label.grid(
