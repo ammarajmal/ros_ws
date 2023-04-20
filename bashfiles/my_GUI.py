@@ -11,8 +11,7 @@ import matplotlib.pyplot as plt
 from scipy import signal
 import numpy as np
 from PIL import Image, ImageTk
-from scipy.fft import fft
-from scipy.fft import fftfreq
+
 import tkinter as tk
 from tkinter import filedialog
 
@@ -876,6 +875,7 @@ class GUI(customtkinter.CTk):
 
     def start_camera_record(self, camera_name, device_id, calibration_file, dur):
         """Starts a camera driver and optionally a camera view"""
+        # print('entered camera record function')
         time_dur_bag = dur
         camera_num = device_id + 1
         self.recorded_datetime_var = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
@@ -908,6 +908,7 @@ class GUI(customtkinter.CTk):
         try:
             cam_driver.start()
             self.running_processes[f'{camera_name}_driver'] = cam_driver
+            # print('camera driver has successfully started')
 
             # Set camera active flag to True
             if camera_name == 'camera_1':
@@ -919,7 +920,9 @@ class GUI(customtkinter.CTk):
 
             # Print success message
             rospy.loginfo(f"{camera_name} camera driver started successfully.")
-            rospy.sleep(2)
+            rospy.sleep(1)
+            print('**********************************hello *********************************')
+             
             record_single_cam.start()
             self.running_processes[f'{camera_name}_record'] = record_single_cam
             rec_time = 0
@@ -1008,7 +1011,7 @@ class GUI(customtkinter.CTk):
         """This function is called when the record single camera button is pressed"""
         if self.sidebar_marker_size_entry.get() != "":
             self.maker_size = self.sidebar_marker_size_entry.get()
-        print(self.maker_size)
+        print('maker_size:', self.maker_size)
 
         cameras = [
             {'camera_name': 'camera_1', 'device_id': 0,
@@ -1023,8 +1026,11 @@ class GUI(customtkinter.CTk):
             camera_number = 1
         elif camera_selected == "Camera 2":
             camera_number = 2
-        else:
+        elif camera_selected == "Camera 3":
             camera_number = 3
+        else:
+            print("Please select a camera")
+            return
 
         man_dur = self.single_camera_dur_entry.get()
         combo_dur = self.single_camera_dur_combo_box.get()
@@ -1150,8 +1156,9 @@ class GUI(customtkinter.CTk):
             print('Loading Bagfile from last recorded file')
             return loaded_file
         else:
-            loaded_file = self.last_recorded_bag_file_name_with_path
-            print("found both files.. but loading last recorded file")
+            loaded_file = self.opened_bagfile_var
+            # loaded_file = self.last_recorded_bag_file_name_with_path
+            print("found both files.. but opening from the directory")
             return loaded_file
 
     def launch_marker_detector(self, camera_name):
@@ -1198,21 +1205,21 @@ class GUI(customtkinter.CTk):
         print(
             '**********************************************************\033[93m')
         print()
-        bag_play_rate = 1
+        bag_play_rate = 2
 
         filename_ = self.get_bagfile()
-        print(filename_)
+        # print(filename_)
         [camera_name, complete_filename] = self.get_camera_name(filename_)
         if camera_name is not None:
 
             just_filename = complete_filename
-            print(complete_filename)
+            print("Loaded BagFile: ",complete_filename)
             csv_file_path = os.path.join(
                 self.csv_file_path, just_filename + '.csv')
             topic_name = '/fiducial_transforms'
             # rostopic_echo_command = f'rostopic echo -p {topic_name} > {csv_file_path}'
             print(just_filename)
-
+            self.sidebar_set_dictionary_btn_event()
             if filename_ is not None:
                 readbag_cli_args = [
                     self.read_bag_launch, f"bag_file_path:={filename_}", f"playback_rate:={bag_play_rate}"]
