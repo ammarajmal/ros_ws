@@ -43,19 +43,20 @@ def csv_plotting_v2(csv_file, ldv_file):
     delta_t = 1 / fs_desired
     time_data_ldv_downsampled = time_data_ldv[::factor]
     disp_data_ldv_downsampled = disp_data_ldv[::factor]
-    
+    print('Length before downsampling: ', len(disp_data_ldv))
+    print('Length after downsampling : ', len(disp_data_ldv_downsampled))
 
     # Calculate actual sampling frequency of downsampled signal
     time_diffs = np.diff(time_data_ldv_downsampled)
     fs_ldv_downsampled = int(round(1 / np.mean(time_diffs),0))
 
-    print('fs_ldv after downsampling: ', fs_ldv_downsampled)
+    # print('fs_ldv after downsampling: ', fs_ldv_downsampled)
     
-    print('Length of time_data_ldv_downsampled: ', len(time_data_ldv_downsampled)/100)
-    print('Length of disp_data_ldv_downsampled: ', len(disp_data_ldv_downsampled))
+    # print('Length of time_data_ldv_downsampled: ', len(time_data_ldv_downsampled))
+    # print('Length of disp_data_ldv_downsampled: ', len(disp_data_ldv_downsampled))
     
-    print('Length of time_data_ldv: ', len(time_data_ldv))
-    print('Length of disp_data_ldv: ', len(disp_data_ldv))
+    # print('Length of time_data_ldv: ', len(time_data_ldv))
+    # print('Length of disp_data_ldv: ', len(disp_data_ldv))
 
     
 
@@ -99,6 +100,14 @@ def csv_plotting_v2(csv_file, ldv_file):
     y_disp = data['field.transforms0.transform.translation.y']
     z_disp = data['field.transforms0.transform.translation.z']
     
+    print("Length1:", len(x_disp), len(y_disp), len(z_disp))
+    print('Length2:', len(disp_data_ldv_downsampled))
+    cam_data = y_disp[:100]
+    # ldv_data = disp_data_ldv_downsampled[:100]
+    plt.plot(cam_data*1000 , label='y_disp', color='red')
+    # plt.plot(ldv_data, color='blue')
+    plt.show()
+    return
     # x_disp = data['field.transforms0.transform.translation.x'] - data['field.transforms0.transform.translation.x'][0]
     # y_disp = data['field.transforms0.transform.translation.y'] - data['field.transforms0.transform.translation.y'][0]
     # z_disp = data['field.transforms0.transform.translation.z'] - data['field.transforms0.transform.translation.z'][0]
@@ -106,6 +115,7 @@ def csv_plotting_v2(csv_file, ldv_file):
     x_disp = x_disp - np.mean(x_disp)
     y_disp = y_disp - np.mean(y_disp)
     z_disp = z_disp - np.mean(z_disp)
+    
     
     x_disp = np.asarray(x_disp)
     y_disp = np.asarray(y_disp)
@@ -121,14 +131,16 @@ def csv_plotting_v2(csv_file, ldv_file):
     
 # Time domain plot for x-axis (zoomed)
     # duration
-    print(duration)
-    x_axs_seconds = 2
+    # print('duration',duration, 's')
+    x_axs_seconds = 1
     factor = duration
     x_len = len(x_disp)
+    # print('x_len',x_len)
     new_x_len = x_len//factor
     new_x_len = new_x_len * x_axs_seconds
+    # print('new_x_len',new_x_len)
     ylimit_value = (np.max(y_disp) + 0.2 * np.max(y_disp))*1000
-    print('new_x_len', new_x_len)
+    # print('new_x_len', new_x_len)
     
     axs[0, 0].plot(x_disp[:new_x_len], label='x_disp', color='green')
     axs[0, 0].set_xlabel('Time - zoomed (s)')
@@ -140,20 +152,24 @@ def csv_plotting_v2(csv_file, ldv_file):
     axs[0, 0].grid(True)
 
     
-
+    print('len(disp_data_ldv)',len(disp_data_ldv))
+    print('len(y_disp)',len(y_disp))
 
     # Time domain plot for 
     # factor = 30
     x_len = len(y_disp)
     new_x_len = x_len//factor
     new_x_len = new_x_len * x_axs_seconds
-    # print(new_x_len)
+    
+    # fig1, axs1 = plt.subplots(3, 2, figsize=(10, 8), gridspec_kw={'hspace': 0.5, 'wspace': 0.5})
+
     axs[1, 0].plot(y_disp[:new_x_len]*1000, label='y_disp', color='red')
+    axs[1, 0].plot(disp_data_ldv_downsampled[:new_x_len], label='x_disp', color='green')
     axs[1, 0].set_xlabel('Time - zoomed (s)')
     axs[1, 0].set_ylabel('y-axis displacement (mm)')
     axs[1, 0].set_ylim([-ylimit_value, ylimit_value])
-    axs[1, 0].set_xticks(np.linspace(0, new_x_len-1, x_axs_seconds+1))
-    axs[1, 0].set_xticklabels(np.arange(0, x_axs_seconds+1))
+    # axs[1, 0].set_xticks(np.linspace(0, new_x_len-1, x_axs_seconds+1))
+    # axs[1, 0].set_xticklabels(np.arange(0, x_axs_seconds+1))
     axs[1, 0].grid(True)
 
 
