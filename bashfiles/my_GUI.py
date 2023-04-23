@@ -880,7 +880,7 @@ class GUI(customtkinter.CTk):
         camera_num = device_id + 1
         self.recorded_datetime_var = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
         # bagfile_name = f"cam{camera_num}_bagfile"
-
+        # LAUNCHFILE PARAMETERS FOR CAMERA AND BAG RECORDING
         camera_launch_args = [f"{self.cam_launch}",
                               f"cam:={camera_name}",
                               f"device_id:={device_id}",
@@ -1253,7 +1253,7 @@ class GUI(customtkinter.CTk):
                                 ['rostopic', 'echo', '-p', topic_name], stdout=f)
                         # rostopic_process = subprocess.Popen(rostopic_echo_command.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                         # self.running_processes[f"{camera_name}_rostopic_process"] = rostopic_process
-                        print('\033[93mFinished..\033[0m')
+                        print('\033[93mFinished reading rosbag file..\033[0m')
                         while rosbag_reading.pm.is_alive():
                             # print('is still alive...')
                             pass
@@ -1486,7 +1486,7 @@ class GUI(customtkinter.CTk):
                     "Variable self.last_recorded_bag_file_name_with_path is not defined or is an empty string.")
         except NameError:
             rospy.logerr(
-                "No fileself.read_bag_launch selected, please record a bag file first.")
+                f"No file {self.read_bag_launch} selected, please record a bag file first.")
 
     def camera_calibration(self, cam_number):
         cb_dim = self.board_size

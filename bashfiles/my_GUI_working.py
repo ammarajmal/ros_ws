@@ -244,8 +244,6 @@ class GUI(customtkinter.CTk):
         """Launches the camera calibration process for the camera 1"""
         print("="*36,"      Starting Camera Calibration","="*36, sep="\n" )
         # Launch parent processes for each camera calibration
-        
-        
         # Start calibration process and wait for it to finish
         calibration = self.calibrations[f"cam{camera_num}_calib"]
         calibration.start()
@@ -254,8 +252,6 @@ class GUI(customtkinter.CTk):
             time.sleep(1)
         calibration.shutdown()
         del self.running_processes[f"cam{camera_num}_calib"]
-        
-            
     def exit_button_click(self):
         print("Terminated successfully.")
         self.destroy()

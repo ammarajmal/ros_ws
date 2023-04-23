@@ -5,5 +5,11 @@
     "cmake.sourceDirectory": "${workspaceFolder}/src/camera_info_manager_py",
     "python.analysis.extraPaths": [
         "/opt/ros/noetic/lib/python3/dist-packages"
-    ]
+    ],
+    "files.associations": {
+        "*.tcc": "cpp",
+        "functional": "cpp",
+        "type_traits": "cpp",
+        "variant": "cpp"
+    }
 }
