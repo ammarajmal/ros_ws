@@ -1282,8 +1282,8 @@ class GUI(customtkinter.CTk):
                         # except:
                         #         return
 
-                        print(
-                        '\033[93mRosbag reading finished.. Marker detection and rostopic process stopped..\033[0m')
+                        print('\033[93mRosbag reading finished..')
+                        print('Marker detection and rostopic process stopped..\033[0m')
 
                     except roslaunch.RLException as e_error:
                         rospy.logerr(
