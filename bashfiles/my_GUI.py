@@ -797,6 +797,7 @@ class GUI(customtkinter.CTk):
 
         # Start the camera driver
         try:
+            rospy.sleep(0.5)
             cam_driver.start()
             self.running_processes[f'{camera_name}_driver'] = cam_driver
 
@@ -810,7 +811,7 @@ class GUI(customtkinter.CTk):
 
             # Print success message
             rospy.loginfo(f"{camera_name} camera driver started successfully.")
-            rospy.sleep(0.1)
+            rospy.sleep(0.5)
 
             # If view_camera is True, start the camera view
             if view_camera:
@@ -1018,7 +1019,7 @@ class GUI(customtkinter.CTk):
 
             # Print success message
             rospy.loginfo(f"{camera_name} camera driver started successfully.")
-            rospy.sleep(1)
+            # rospy.sleep(1)
             # print('**********************************hello *********************************')
              
             record_single_cam.start()
@@ -1203,6 +1204,26 @@ class GUI(customtkinter.CTk):
 
     def start_multi_camera(self):
         try:
+            if self.sidebar_marker_size_entry.get() != "":
+                self.maker_size = self.sidebar_marker_size_entry.get()
+            print('maker_size:', self.maker_size)
+            multi_manual_dur = self.multi_camera_dur_entry.get()
+            multi_combo_dur = self.multi_camera_dur_combo_box.get()
+            
+            # print('multi_manual_dur', multi_manual_dur)
+            # print('multi_combo_dur', multi_combo_dur)
+            if multi_manual_dur == "":
+                if multi_combo_dur == "Select":
+                    print("Please select a duration")
+                    return
+                else:
+                    self.multi_camera_dur = multi_combo_dur
+                    print(f"\033[93mDuration: {self.multi_camera_dur}", "\033[0m")
+                    print('******************************************')
+            else:
+                self.multi_camera_dur = multi_manual_dur
+                print(f"\033[93mDuration: {self.multi_camera_dur}", "\033[0m")
+                print('******************************************')
             cameras = [
                 {'camera_name': 'camera_1', 'device_id': 0, 'calibration_file': 'cam1', 'button': self.sidebar_btn_cam_1_start,
                     'calibrate_button': self.sidebar_btn_cam_1_calib, 'name': 'Camera 1'},
@@ -1239,16 +1260,77 @@ class GUI(customtkinter.CTk):
                 running_cams = list(self.running_processes.keys())
                 if len(running_cams) == 1:
                     print("one camera is running")
-                    running_cams = [s.replace('_driver', '') for s in running_cams]
+                    # cam_nums = []
+                    # for c in running_cams:
+                    #     cam_nums.append(int(c.split('_')[1]))
+                    # print(cam_nums)
+                    camera_name = running_cams[0].replace('_driver', '')
+                    # running_cams = [s.replace('_driver', '') for s in running_cams]
+                    # image_topic = '/'+running_cams[0] + '/image_raw'
+                    # camera_info_topic = '/'+running_cams[0] + '/camera_info'
                     print('Running cameras: ', running_cams)
+                    # print('topics: ', image_topic, '\n',camera_info_topic)
+                    self.recorded_datetime_var = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
+                    record_launch_args = [
+                        self.record_bag_launch,
+                        f'cam:={camera_name}',
+                        f'dur:={self.multi_camera_dur}',
+                        f'bagfile_datetime:={self.recorded_datetime_var}'
+                    ]
+                            # Create a ROS launch file with the camera record launch command
+                    record_single_cam_file = [(roslaunch.rlutil.resolve_launch_arguments(
+                        record_launch_args)[0], record_launch_args[1:])]
+                    record_single_cam = roslaunch.parent.ROSLaunchParent(
+                        self.uuid, record_single_cam_file)
+                    
+                    # rospy.sleep(1)
+                    record_single_cam.start()
+                    self.running_processes[f'{camera_name}_record'] = record_single_cam
+                    rec_time = 0
+                    while record_single_cam.pm.is_alive():
+                        rospy.sleep(1)
+                        rec_time += 1
+                        if rec_time <= int(self.multi_camera_dur):
+                            print(
+                                f"\033[93mRecording from {camera_name}...{rec_time}/{self.multi_camera_dur}s\033[0m")
+
+                    # Shutdown the camera driver
+                    try:
+                        self.running_processes[f'{camera_name}_driver'].shutdown()
+                        if f'{camera_name}_record' in self.running_processes:
+                            self.running_processes[f'{camera_name}_record'].shutdown()
+
+                            saved_bagfile = f"{camera_name}_{self.multi_camera_dur}s_{self.recorded_datetime_var}.bag"
+                            self.last_recorded_bag_file_name_with_path = os.path.join(
+                                self.bagfile_path, saved_bagfile)
+                            print("\033[93mSaved Data: \033[0m")
+                            print("\033[93m------------\033[0m")
+                            print(
+                                f"\033[93mBagfile Name: {os.path.basename(self.last_recorded_bag_file_name_with_path)} \033[0m")
+                            print(
+                                f"\033[93mDirectory: {os.path.dirname(self.last_recorded_bag_file_name_with_path)} \033[0m")
+                            self.multi_camera_active = False
+                            self.multi_camera_start_button.configure(
+                            text=f"Start Cameras", fg_color=themes[COLOR_SELECT])
+                    except roslaunch.RLException as excep_camera:
+                        rospy.logerr(
+                            f"Error stopping {camera_name} camera driver: {str(excep_camera)}")
+                        return
+
                 elif len(running_cams) == 2:
                     print("Two cameras are running")
                     running_cams = [s.replace('_driver', '') for s in running_cams]
+                    image_topics = ['/'+topic+'/image_raw' for topic in running_cams]
+                    camera_info_topics = ['/'+topic+'/camera_info' for topic in running_cams]
                     print('Running cameras: ', running_cams)
+                    print('topics: ', image_topics, '\n',camera_info_topics)
                 elif len(running_cams) == 3:
                     print("Three cameras are running")
                     running_cams = [s.replace('_driver', '') for s in running_cams]
+                    image_topics = ['/'+topic+'/image_raw' for topic in running_cams]
+                    camera_info_topics = ['/'+topic+'/camera_info' for topic in running_cams]
                     print('Running cameras: ', running_cams)
+                    print('topics: ', image_topics, '\n',camera_info_topics)
                 else:
                     print("No cameras are running")
             else:
