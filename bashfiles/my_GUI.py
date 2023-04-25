@@ -698,10 +698,26 @@ class GUI(customtkinter.CTk):
         print('\033[92m***************************************************')
         print('********  Recording multi camera bag file  ********')
         print('***************************************************')
-        self.uuid = roslaunch.rlutil.get_or_generate_uuid(None, False)
-        self.record_multibag_launch_file = roslaunch.parent.ROSLaunchParent(
-            self.uuid, [self.record_multibag_launch_path])
-        # self.record_multibag_launch_file.start()
+        if self.check_camera_1_var.get() == 'on':
+            self.multi_cameras_active_status.add(1)
+        else:
+            self.multi_cameras_active_status.discard(1)
+        if self.check_camera_2_var.get() == 'on':
+            self.multi_cameras_active_status.add(2)
+        else:
+            self.multi_cameras_active_status.discard(2)
+        if self.check_camera_3_var.get() == 'on':
+            self.multi_cameras_active_status.add(3)
+        else:
+            self.multi_cameras_active_status.discard(3)
+        print(self.multi_cameras_active_status)
+        print(len(self.multi_cameras_active_status))
+        print(len(self.running_processes))
+        print(self.running_processes)
+        
+        # try:
+            
+        
         return
         
         if self.sidebar_marker_size_entry.get() != "":
@@ -1003,7 +1019,7 @@ class GUI(customtkinter.CTk):
             # Print success message
             rospy.loginfo(f"{camera_name} camera driver started successfully.")
             rospy.sleep(1)
-            print('**********************************hello *********************************')
+            # print('**********************************hello *********************************')
              
             record_single_cam.start()
             self.running_processes[f'{camera_name}_record'] = record_single_cam
@@ -1212,21 +1228,57 @@ class GUI(customtkinter.CTk):
             # print(active_cameras)
             if not self.multi_camera_active:
                 self.multi_camera_active = True
+                self.multi_camera_start_button.configure(
+                    text=f"Stop Cameras", fg_color=("#fa5f5a", "#ba3732"))
                 for camera in active_cameras:
+                    print('Starting camera: ', camera['name'])
                     camera_name = camera['camera_name']
                     device_id = camera['device_id']
                     calibration_file = camera['calibration_file']
-                    self.start_camera(camera_name, device_id, calibration_file, True, False)
-                    
+                    self.start_camera(camera_name, device_id, calibration_file, False, False)
+                running_cams = list(self.running_processes.keys())
+                if len(running_cams) == 1:
+                    print("one camera is running")
+                    running_cams = [s.replace('_driver', '') for s in running_cams]
+                    print('Running cameras: ', running_cams)
+                elif len(running_cams) == 2:
+                    print("Two cameras are running")
+                    running_cams = [s.replace('_driver', '') for s in running_cams]
+                    print('Running cameras: ', running_cams)
+                elif len(running_cams) == 3:
+                    print("Three cameras are running")
+                    running_cams = [s.replace('_driver', '') for s in running_cams]
+                    print('Running cameras: ', running_cams)
+                else:
+                    print("No cameras are running")
             else:
+                # call .shutdown on all the camera objects
+                running_cams = list(self.running_processes.keys())
+                for camera_driver in running_cams:
+                    print(f'Stopping camera: {camera_driver}')
+                    self.running_processes[camera_driver].shutdown()
+                    self.running_processes.pop(camera_driver)
+                self.multi_camera_active = False
+                self.multi_camera_start_button.configure(
+                    text=f"Start Cameras", fg_color=themes[COLOR_SELECT])
+                print(self.running_processes)
+                return
+                self.running_processes.pop(camera_driver for camera_driver in running_cams)
+                self.multi_camera_active = False
+                self.multi_camera_start_button.configure(
+                text=f"Start Cameras", fg_color=themes[COLOR_SELECT])
+                return
                 for camera in active_cameras:
+                    print('Stopping camera: ', camera['name'])
                     camera_name = camera['camera_name']
                     self.stop_camera(camera_name)
                     self.multi_camera_active = False
+                    self.multi_camera_start_button.configure(
+                    text=f"Start Cameras", fg_color=themes[COLOR_SELECT])
         except Exception as excep_camera:
             rospy.logerr('Error in starting multi camera: ' + str(excep_camera))
 
-    def start_multi_camera__(self):
+    def start_multi_camera__legacy(self):
         print('\033[92m***************************************************')
         print('********  Saving multi camera bag file  ********')
         print('***************************************************')

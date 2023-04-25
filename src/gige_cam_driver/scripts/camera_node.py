@@ -49,7 +49,7 @@ class Camera(object):
 		pFrameBuffer = CameraAlignMalloc(FrameBufferSize, 16)
 		CameraSetTriggerMode(hCamera, 0)
 		CameraSetAeState(hCamera, 0)
-		CameraSetExposureTime(hCamera, 10 * 1000)
+		CameraSetExposureTime(hCamera, 5 * 1000)
 		CameraPlay(hCamera)
 		self.hCamera = hCamera
 		self.pFrameBuffer = pFrameBuffer
