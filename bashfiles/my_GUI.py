@@ -10,7 +10,8 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from scipy import signal
 import numpy as np
-from PIL import Image, ImageTk
+# from PIL import Image, ImageTk
+import rosbag
 
 import tkinter as tk
 from tkinter import filedialog
@@ -19,6 +20,8 @@ import roslaunch
 
 import rospkg
 import rospy
+from sensor_msgs.msg import Image, CameraInfo
+
 
 
 import customtkinter
@@ -70,7 +73,13 @@ class GUI(customtkinter.CTk):
         roslaunch.configure_logging(self.uuid)
 
         self.record_bag_launch = f"{self.launch_path}recordbag.launch"
+        
+        self.record_multibag_launch_path = f"{self.launch_path}allbags.launch"
+        
+        
         self.read_bag_launch = f"{self.launch_path}readbag.launch"
+        
+        
         self.cam_launch = f"{self.launch_path}cam.launch"
         self.view_launch = f"{self.launch_path}viewcam.launch"
         self.calib_launch = f"{self.launch_path}calib.launch"
@@ -85,9 +94,11 @@ class GUI(customtkinter.CTk):
         self.opened_bagfile_var = ''
         self.recorded_datetime_var = ''
         self.single_camera_dur = ''
+        self.multi_camera_dur = ''
         self.last_recorded_bag_file_name_with_path = ''
         self.loaded_last_file_flag = False
         self.opened_file_flag = False
+        self.multi_cameras_active_status = set()
         # self.last_recorded_bag_file_name_path = os.path.join(
         #             self.bagfile_path, self.last_recorded_bag_file_name)
 
@@ -98,7 +109,6 @@ class GUI(customtkinter.CTk):
         self.maker_size = "0.1"
         self.var_marker_size = tk.StringVar(self, "0.05")
         self.var_dictionary = tk.StringVar(self, "4")
-
         self.running_processes = {}
         self.camera_1_active = False
         self.camera_2_active = False
@@ -586,7 +596,7 @@ class GUI(customtkinter.CTk):
             font=customtkinter.CTkFont(size=14),
             checkbox_width=20,
             checkbox_height=20,
-            command=self.checkbox_event,
+            command=self.check_camera_1_checkbox_event,
             variable=self.check_camera_1_var,
             onvalue="on",
             offvalue="off",
@@ -599,7 +609,7 @@ class GUI(customtkinter.CTk):
             font=customtkinter.CTkFont(size=14),
             checkbox_width=20,
             checkbox_height=20,
-            command=self.checkbox_event,
+            command=self.check_camera_2_checkbox_event,
             variable=self.check_camera_2_var,
             onvalue="on",
             offvalue="off",
@@ -612,7 +622,7 @@ class GUI(customtkinter.CTk):
             font=customtkinter.CTkFont(size=14),
             checkbox_width=20,
             checkbox_height=20,
-            command=self.checkbox_event,
+            command=self.check_camera_3_checkbox_event,
             variable=self.check_camera_3_var,
             onvalue="on",
             offvalue="off",
@@ -637,10 +647,17 @@ class GUI(customtkinter.CTk):
             corner_radius=5,
             width=20
         )
-        self.multi_camera_rec_button = customtkinter.CTkButton(
+        self.multi_camera_start_button = customtkinter.CTkButton(
+            master=self.record_multiple_frame,
+            text="Start Cameras",
+            font=customtkinter.CTkFont(size=14),
+            command=self.start_multi_camera
+        )
+        self.multi_camera_record_button = customtkinter.CTkButton(
             master=self.record_multiple_frame,
             text="Record",
-            font=customtkinter.CTkFont(size=14)
+            font=customtkinter.CTkFont(size=14),
+            command=self.record_multi_camera
         )
         self.multi_camera_rec_manual_button = customtkinter.CTkButton(
             master=self.record_multiple_frame,
@@ -669,14 +686,55 @@ class GUI(customtkinter.CTk):
             row=2, column=2, padx=(0, 10),  pady=(0, 5),   sticky="nsew")
         self.multi_camera_dur_entry.grid(
             row=2, column=3, padx=(0, 20),  pady=(0, 5),   sticky="nsew")
-        self.multi_camera_rec_button.grid(
+        self.multi_camera_start_button.grid(
+            row=3, column=0, padx=10, pady=(10, 20),  sticky="nsew")
+        self.multi_camera_record_button.grid(
             row=3, column=1, padx=10, pady=(10, 20),  sticky="nsew")
         self.multi_rec_manual_label.grid(
             row=3, column=2, padx=(0, 10), pady=(10, 20), sticky="nsew")
         self.multi_camera_rec_manual_button.grid(
             row=3, column=3, padx=(0, 20),  pady=(10, 20), sticky="nsew")
+    def record_multi_camera(self):
+        print('\033[92m***************************************************')
+        print('********  Recording multi camera bag file  ********')
+        print('***************************************************')
+        self.uuid = roslaunch.rlutil.get_or_generate_uuid(None, False)
+        self.record_multibag_launch_file = roslaunch.parent.ROSLaunchParent(
+            self.uuid, [self.record_multibag_launch_path])
+        # self.record_multibag_launch_file.start()
+        return
+        
+        if self.sidebar_marker_size_entry.get() != "":
+            self.maker_size = self.sidebar_marker_size_entry.get()
+        print('\033[93mmaker_size:', self.maker_size)
+        multi_manual_dur = self.multi_camera_dur_entry.get()
+        multi_combo_dur = self.multi_camera_dur_combo_box.get()
+        
+        # print('multi_manual_dur', multi_manual_dur)
+        # print('multi_combo_dur', multi_combo_dur)
+        if multi_manual_dur == "":
+            if multi_combo_dur == "Select":
+                print("Please select a duration")
+                return
+            else:
+                self.multi_camera_dur = multi_combo_dur
+                print(f"\033[93mDuration: {self.multi_camera_dur}", "\033[0m")
+                print('******************************************')
+        else:
+            self.multi_camera_dur = multi_manual_dur
+            print(f"\033[93mDuration: {self.multi_camera_dur}", "\033[0m")
+            print('******************************************')
 
-    def checkbox_event(self):
+
+    def check_camera_1_checkbox_event(self):
+        print(self.check_camera_1_var.get())
+        pass
+        
+    def check_camera_2_checkbox_event(self):
+        print(self.check_camera_2_var.get())
+        pass
+    def check_camera_3_checkbox_event(self):
+        print(self.check_camera_3_var.get())
         pass
 
     def record_data(self):
@@ -1054,7 +1112,7 @@ class GUI(customtkinter.CTk):
             print(f"\033[93mDuration: {self.single_camera_dur}", "\033[0m")
             print('******************************************')
 
-        time.sleep(1)
+        # time.sleep(1)
 
         # Select the camera based on the provided number
         if camera_number < 1 or camera_number > 3:
@@ -1103,6 +1161,76 @@ class GUI(customtkinter.CTk):
         # Update the camera active states
         self.camera_1_active, self.camera_2_active, self.camera_3_active = camera_active_states
 
+
+    def start_multi_camera(self):
+        print('\033[92m***************************************************')
+        print('********  Saving multi camera bag file  ********')
+        print('***************************************************')
+        # if self.sidebar_marker_size_entry.get() != "":
+        #     self.maker_size = self.sidebar_marker_size_entry.get()
+        # print('maker_size:', self.maker_size)
+        # multi_manual_dur = self.multi_camera_dur_entry.get()
+        # multi_combo_dur = self.multi_camera_dur_combo_box.get()
+        
+        # # print('multi_manual_dur', multi_manual_dur)
+        # # print('multi_combo_dur', multi_combo_dur)
+        # if multi_manual_dur == "":
+        #     if multi_combo_dur == "Select":
+        #         print("Please select a duration")
+        #         return
+        #     else:
+        #         self.multi_camera_dur = multi_combo_dur
+        #         print(f"\033[93mDuration: {self.multi_camera_dur}", "\033[0m")
+        #         print('******************************************')
+        # else:
+        #     self.multi_camera_dur = multi_manual_dur
+        #     print(f"\033[93mDuration: {self.multi_camera_dur}", "\033[0m")
+        #     print('******************************************')
+            
+        cameras = [
+            {'camera_name': 'camera_1', 'device_id': 0,
+                'calibration_file': 'cam1', 'button': self.sidebar_btn_cam_1_start},
+            {'camera_name': 'camera_2', 'device_id': 1,
+                'calibration_file': 'cam2', 'button': self.sidebar_btn_cam_2_start},
+            {'camera_name': 'camera_3', 'device_id': 2,
+                'calibration_file': 'cam3', 'button': self.sidebar_btn_cam_3_start}
+        ]
+        if self.check_camera_1_var.get() == 'on':
+            self.multi_cameras_active_status.add(1)
+        else:
+            self.multi_cameras_active_status.discard(1)
+        if self.check_camera_2_var.get() == 'on':
+            self.multi_cameras_active_status.add(2)
+        else:
+            self.multi_cameras_active_status.discard(2)
+        if self.check_camera_3_var.get() == 'on':
+            self.multi_cameras_active_status.add(3)
+        else:
+            self.multi_cameras_active_status.discard(3)
+
+        active_cameras = [cameras[i-1] for i in self.multi_cameras_active_status]
+        # print('Active cameras: ', active_cameras)
+        
+        for camera in active_cameras:
+            package = 'gige_cam_driver'
+            executable = 'camera_node.py'
+            node_name = camera['camera_name']
+            device_id = str(camera['device_id'])
+            calibration_file = camera['calibration_file']
+            calib_path = "$(find gige_cam_driver)/config/camera_info_"+calibration_file+".yaml"
+        
+            node = roslaunch.core.Node(package, executable, name=node_name, output='screen')
+            node.args = f"device_id:={device_id} camera_manager:={node_name} calibration_file:={calib_path}"
+            
+            launch = roslaunch.scriptapi.ROSLaunch()
+            launch.start()
+
+            process = launch.launch(node)
+            print("Started camera:", node_name)
+
+
+        
+    
     def load_data_button_event(self):
         """This function is called when the load data button is clicked."""
         print('\033[92m***************************************************')
@@ -1534,13 +1662,14 @@ class GUI(customtkinter.CTk):
         print("Marker size set to: ", self.var_marker_size)
         
     def show_results_button_event(self):
-        path_image = '/home/agcam/ros_ws/src/gige_cam_driver/csvfiles/camera_1_20s_2023-04-05_11-34-18.png'
-        image = Image.open(path_image)
-        image = image.resize((800, 600), Image.ANTIALIAS)
-        photo = ImageTk.PhotoImage(image)
-        label = customtkinter.CTkLabel(master=self.tabview.tab("Display Results"), image=photo)
-        label.image = photo
-        label.pack()
+        # path_image = '/home/agcam/ros_ws/src/gige_cam_driver/csvfiles/camera_1_20s_2023-04-05_11-34-18.png'
+        # image = Image.open(path_image)
+        # image = image.resize((800, 600), Image.ANTIALIAS)
+        # photo = ImageTk.PhotoImage(image)
+        # label = customtkinter.CTkLabel(master=self.tabview.tab("Display Results"), image=photo)
+        # label.image = photo
+        # label.pack()
+        pass
     
         
 
