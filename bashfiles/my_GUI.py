@@ -84,7 +84,7 @@ class GUI(customtkinter.CTk):
         self.view_launch = f"{self.launch_path}viewcam.launch"
         self.calib_launch = f"{self.launch_path}calib.launch"
         self.detect_launch = f"{self.detect_launch_path}aruco_detect.launch"
-
+        self.multi_camera_active = False
         self.check_camera_1_var = tk.StringVar(self, "on")
         self.check_camera_2_var = tk.StringVar(self, "on")
         self.check_camera_3_var = tk.StringVar(self, "on")
@@ -759,6 +759,10 @@ class GUI(customtkinter.CTk):
 
     def start_camera(self, camera_name, device_id, calibration_file, view_camera, calibrate_camera):
         """Starts a camera driver and optionally a camera view"""
+            # Check if the camera driver is already running
+        if f'{camera_name}_driver' in self.running_processes:
+            rospy.logwarn(f"{camera_name} camera driver is already running.")
+            return
         camera_launch_args = [f"{self.cam_launch}",
                               f"cam:={camera_name}",
                               f"device_id:={device_id}",
@@ -767,12 +771,7 @@ class GUI(customtkinter.CTk):
         view_launch_args = [self.view_launch,
                             f"camera_name:={camera_name}"
                             ]
-        # print(f"board size: {self.board_size} and square size: {self.square_size}")
-        # calib_launch_args = [self.calib_launch,
-        #                      f"cam:={camera_name}",
-        #                      f"size:={self.board_size}",
-        #                      f"square:={self.square_size}"
-        #                      ]
+
 
         # Create a ROS launch file with the camera launch command
         roslaunch_file = [(roslaunch.rlutil.resolve_launch_arguments(
@@ -795,7 +794,7 @@ class GUI(customtkinter.CTk):
 
             # Print success message
             rospy.loginfo(f"{camera_name} camera driver started successfully.")
-            rospy.sleep(2)
+            rospy.sleep(0.1)
 
             # If view_camera is True, start the camera view
             if view_camera:
@@ -806,16 +805,6 @@ class GUI(customtkinter.CTk):
                 view_output.start()
                 self.running_processes[f'{camera_name}_view'] = view_output
 
-            # If calibrate_camera is True, start camera calibration
-            # if calibrate_camera:
-            #     rospy.loginfo(
-            #         f"{camera_name} calibration started successfully.")
-            #     calibrate_launch_file = [(roslaunch.rlutil.resolve_launch_arguments(
-            #         calib_launch_args)[0], calib_launch_args[1:])]
-            #     camera_calibrate = roslaunch.parent.ROSLaunchParent(
-            #         self.uuid, calibrate_launch_file)
-            #     camera_calibrate.start()
-            #     self.running_processes[f'{camera_name}_calibrate'] = camera_calibrate
 
         except roslaunch.RLException as excep_camera:
             rospy.logerr(
@@ -823,6 +812,41 @@ class GUI(customtkinter.CTk):
             return
 
     def stop_camera(self, camera_name):
+        """Stop a camera driver."""
+        # Check if camera driver is running
+        if f'{camera_name}_driver' not in self.running_processes:
+            rospy.logwarn(f"{camera_name} camera driver is not running.")
+            return
+
+        # Shutdown the camera driver
+        try:
+            self.running_processes[f'{camera_name}_driver'].shutdown()
+            if f'{camera_name}_view' in self.running_processes:
+                self.running_processes[f'{camera_name}_view'].shutdown()
+            # if f'{camera_name}_calibrate' in self.running_processes:
+            #     self.running_processes[f'{camera_name}_calibrate'].shutdown()
+        except roslaunch.RLException as excep_camera:
+            rospy.logerr(
+                f"Error stopping {camera_name} camera driver: {str(excep_camera)}")
+            return
+
+        # Set camera active flag to False
+        if camera_name == 'camera_1':
+            self.camera_1_active = False
+        elif camera_name == 'camera_2':
+            self.camera_2_active = False
+        elif camera_name == 'camera_3':
+            self.camera_3_active = False
+
+        # Remove camera driver from running processes dictionary
+        self.running_processes.pop(f'{camera_name}_driver', None)
+        self.running_processes.pop(f'{camera_name}_view', None)
+        # self.running_processes.pop(f'{camera_name}_calibrate', None)
+
+        # Print success message
+        rospy.loginfo(f"{camera_name} camera driver stopped successfully.")
+
+    def stop_camera__legacy(self, camera_name):
         """Stop a camera driver."""
         # Check if camera driver is running
         if f'{camera_name}_driver' not in self.running_processes:
@@ -1161,8 +1185,48 @@ class GUI(customtkinter.CTk):
         # Update the camera active states
         self.camera_1_active, self.camera_2_active, self.camera_3_active = camera_active_states
 
-
     def start_multi_camera(self):
+        try:
+            cameras = [
+                {'camera_name': 'camera_1', 'device_id': 0, 'calibration_file': 'cam1', 'button': self.sidebar_btn_cam_1_start,
+                    'calibrate_button': self.sidebar_btn_cam_1_calib, 'name': 'Camera 1'},
+                {'camera_name': 'camera_2', 'device_id': 1, 'calibration_file': 'cam2', 'button': self.sidebar_btn_cam_2_start,
+                    'calibrate_button': self.sidebar_btn_cam_2_calib, 'name': 'Camera 2'},
+                {'camera_name': 'camera_3', 'device_id': 2, 'calibration_file': 'cam3','button': self.sidebar_btn_cam_3_start,
+                    'calibrate_button': self.sidebar_btn_cam_3_calib, 'name': 'Camera 3'}
+            ]
+            if self.check_camera_1_var.get() == 'on':
+                self.multi_cameras_active_status.add(1)
+            else:
+                self.multi_cameras_active_status.discard(1)
+            if self.check_camera_2_var.get() == 'on':
+                self.multi_cameras_active_status.add(2)
+            else:
+                self.multi_cameras_active_status.discard(2)
+            if self.check_camera_3_var.get() == 'on':
+                self.multi_cameras_active_status.add(3)
+            else:
+                self.multi_cameras_active_status.discard(3)
+            # print('Active cameras: ', list(self.multi_cameras_active_status))
+            active_cameras = [cameras[i-1] for i in self.multi_cameras_active_status]
+            # print(active_cameras)
+            if not self.multi_camera_active:
+                self.multi_camera_active = True
+                for camera in active_cameras:
+                    camera_name = camera['camera_name']
+                    device_id = camera['device_id']
+                    calibration_file = camera['calibration_file']
+                    self.start_camera(camera_name, device_id, calibration_file, True, False)
+                    
+            else:
+                for camera in active_cameras:
+                    camera_name = camera['camera_name']
+                    self.stop_camera(camera_name)
+                    self.multi_camera_active = False
+        except Exception as excep_camera:
+            rospy.logerr('Error in starting multi camera: ' + str(excep_camera))
+
+    def start_multi_camera__(self):
         print('\033[92m***************************************************')
         print('********  Saving multi camera bag file  ********')
         print('***************************************************')
@@ -1207,18 +1271,19 @@ class GUI(customtkinter.CTk):
             self.multi_cameras_active_status.add(3)
         else:
             self.multi_cameras_active_status.discard(3)
-
+        print('Active cameras: ', self.multi_cameras_active_status)
         active_cameras = [cameras[i-1] for i in self.multi_cameras_active_status]
         # print('Active cameras: ', active_cameras)
-        
         for camera in active_cameras:
             package = 'gige_cam_driver'
             executable = 'camera_node.py'
             node_name = camera['camera_name']
             device_id = str(camera['device_id'])
             calibration_file = camera['calibration_file']
-            calib_path = "$(find gige_cam_driver)/config/camera_info_"+calibration_file+".yaml"
-        
+            # calib_path = "$(find gige_cam_driver)/config/camera_info_"+calibration_file+".yaml"
+            
+            calib_path = os.path.join(rospkg.RosPack().get_path('gige_cam_driver'), 'config', 'camera_info_'+calibration_file+'.yaml')
+            print('calib_path', calib_path)
             node = roslaunch.core.Node(package, executable, name=node_name, output='screen')
             node.args = f"device_id:={device_id} camera_manager:={node_name} calibration_file:={calib_path}"
             
