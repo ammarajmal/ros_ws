@@ -336,27 +336,27 @@ class GUI(customtkinter.CTk):
             row=2, column=1, padx=(20, 20), pady=(0, 20))
 
         self.tabview.add("Record & Process Data")
-        self.tabview.add("Display Results")
+        # self.tabview.add("Display Results")
         self.tabview.tab("Record & Process Data").grid_columnconfigure(
-            0, weight=1)  # configure grid of individual tabs
-        self.tabview.tab("Display Results").grid_columnconfigure(
-            0, weight=1)  # configure grid of individual tabs
+            0, weight=2)  # configure grid of individual tabs
+        # self.tabview.tab("Display Results").grid_columnconfigure(
+            # 0, weight=1)  # configure grid of individual tabs
 
-        self.result_label = customtkinter.CTkLabel(
-            master=self.tabview.tab("Display Results"),
-            text="Results",
-            font=customtkinter.CTkFont(size=16),
-            text_color='black'
-        )
-        self.result_frame = customtkinter.CTkFrame(
-            master=self.tabview.tab("Display Results"),
-            fg_color=('lightgray', 'gray')
-        )
+        # self.result_label = customtkinter.CTkLabel(
+        #     master=self.tabview.tab("Display Results"),
+        #     text="Results",
+        #     font=customtkinter.CTkFont(size=16),
+        #     text_color='black'
+        # )
+        # self.result_frame = customtkinter.CTkFrame(
+        #     master=self.tabview.tab("Display Results"),
+        #     fg_color=('lightgray', 'gray')
+        # )
 
-        self.result_label.grid(row=0, column=0, padx=20,
-                               pady=(5, 0), sticky="nsew")
-        self.result_frame.grid(
-            row=1, column=0, columnspan=2, padx=20, pady=(10, 0), sticky="nsew")
+        # self.result_label.grid(row=0, column=0, padx=20,
+        #                        pady=(5, 0), sticky="nsew")
+        # self.result_frame.grid(
+        #     row=1, column=0, columnspan=2, padx=20, pady=(10, 0), sticky="nsew")
         self.record_label = customtkinter.CTkLabel(
             master=self.tabview.tab("Record & Process Data"),
             text="Recording from Camera",
@@ -369,7 +369,8 @@ class GUI(customtkinter.CTk):
         )
         self.record_multiple_frame = customtkinter.CTkFrame(
             master=self.tabview.tab("Record & Process Data"),
-            fg_color=('lightgray', 'gray')
+            fg_color=('lightgray', 'gray'),
+            
         )
         self.process_label = customtkinter.CTkLabel(
             master=self.tabview.tab("Record & Process Data"),
@@ -463,7 +464,7 @@ class GUI(customtkinter.CTk):
         )
         self.single_dur_select_or_label = customtkinter.CTkLabel(
             master=self.record_single_frame,
-            text="or        Enter manually:",
+            text="  or        Enter manually:",
             font=customtkinter.CTkFont(size=14)
             # text_color="#707070"
         )
@@ -553,10 +554,10 @@ class GUI(customtkinter.CTk):
             row=2, column=3, padx=(0, 20),  pady=(0, 5),   sticky="nsew")
         self.single_camera_rec_button.grid(
             row=3, column=1, padx=(10), pady=(10, 20), sticky="nsew")
-        self.single_rec_manual_label.grid(
-            row=3, column=2, padx=(0, 10), pady=(10, 20), sticky="nsew")
-        self.single_camera_rec_manual_button.grid(
-            row=3, column=3, padx=(0, 20),  pady=(10, 20), sticky="nsew")
+        # self.single_rec_manual_label.grid(
+        #     row=3, column=2, padx=(0, 10), pady=(10, 20), sticky="nsew")
+        # self.single_camera_rec_manual_button.grid(
+        #     row=3, column=3, padx=(0, 20),  pady=(10, 20), sticky="nsew")
 # *****************************************************************************************************************************
 
         self.multiple_cams_label = customtkinter.CTkLabel(
@@ -585,7 +586,7 @@ class GUI(customtkinter.CTk):
         )
         self.multi_dur_select_or_label = customtkinter.CTkLabel(
             master=self.record_multiple_frame,
-            text="or        Enter manually:",
+            text="  or        Enter manually:",
             font=customtkinter.CTkFont(size=14),
             # text_color="#707070"
         )
@@ -647,12 +648,12 @@ class GUI(customtkinter.CTk):
             corner_radius=5,
             width=20
         )
-        self.multi_camera_start_button = customtkinter.CTkButton(
-            master=self.record_multiple_frame,
-            text="Start Cameras",
-            font=customtkinter.CTkFont(size=14),
-            command=self.start_multi_camera
-        )
+        # self.multi_camera_start_button = customtkinter.CTkButton(
+        #     master=self.record_multiple_frame,
+        #     text="Start Cameras",
+        #     font=customtkinter.CTkFont(size=14),
+        #     command=self.start_multi_camera
+        # )
         self.multi_camera_record_button = customtkinter.CTkButton(
             master=self.record_multiple_frame,
             text="Record",
@@ -686,15 +687,15 @@ class GUI(customtkinter.CTk):
             row=2, column=2, padx=(0, 10),  pady=(0, 5),   sticky="nsew")
         self.multi_camera_dur_entry.grid(
             row=2, column=3, padx=(0, 20),  pady=(0, 5),   sticky="nsew")
-        self.multi_camera_start_button.grid(
-            row=3, column=0, padx=10, pady=(10, 20),  sticky="nsew")
+        # self.multi_camera_start_button.grid(
+        #     row=3, column=0, padx=10, pady=(10, 20),  sticky="nsew")
         self.multi_camera_record_button.grid(
             row=3, column=1, padx=10, pady=(10, 20),  sticky="nsew")
-        self.multi_rec_manual_label.grid(
-            row=3, column=2, padx=(0, 10), pady=(10, 20), sticky="nsew")
-        self.multi_camera_rec_manual_button.grid(
-            row=3, column=3, padx=(0, 20),  pady=(10, 20), sticky="nsew")
-    def record_multi_camera(self):
+        # self.multi_rec_manual_label.grid(
+        #     row=3, column=2, padx=(0, 10), pady=(10, 20), sticky="nsew")
+        # self.multi_camera_rec_manual_button.grid(
+        #     row=3, column=3, padx=(0, 20),  pady=(10, 20), sticky="nsew")
+    def record_multi_camera__nonfunctional_legacy(self):
         print('\033[92m***************************************************')
         print('********  Recording multi camera bag file  ********')
         print('***************************************************')
@@ -1202,7 +1203,7 @@ class GUI(customtkinter.CTk):
         # Update the camera active states
         self.camera_1_active, self.camera_2_active, self.camera_3_active = camera_active_states
 
-    def start_multi_camera(self):
+    def record_multi_camera(self):
         try:
             if self.sidebar_marker_size_entry.get() != "":
                 self.maker_size = self.sidebar_marker_size_entry.get()
@@ -1249,8 +1250,8 @@ class GUI(customtkinter.CTk):
             # print(active_cameras)
             if not self.multi_camera_active:
                 self.multi_camera_active = True
-                self.multi_camera_start_button.configure(
-                    text=f"Stop Cameras", fg_color=("#fa5f5a", "#ba3732"))
+                self.multi_camera_record_button.configure(
+                    text=f"Stop Recording", fg_color=("#fa5f5a", "#ba3732"))
                 for camera in active_cameras:
                     print('Starting camera: ', camera['name'])
                     camera_name = camera['camera_name']
@@ -1310,8 +1311,8 @@ class GUI(customtkinter.CTk):
                             print(
                                 f"\033[93mDirectory: {os.path.dirname(self.last_recorded_bag_file_name_with_path)} \033[0m")
                             self.multi_camera_active = False
-                            self.multi_camera_start_button.configure(
-                            text=f"Start Cameras", fg_color=themes[COLOR_SELECT])
+                            self.multi_camera_record_button.configure(
+                            text=f"Record", fg_color=themes[COLOR_SELECT])
                     except roslaunch.RLException as excep_camera:
                         rospy.logerr(
                             f"Error stopping {camera_name} camera driver: {str(excep_camera)}")
@@ -1341,13 +1342,13 @@ class GUI(customtkinter.CTk):
                     self.running_processes[camera_driver].shutdown()
                     self.running_processes.pop(camera_driver)
                 self.multi_camera_active = False
-                self.multi_camera_start_button.configure(
-                    text=f"Start Cameras", fg_color=themes[COLOR_SELECT])
+                self.multi_camera_record_button.configure(
+                    text=f"Record", fg_color=themes[COLOR_SELECT])
                 print(self.running_processes)
                 return
                 self.running_processes.pop(camera_driver for camera_driver in running_cams)
                 self.multi_camera_active = False
-                self.multi_camera_start_button.configure(
+                self.multi_camera_record_button.configure(
                 text=f"Start Cameras", fg_color=themes[COLOR_SELECT])
                 return
                 for camera in active_cameras:
@@ -1355,7 +1356,7 @@ class GUI(customtkinter.CTk):
                     camera_name = camera['camera_name']
                     self.stop_camera(camera_name)
                     self.multi_camera_active = False
-                    self.multi_camera_start_button.configure(
+                    self.multi_camera_record_button.configure(
                     text=f"Start Cameras", fg_color=themes[COLOR_SELECT])
         except Exception as excep_camera:
             rospy.logerr('Error in starting multi camera: ' + str(excep_camera))
