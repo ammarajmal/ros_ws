@@ -108,8 +108,8 @@ class GUI(customtkinter.CTk):
         self.board_size = "6x5"
         self.square_size = "0.025"
         self.maker_size = "0.1"
-        self.var_marker_size = tk.StringVar(self, "0.05")
-        self.var_dictionary = tk.StringVar(self, "4")
+        self.var_marker_size = tk.StringVar(self, "0.021")
+        self.var_dictionary = tk.StringVar(self, "1")
         self.running_processes = {}
         self.camera_1_active = False
         self.camera_2_active = False
