@@ -21,6 +21,7 @@ import roslaunch
 import rospkg
 import rospy
 from sensor_msgs.msg import Image, CameraInfo
+from plotting import py_plotting
 
 
 
@@ -65,7 +66,7 @@ class GUI(customtkinter.CTk):
         # ********************************************************************************
 
         self.launch_path = rospkg.RosPack().get_path('gige_cam_driver') + '/launch/'
-        self.csv_file_path = rospkg.RosPack().get_path('gige_cam_driver') + '/csvfiles/'
+        self.csv_folder_path = rospkg.RosPack().get_path('gige_cam_driver') + '/csvfiles/'
         self.detect_launch_path = rospkg.RosPack().get_path('aruco_detect') + '/launch/'
         self.bagfile_path = self.launch_path.replace("launch/", "bagfiles/")
 
@@ -113,6 +114,7 @@ class GUI(customtkinter.CTk):
         self.camera_1_active = False
         self.camera_2_active = False
         self.camera_3_active = False
+        self.csv_file_path_global = ''
 
         self.title("Displacement Measurement using ARUCO Marker")
         self.main_label = customtkinter.CTkLabel(
@@ -1436,7 +1438,13 @@ class GUI(customtkinter.CTk):
         print('\033[92m***************************************************')
         print('********  Loading Bag File from Directory  ********')
         print('***************************************************')
-
+        self.process_detect_label.configure(text='Completed Successfully',
+                                    state='disabled',
+                                    text_color='green',
+                                    font=customtkinter.CTkFont(
+                                        size=12, weight='bold')
+                                    )
+        self.process_show_results_button.configure(state =  'disabled')
         root = tk.Tk()
         root.withdraw()
         self.opened_bagfile_var = filedialog.askopenfilename(
@@ -1543,10 +1551,12 @@ class GUI(customtkinter.CTk):
             just_filename = complete_filename
             print("Loaded BagFile: ",complete_filename)
             csv_file_path = os.path.join(
-                self.csv_file_path, just_filename + '.csv')
+                self.csv_folder_path, just_filename + '.csv')
+            print('**************************************************88 print****************')
+            print(csv_file_path)
+            print('**************************************************88 print****************')
+
             topic_name = '/fiducial_transforms'
-            # rostopic_echo_command = f'rostopic echo -p {topic_name} > {csv_file_path}'
-            print(just_filename)
             self.sidebar_set_dictionary_btn_event()
             if filename_ is not None:
                 readbag_cli_args = [
@@ -1579,6 +1589,8 @@ class GUI(customtkinter.CTk):
                         with open(csv_file_path, 'w') as f:
                             rostopic_process = subprocess.Popen(
                                 ['rostopic', 'echo', '-p', topic_name], stdout=f)
+                        print(f'\033[93mSaved data in csc file at: {csv_file_path}\033[0m')
+                        self.csv_file_path_global = csv_file_path
                         # rostopic_process = subprocess.Popen(rostopic_echo_command.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                         # self.running_processes[f"{camera_name}_rostopic_process"] = rostopic_process
                         print('\033[93mFinished reading rosbag file..\033[0m')
@@ -1619,165 +1631,8 @@ class GUI(customtkinter.CTk):
                 except roslaunch.RLException as e_error:
                     rospy.logerr(
                         f"Error:{e_error} in reading and marker detection from:{camera_name}_rosbag_reading")
-    def csv_plotting_v2(self, csv_file):
-        fs = 200
-        camera, path = self.get_camera_name(csv_file)
-        data = pd.read_csv(csv_file)
-        jpg_file = csv_file.replace('.csv', '.png')
-        try:
-            camera_name = data['field.header.frame_id']
-            marker_id = data['field.transforms0.fiducial_id']
-            image_seq = data['field.image_seq']
-            x_disp = data['field.transforms0.transform.translation.x']
-            y_disp = data['field.transforms0.transform.translation.y']
-            z_disp = data['field.transforms0.transform.translation.z']
-            
-            x_disp = data['field.transforms0.transform.translation.x'] - data['field.transforms0.transform.translation.x'][0]
-            y_disp = data['field.transforms0.transform.translation.y'] - data['field.transforms0.transform.translation.y'][0]
-            z_disp = data['field.transforms0.transform.translation.z'] - data['field.transforms0.transform.translation.z'][0]
-            
-            x_disp = x_disp - np.mean(x_disp)
-            y_disp = y_disp - np.mean(y_disp)
-            z_disp = z_disp - np.mean(z_disp)
-            
-            # Plotting
-            fig, axs = plt.subplots(2, 1, figsize=(10, 8))
-            
-            # Time domain plot
-            axs[0].plot(x_disp, label='x_disp')
-            axs[0].plot(y_disp, label='y_disp')
-            axs[0].plot(z_disp, label='z_disp')
-            axs[0].set_xlabel('Time (s)')
-            axs[0].set_ylabel('Displacement (m)')
-            axs[0].set_title('Camera: {}, Marker ID: {}, Image Seq: {}'.format(camera_name[0], marker_id[0], image_seq[0]))
-            axs[0].legend()
-            
-            # Frequency domain plot
-            n = len(x_disp)
-            yf = fft(x_disp)
-            xf = fftfreq(n, 1/fs)[:n//2]
-            axs[1].plot(xf, 2.0/n * np.abs(yf[0:n//2]), label='x_disp')
-            yf = fft(y_disp)
-            axs[1].plot(xf, 2.0/n * np.abs(yf[0:n//2]), label='y_disp')
-            yf = fft(z_disp)
-            axs[1].plot(xf, 2.0/n * np.abs(yf[0:n//2]), label='z_disp')
-            axs[1].set_xlabel('Frequency (Hz)')
-            axs[1].set_ylabel('Magnitude')
-            axs[1].set_title('Frequency domain')
-            axs[1].legend()
-            
-            # Save the figure
-            plt.savefig(jpg_file)
-            
-        except Exception as e:
-            print('Error: ', str(e))
-        
-        
-    def csv_plotting(self, csv_file):
-        """This function plots the data from the csv file passed as input argument"""
-        fs = 200
-        upsample_factor = 200
-        camera, path = self.get_camera_name(csv_file)
-        data = pd.read_csv(csv_file)
-        jpg_file = csv_file.replace('.csv', '.png')
-        try:    
-            # Extract the columns from the csv file
-            camera_name = data['field.header.frame_id']
-            marker_id = data['field.transforms0.fiducial_id']
-            image_seq = data['field.image_seq']
-            x_disp = data['field.transforms0.transform.translation.x'] 
-            y_disp = data['field.transforms0.transform.translation.y'] 
-            z_disp = data['field.transforms0.transform.translation.z']
-            x_disp = data['field.transforms0.transform.translation.x'] - data['field.transforms0.transform.translation.x'][0]
-            y_disp = data['field.transforms0.transform.translation.y'] - data['field.transforms0.transform.translation.y'][0]
-            z_disp = data['field.transforms0.transform.translation.z'] - data['field.transforms0.transform.translation.z'][0]
-            
-            x_disp =  x_disp - np.mean(x_disp)
-            y_disp = y_disp - np.mean(y_disp)
-            z_disp = z_disp - np.mean(z_disp)
-            
 
-            
-            
-            # finding the length of x_disp
-            # len_disp = len(x_disp)
-            
-            time_vector = range(len(x_disp))
 
-            # upsample the time vector
-            up_factor = upsample_factor
-            # upsampled_time = np.linspace(0, len(t) - 1, len(t) * up_factor)
-            upsampled_time = np.linspace(
-                time_vector[0], time_vector[-1], len(time_vector) * up_factor)
-
-            # # Now, upsample the displacement signals using linear interpolation.
-            # x_disp_up = np.interp(upsampled_time, time_vector, x_disp)
-            # y_disp_up = np.interp(upsampled_time, time_vector, y_disp)
-            # z_disp_up = np.interp(upsampled_time, time_vector, z_disp)
-
-            x_disp_up = x_disp
-            y_disp_up = y_disp
-            z_disp_up = z_disp
-
-            f_x_disp, Pxx = signal.csd(x_disp_up, x_disp_up, fs, nfft=2048)
-            f_y_disp, Pyy = signal.csd(y_disp_up, y_disp_up, fs, nfft=2048)
-            f_z_disp, Pzz = signal.csd(z_disp_up, z_disp_up, fs, nfft=2048)
-
-            fig, axis_plot = plt.subplots(nrows=3, ncols=2)
-
-            # set the title of the figure
-            fig.suptitle(
-                f'3D displacement using ARUCO marker detection - {camera}')
-
-            # Plotting the x, y, z displacement
-            axis_plot[0, 0].plot([t/100 for t in time_vector], x_disp, 'r')
-            axis_plot[0, 0].set_title('X displacement', loc='left', fontdict={
-                'fontsize': 12, 'fontweight': 'bold'})
-            axis_plot[0, 0].set_xlabel('Time (sec)')
-            
-            
-
-            axis_plot[1, 0].plot([t/100 for t in time_vector], y_disp, 'g')
-            axis_plot[1, 0].set_title('Y displacement', loc='left', fontdict={
-                'fontsize': 12, 'fontweight': 'bold'})
-            axis_plot[1, 0].set_xlabel('Time (sec)')
-
-            axis_plot[2, 0].plot([t/100 for t in time_vector], z_disp, 'b')
-            axis_plot[2, 0].set_title('Z displacement', loc='left', fontdict={
-                'fontsize': 12, 'fontweight': 'bold'})
-            axis_plot[2, 0].set_xlabel('Time (sec)')
-
-            axis_plot[0, 0].grid(True)
-            axis_plot[1, 0].grid(True)
-            axis_plot[2, 0].grid(True)
-
-            # Plotting the frequency response
-            axis_plot[0, 1].semilogy(f_x_disp, np.abs(Pxx))
-            axis_plot[0, 1].set_title('X-disp freq response', loc='left', fontdict={
-                'fontsize': 12, 'fontweight': 'bold'})
-            axis_plot[0, 1].set_xlabel('Frequency (Hz)')
-
-            axis_plot[1, 1].semilogy(f_y_disp, np.abs(Pyy))
-            axis_plot[1, 1].set_title('Y-disp freq response', loc='left', fontdict={
-                'fontsize': 12, 'fontweight': 'bold'})
-            axis_plot[1, 1].set_xlabel('Frequency (Hz)')
-
-            axis_plot[2, 1].semilogy(f_z_disp, np.abs(Pzz))
-            axis_plot[2, 1].set_title('Z-disp freq response', loc='left', fontdict={
-                'fontsize': 12, 'fontweight': 'bold'})
-            axis_plot[2, 1].set_xlabel('Frequency (Hz)')
-
-            axis_plot[0, 1].grid(True)
-            axis_plot[1, 1].grid(True)
-            axis_plot[2, 1].grid(True)
-
-            # Saving the plot with a given name
-            fig.savefig(jpg_file)
-            print('Close the figure to continue..')
-            plt.show()
-        except Exception as e:
-            rospy.logerr('Error in reading file/detection: %s', e)
-            return False
 
     def load_last_saved_button_event(self):
         """This function is called when the detect button is clicked."""
@@ -1861,15 +1716,17 @@ class GUI(customtkinter.CTk):
         print("Dictionary set to: ", self.var_dictionary)
         print("Marker size set to: ", self.var_marker_size)
         
+
+
     def show_results_button_event(self):
-        # path_image = '/home/agcam/ros_ws/src/gige_cam_driver/csvfiles/camera_1_20s_2023-04-05_11-34-18.png'
-        # image = Image.open(path_image)
-        # image = image.resize((800, 600), Image.ANTIALIAS)
-        # photo = ImageTk.PhotoImage(image)
-        # label = customtkinter.CTkLabel(master=self.tabview.tab("Display Results"), image=photo)
-        # label.image = photo
-        # label.pack()
-        pass
+        """This function is called when the Show Results button is clicked."""
+        print('\033[92m**********************************************************')
+        print('****** Displaying Displacement Measurement Results ******')
+        print(
+            '********************************************************\033[93m')
+        print()
+        py_plotting(self.csv_file_path_global)
+        
     
         
 

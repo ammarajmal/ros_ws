@@ -176,11 +176,11 @@ def csv_plotting_v2(csv_file):
 
 
 if __name__ == "__main__":
-    # csv_file = '/home/ammar/ros_ws/src/gige_cam_driver/csvfiles/camera_1_10s_2023-04-10_03-53-01_8Hz.csv'
+    csv_file = '/home/ammar/ros_ws/src/gige_cam_driver/csvfiles/old/backup_data_csv/camera_1_50s_2023-04-10_03-19-05_3Hz.csv'
     # csv_file = '/home/ammar/ros_ws/src/gige_cam_driver/csvfiles/camera_1_50s_2023-04-10_03-19-05_3Hz.csv'
     # csv_file = '/home/ammar/ros_ws/src/gige_cam_driver/csvfiles/camera_1_50s_2023-04-10_03-26-52_7Hz.csv'
     # csv_file = '/home/ammar/ros_ws/src/gige_cam_driver/csvfiles/camera_1_60s_2023-04-11_22-41-10_10Hz.csv'
-    csv_file = '/home/ammar/ros_ws/src/gige_cam_driver/csvfiles/camera_1_60s_2023-04-11_22-04-43_3Hz.csv'
+    # csv_file = '/home/ammar/ros_ws/src/gige_cam_driver/csvfiles/camera_1_60s_2023-04-11_22-04-43_3Hz.csv'
     csv_plotting_v2(csv_file)
 
     # fs = 210 # Sampling frequency

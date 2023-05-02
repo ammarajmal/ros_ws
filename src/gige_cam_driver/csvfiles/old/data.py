@@ -6,7 +6,7 @@ from datetime import datetime
 def parse_date_string(date_string):
     return datetime.strptime(date_string, '%Y-%m-%d %H:%M:%S.%f')
 def plot_data(filename_ldv, filename_cam):
-   
+    print('entered function')
     df_ldv = pd.read_csv(filename_ldv)
 
     # convert 'Snapshot Time Stamp' column to datetime format
