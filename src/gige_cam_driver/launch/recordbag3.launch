@@ -1,0 +1,19 @@
+<launch>
+
+<arg name="cam1" default="camera_1" />
+<arg name="cam2" default="camera_2" />
+<arg name="cam3" default="camera_3" />
+<arg name='filename' default="camera_123" />
+<arg name="dur" default="5" />
+<arg name="bagfile_datetime"/>
+
+<arg name="bag_file_path" default="$(find gige_cam_driver)/bagfiles/'$(arg filename)'_$(arg dur)s_$(arg bagfile_datetime).bag" />
+
+
+  <node name="$(arg filename)_rosbag_record"
+  pkg="rosbag" type="record" respawn="false" output="log"
+  args=" --duration=$(arg dur) --output-name='$(arg bag_file_path)'
+   /'$(arg cam1)'/camera_info /'$(arg cam1)'/image_raw 
+   /'$(arg cam2)'/camera_info /'$(arg cam2)'/image_raw
+   /'$(arg cam3)'/camera_info /'$(arg cam3)'/image_raw" />
+</launch>
