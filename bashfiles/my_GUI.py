@@ -102,8 +102,7 @@ class GUI(customtkinter.CTk):
         self.loaded_last_file_flag = False
         self.opened_file_flag = False
         self.multi_cameras_active_status = set()
-        # self.last_recorded_bag_file_name_path = os.path.join(
-        #             self.bagfile_path, self.last_recorded_bag_file_name)
+
 
         self.sidebar_entry_get_calib_sq_size_var = tk.StringVar()
         self.sidebar_entry_get_calib_cb_dim_var = tk.StringVar()
@@ -1232,7 +1231,7 @@ class GUI(customtkinter.CTk):
                     self.running_processes.pop(f'{camera_name}_driver')
                     self.running_processes[f'{camera_name}_record'].shutdown()
                     self.running_processes.pop(f'{camera_name}_record')
-                    print('Successfully shut down camera driver for: ', camera_name)
+                    print('Successfully completed recording from:', camera_name)
                     saved_bagfile = f"{camera_name}_{self.multi_camera_dur}s_{self.recorded_datetime_var}.bag"
                     self.last_recorded_bag_file_name_with_path = os.path.join(self.bagfile_path, saved_bagfile)
                     print("\033[93mSaved Data: \033[0m")
@@ -1249,8 +1248,8 @@ class GUI(customtkinter.CTk):
                     
                     camera_name_1 = running_cams[0].replace('_driver', '')
                     camera_name_2 = running_cams[1].replace('_driver', '')
-                    print("Two cameras are running", camera_name_1, camera_name_2)
-                    twocameras = f'camera_{camera_name_1.split("_")[1]}{camera_name_2.split("_")[1]}'
+                    print("Recording from Cameras: ", camera_name_1, camera_name_2)
+                    twocameras = f'cameras_{camera_name_1.split("_")[1]}{camera_name_2.split("_")[1]}'
                     record_2_cam_launch_args = [
                         self.record_2bag_launch,
                         f'cam1:={camera_name_1}',
@@ -1280,18 +1279,25 @@ class GUI(customtkinter.CTk):
                     self.running_processes.pop(f'{camera_name_1}_driver')
                     self.running_processes.pop(f'{camera_name_2}_driver')
                     self.running_processes.pop(f'{twocameras}_record')
+                    print('Successfully completed recording from:', twocameras)
+                    
+                    saved_bagfile = f"{twocameras}_{self.multi_camera_dur}s_{self.recorded_datetime_var}.bag"
+                    self.last_recorded_bag_file_name_with_path = os.path.join(self.bagfile_path, saved_bagfile)
+                    print("\033[93mSaved Data: \033[0m")
+                    print("\033[93m------------\033[0m")
+                    print(f"\033[93mBagfile Name: {os.path.basename(self.last_recorded_bag_file_name_with_path)} \033[0m")
+                    print(f"\033[93mDirectory: {os.path.dirname(self.last_recorded_bag_file_name_with_path)} \033[0m")
                     self.multi_camera_active = False
-                    self.multi_camera_record_button.configure(
-                    text=f"Record", fg_color=themes[COLOR_SELECT])
+                    self.multi_camera_record_button.configure(text=f"Record", fg_color=themes[COLOR_SELECT])
                     print('Status of self.running_processes: ',self.running_processes)
-                    return
+                    print('DONE..!!')
 
                 elif len(running_cams) == 3:
                     camera_name_1 = running_cams[0].replace('_driver', '')
                     camera_name_2 = running_cams[1].replace('_driver', '')
                     camera_name_3 = running_cams[2].replace('_driver', '')
                     print("Running Cameras:", camera_name_1, camera_name_2, camera_name_3)
-                    threecameras = f'camera_{camera_name_1.split("_")[1]}{camera_name_2.split("_")[1]}{camera_name_3.split("_")[1]}'
+                    threecameras = f'cameras_{camera_name_1.split("_")[1]}{camera_name_2.split("_")[1]}{camera_name_3.split("_")[1]}'
                     record_3_cam_launch_args = [
                         self.record_3bag_launch,
                         f'cam1:={camera_name_1}',
@@ -1324,11 +1330,18 @@ class GUI(customtkinter.CTk):
                     self.running_processes.pop(f'{camera_name_2}_driver')
                     self.running_processes.pop(f'{camera_name_3}_driver')
                     self.running_processes.pop(f'{threecameras}_record')
+                    print('Successfully shutdown camera driver for: ', threecameras)
+                    
+                    saved_bagfile = f"{threecameras}_{self.multi_camera_dur}s_{self.recorded_datetime_var}.bag"
+                    self.last_recorded_bag_file_name_with_path = os.path.join(self.bagfile_path, saved_bagfile)
+                    print("\033[93mSaved Data: \033[0m")
+                    print("\033[93m------------\033[0m")
+                    print(f"\033[93mBagfile Name: {os.path.basename(self.last_recorded_bag_file_name_with_path)} \033[0m")
+                    print(f"\033[93mDirectory: {os.path.dirname(self.last_recorded_bag_file_name_with_path)} \033[0m")
                     self.multi_camera_active = False
-                    self.multi_camera_record_button.configure(
-                    text=f"Record", fg_color=themes[COLOR_SELECT])
+                    self.multi_camera_record_button.configure(text=f"Record", fg_color=themes[COLOR_SELECT])
                     print('Status of self.running_processes: ',self.running_processes)
-                    return
+                    print('DONE..!!')
                 else:
                     print("No cameras are running")
             else:
@@ -1476,23 +1489,19 @@ class GUI(customtkinter.CTk):
     def get_bagfile(self):
         """This function is called to load bagfile."""
         if self.opened_bagfile_var == "" and self.last_recorded_bag_file_name_with_path == "":
-            rospy.logerr("No file selected, Please load a bag file first")
+            rospy.logerr("No file selected, Please load a file first")
             print(
                 '\033[92m**********************************************************\n\033[0m')
             return None
         elif self.opened_bagfile_var != "" and self.last_recorded_bag_file_name_with_path == "":
-            loaded_file = self.opened_bagfile_var
-            print('Opening Bagfile from directory')
-            return loaded_file
+            print('Opening file from directory')
+            return self.opened_bagfile_var
         elif self.opened_bagfile_var == "" and self.last_recorded_bag_file_name_with_path != "":
-            loaded_file = self.last_recorded_bag_file_name_with_path
-            print('Loading Bagfile from last recorded file')
-            return loaded_file
+            print('Loading file from last recording')
+            return self.last_recorded_bag_file_name_with_path
         else:
-            loaded_file = self.opened_bagfile_var
-            # loaded_file = self.last_recorded_bag_file_name_with_path
-            print("found both files.. but opening from the directory")
-            return loaded_file
+            print("Opening the selected file from the directory")
+            return self.opened_bagfile_var
 
     def launch_marker_detector(self, camera_name):
         """This function is called to launch the marker detection node."""
@@ -1541,94 +1550,106 @@ class GUI(customtkinter.CTk):
         bag_play_rate = 2
 
         filename_ = self.get_bagfile()
-        # print(filename_)
+
         [camera_name, complete_filename] = self.get_camera_name(filename_)
-        if camera_name is not None:
+        print('camera_name: ', camera_name)
+        print('complete_filename: ', complete_filename, '.bag')
 
-            just_filename = complete_filename
-            print("Loaded BagFile: ",complete_filename)
-            csv_file_path = os.path.join(
-                self.csv_folder_path, just_filename + '.csv')
-            print('**************************************************88 print****************')
-            print(csv_file_path)
-            print('**************************************************88 print****************')
+        # if camera_name is not None and camera_name :
+        def detection_start(camera_name, filename_, bag_play_rate):
+            if camera_name is not None:
+                just_filename = complete_filename
+                print("Loaded BagFile: ",complete_filename)
+                csv_file_path = os.path.join(
+                    self.csv_folder_path, just_filename + '.csv')
+                print('**************************************************88 print****************')
+                print(csv_file_path)
+                print('**************************************************88 print****************')
 
-            topic_name = '/fiducial_transforms'
-            self.sidebar_set_dictionary_btn_event()
-            if filename_ is not None:
-                readbag_cli_args = [
-                    self.read_bag_launch, f"bag_file_path:={filename_}", f"playback_rate:={bag_play_rate}"]
-                roslaunch_args = readbag_cli_args[1:]
-                roslaunch_file = [(roslaunch.rlutil.resolve_launch_arguments(
-                    readbag_cli_args)[0], roslaunch_args)]
-                rosbag_reading = roslaunch.parent.ROSLaunchParent(
-                    self.uuid, roslaunch_file)
+                topic_name = '/fiducial_transforms'
+                self.sidebar_set_dictionary_btn_event()
+                if filename_ is not None:
+                    
+                    readbag_cli_args = [
+                        self.read_bag_launch, f"bag_file_path:={filename_}",
+                        f"playback_rate:={bag_play_rate}"
+                        ]
+                    roslaunch_file = [(roslaunch.rlutil.resolve_launch_arguments(readbag_cli_args)[0], readbag_cli_args[1:])]
+                    rosbag_reading = roslaunch.parent.ROSLaunchParent(self.uuid, roslaunch_file)
 
-                aruco_detect_cli_args = [
-                    self.detect_launch, f'camera:={camera_name}', f'dictionary:={self.var_dictionary}', f'aruco_marker_size:={self.var_marker_size}']
-                roslaunch_args = aruco_detect_cli_args[1:]
-                roslaunch_file = [(roslaunch.rlutil.resolve_launch_arguments(
-                    aruco_detect_cli_args)[0], roslaunch_args)]
-                marker_detection = roslaunch.parent.ROSLaunchParent(
-                    self.uuid, roslaunch_file)
-                # Start the roslaunch parent object
+                    aruco_detect_cli_args = [
+                        self.detect_launch, f'camera:={camera_name}',
+                        f'dictionary:={self.var_dictionary}',
+                        f'aruco_marker_size:={self.var_marker_size}'
+                        ]
+                    roslaunch_file = [(roslaunch.rlutil.resolve_launch_arguments(aruco_detect_cli_args)[0], aruco_detect_cli_args[1:])]
+                    marker_detection = roslaunch.parent.ROSLaunchParent(self.uuid, roslaunch_file)
 
-                try:
-                    rosbag_reading.start()
-                    self.running_processes[f"{camera_name}_rosbag_reading"] = rosbag_reading
-                    print(
-                        f'\033[93mPlaying bag file at {bag_play_rate}x speed..\033[0m')
+                    # Start the roslaunch parent object
+
                     try:
-                        marker_detection.start()
-                        print('\033[93mStarted marker detection..\033[0m')
-                        self.running_processes[f"{camera_name}_marker_detection"] = marker_detection
-                        print('\033[93mSaving data into a CSV file..\033[0m')
-                        with open(csv_file_path, 'w') as f:
-                            rostopic_process = subprocess.Popen(
-                                ['rostopic', 'echo', '-p', topic_name], stdout=f)
-                        print(f'\033[93mSaved data in csc file at: {csv_file_path}\033[0m')
-                        self.csv_file_path_global = csv_file_path
-                        # rostopic_process = subprocess.Popen(rostopic_echo_command.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-                        # self.running_processes[f"{camera_name}_rostopic_process"] = rostopic_process
-                        print('\033[93mFinished reading rosbag file..\033[0m')
-                        while rosbag_reading.pm.is_alive():
-                            # print('is still alive...')
-                            pass
-                        self.process_detect_label.configure(text='Completed Successfully!',
-                                                            state='normal',
-                                                            text_color='green',
-                                                            font=customtkinter.CTkFont(
-                                                                size=12, weight='bold')
-                                                            )
-                        self.process_show_results_button.configure(state =  'normal')
-                        print('finished the reading bagfile process')
-                        # print('\033[93mRosbag reading finished.. Now stopping marker detection..\033[0m')
-                        rostopic_process.terminate()
-                        marker_detection.shutdown()
+                        rosbag_reading.start()
+                        self.running_processes[f"{camera_name}_rosbag_reading"] = rosbag_reading
+                        print(
+                            f'\033[93mPlaying bag file at {bag_play_rate}x speed..\033[0m')
+                        try:
+                            marker_detection.start()
+                            print('\033[93mStarted marker detection..\033[0m')
+                            self.running_processes[f"{camera_name}_marker_detection"] = marker_detection
+                            print('\033[93mSaving data into a CSV file..\033[0m')
+                            with open(csv_file_path, 'w') as f:
+                                rostopic_process = subprocess.Popen(
+                                    ['rostopic', 'echo', '-p', topic_name], stdout=f)
+                            print(f'\033[93mSaved data in csc file at: {csv_file_path}\033[0m')
+                            self.csv_file_path_global = csv_file_path
+                            # rostopic_process = subprocess.Popen(rostopic_echo_command.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                            # self.running_processes[f"{camera_name}_rostopic_process"] = rostopic_process
+                            print('\033[93mFinished reading rosbag file..\033[0m')
+                            while rosbag_reading.pm.is_alive():
+                                # print('is still alive...')
+                                pass
+                            self.process_detect_label.configure(text='Completed Successfully!',
+                                                                state='normal',
+                                                                text_color='green',
+                                                                font=customtkinter.CTkFont(
+                                                                    size=12, weight='bold')
+                                                                )
+                            self.process_show_results_button.configure(state =  'normal')
+                            print('finished the reading bagfile process')
+                            # print('\033[93mRosbag reading finished.. Now stopping marker detection..\033[0m')
+                            rostopic_process.terminate()
+                            marker_detection.shutdown()
 
-                        # Remove the processes from running_processes dictionary
-                        self.running_processes.pop(
-                            f"{camera_name}_rosbag_reading")
-                        self.running_processes.pop(
-                            f"{camera_name}_marker_detection")
-                    # self.running_processes.pop(f"{camera_name}_rostopic_process")
-                        # try:
-                        #     if self.csv_plotting_v2(csv_file_path) is not None:
-                        #         print(
-                        #         '\033[93mRosbag reading finished.. Marker detection and rostopic process stopped..\033[0m')
-                        # except:
-                        #         return
-
-                        print('\033[93mRosbag reading finished..')
-                        print('Marker detection and rostopic process stopped..\033[0m')
-
+                            # Remove the processes from running_processes dictionary
+                            self.running_processes.pop(
+                                f"{camera_name}_rosbag_reading")
+                            self.running_processes.pop(
+                                f"{camera_name}_marker_detection")
+                            print('\033[93mRosbag reading finished..')
+                            print('Marker detection and rostopic process stopped..\033[0m')
+                        except roslaunch.RLException as e_error:
+                            rospy.logerr(
+                                f"Error:{e_error} in running :{camera_name}_marker_detection")
                     except roslaunch.RLException as e_error:
                         rospy.logerr(
-                            f"Error:{e_error} in running :{camera_name}_marker_detection")
-                except roslaunch.RLException as e_error:
-                    rospy.logerr(
-                        f"Error:{e_error} in reading and marker detection from:{camera_name}_rosbag_reading")
+                            f"Error:{e_error} in reading and marker detection from:{camera_name}_rosbag_reading")
+        
+        if camera_name.split('_')[0] == 'camera':
+            # print(camera_name.split('_')[1], len(camera_name.split('_')[1]))
+            # print('Okay!')
+            detection_start(camera_name, filename_, bag_play_rate)
+        elif camera_name.split('_')[0] == 'cameras':
+            cam_num = camera_name.split('_')[1]
+            print('Cameras: ', cam_num, '(',len(cam_num), 'cameras)')
+            for cam in cam_num:
+                camera_name = 'camera_' + cam
+                print('Starting detection for Camera No. :', cam)
+                detection_start(camera_name, filename_, bag_play_rate)
+                # newfilename_ = filename_.replace('.bag', f'_{cam}.bag')
+                # detection_start(camera_name, newfilename_, bag_play_rate)
+      
 
+  
 
 
     def load_last_saved_button_event(self):
@@ -1640,9 +1661,7 @@ class GUI(customtkinter.CTk):
 
         try:
             if self.last_recorded_bag_file_name_with_path != "":
-                # filename = os.fspath(self.last_recorded_bag_file_name)
-                # print(
-                #     f'Processing File: "{os.path.basename(filename)}" from directory: "{self.bagfile_path}"')
+
                 print("\033[93m")
                 print(f"Camera: {self.camera_selection_var}")
                 print(f"Marker Size: {self.var_marker_size}")
