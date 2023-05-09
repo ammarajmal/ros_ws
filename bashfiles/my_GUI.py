@@ -1550,18 +1550,21 @@ class GUI(customtkinter.CTk):
         bag_play_rate = 2
 
         filename_ = self.get_bagfile()
+        print('filename_: ', filename_)
+        
 
         [camera_name, complete_filename] = self.get_camera_name(filename_)
         print('camera_name: ', camera_name)
         print('complete_filename: ', complete_filename, '.bag')
-
         # if camera_name is not None and camera_name :
-        def detection_start(camera_name, filename_, bag_play_rate):
+        def detection_start(camera_name, filename_, bag_play_rate, cam_n):
             if camera_name is not None:
                 just_filename = complete_filename
                 print("Loaded BagFile: ",complete_filename)
-                csv_file_path = os.path.join(
-                    self.csv_folder_path, just_filename + '.csv')
+                if cam_n is not None:
+                    csv_file_path = os.path.join(self.csv_folder_path, just_filename +'_cam'+cam_n+'.csv')
+                else:
+                    csv_file_path = os.path.join(self.csv_folder_path, just_filename + '.csv')
                 print('**************************************************88 print****************')
                 print(csv_file_path)
                 print('**************************************************88 print****************')
@@ -1626,7 +1629,8 @@ class GUI(customtkinter.CTk):
                             self.running_processes.pop(
                                 f"{camera_name}_marker_detection")
                             print('\033[93mRosbag reading finished..')
-                            print('Marker detection and rostopic process stopped..\033[0m')
+                            print('Marker detection completed..\033[0m')
+                            print('Successfully Displacement Data saved.\033[0m')
                         except roslaunch.RLException as e_error:
                             rospy.logerr(
                                 f"Error:{e_error} in running :{camera_name}_marker_detection")
@@ -1637,14 +1641,14 @@ class GUI(customtkinter.CTk):
         if camera_name.split('_')[0] == 'camera':
             # print(camera_name.split('_')[1], len(camera_name.split('_')[1]))
             # print('Okay!')
-            detection_start(camera_name, filename_, bag_play_rate)
+            detection_start(camera_name, filename_, bag_play_rate, None)
         elif camera_name.split('_')[0] == 'cameras':
             cam_num = camera_name.split('_')[1]
             print('Cameras: ', cam_num, '(',len(cam_num), 'cameras)')
             for cam in cam_num:
                 camera_name = 'camera_' + cam
                 print('Starting detection for Camera No. :', cam)
-                detection_start(camera_name, filename_, bag_play_rate)
+                detection_start(camera_name, filename_, bag_play_rate, cam)
                 # newfilename_ = filename_.replace('.bag', f'_{cam}.bag')
                 # detection_start(camera_name, newfilename_, bag_play_rate)
       
