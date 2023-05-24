@@ -49,7 +49,7 @@ class Camera(object):
 		pFrameBuffer = CameraAlignMalloc(FrameBufferSize, 16)
 		CameraSetTriggerMode(hCamera, 0)
 		CameraSetAeState(hCamera, 0)
-		CameraSetExposureTime(hCamera, 5 * 1000)
+		CameraSetExposureTime(hCamera, 8 * 1000)
 		CameraPlay(hCamera)
 		self.hCamera = hCamera
 		self.pFrameBuffer = pFrameBuffer
@@ -91,7 +91,7 @@ class Camera(object):
 		if not self.open():
 			print("camera not opened")
 			exit(0)
-		rate = rospy.Rate(150) #  (frames per second)
+		rate = rospy.Rate(100) #  (frames per second)
 		rospy.loginfo(f"Camera {self.dev_id} initialized successfully")
 		while not rospy.is_shutdown():
 			frame = self.grab()

@@ -1,13 +1,13 @@
 <!-- Run the aruco_detect node -->
 <launch>
-    <arg name="aruco_marker_size" default="0.05"/> <!-- Marker Size in meters -->
+    <arg name="aruco_marker_size" default="0.025"/> <!-- Marker Size in meters -->
     <group ns="camera_1_aruco_detect">
         <include file="$(find aruco_detect)/launch/aruco_detect.launch">
             <arg name="camera" value="/camera_1"/>
             <arg name="image" value="image"/>
             <arg name="transport" value="raw"/>
             <arg name="fiducial_len" value="$(arg aruco_marker_size)"/>
-            <arg name="dictionary" value="1"/>
+            <arg name="dictionary" value="7"/>
             <arg name="do_pose_estimation" value="true"/>
             <arg name="vis_msgs" value="false"/>
             <arg name="ignore_fiducials" value=""/>
@@ -21,7 +21,7 @@
             <arg name="image" value="image"/>
             <arg name="transport" value="raw"/>
             <arg name="fiducial_len" value="$(arg aruco_marker_size)"/>
-            <arg name="dictionary" value="1"/>
+            <arg name="dictionary" value="7"/>
             <arg name="do_pose_estimation" value="true"/>
             <arg name="vis_msgs" value="false"/>
             <arg name="ignore_fiducials" value=""/>
@@ -35,7 +35,7 @@
             <arg name="image" value="image"/>
             <arg name="transport" value="raw"/>
             <arg name="fiducial_len" value="$(arg aruco_marker_size)"/>
-            <arg name="dictionary" value="1"/>
+            <arg name="dictionary" value="7"/>
             <arg name="do_pose_estimation" value="true"/>
             <arg name="vis_msgs" value="false"/>
             <arg name="ignore_fiducials" value=""/>

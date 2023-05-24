@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 def py_plotting(camera_file):
     try:
         cameraData = pd.read_csv(camera_file)
-        # print(camera_file)
+        print('in plotting function - camera_file name:',camera_file)
         camera_file = os.path.basename(camera_file)
 
         record_cam_number  = camera_file.split('_')[1]
@@ -34,9 +34,9 @@ def py_plotting(camera_file):
         zDisplacementsCamera = cameraData['field.transforms0.transform.translation.x']
 
 
-        xDisplacementsCamera = (xDisplacementsCamera - np.mean(xDisplacementsCamera)) * 1000 /2
-        yDisplacementsCamera = (yDisplacementsCamera - np.mean(yDisplacementsCamera)) * 1000 /2
-        zDisplacementsCamera = (zDisplacementsCamera - np.mean(zDisplacementsCamera)) * 1000 /2
+        xDisplacementsCamera = (xDisplacementsCamera - np.mean(xDisplacementsCamera)) * 1000 
+        yDisplacementsCamera = (yDisplacementsCamera - np.mean(yDisplacementsCamera)) * 1000 
+        zDisplacementsCamera = (zDisplacementsCamera - np.mean(zDisplacementsCamera)) * 1000 
 
         # Scale amplitude axis of time plots based on the maximum displacement of each axis
         max_disp = np.max([np.abs(xDisplacementsCamera), np.abs(yDisplacementsCamera), np.abs(zDisplacementsCamera)])
@@ -80,8 +80,8 @@ def py_plotting(camera_file):
 
         # Plot the camera time domain signal (x displacement)
         axs[0, 0].plot(
-            time_cam[:fs],
-            xDisplacementsCamera.values[:fs],
+            time_cam[:2*fs],
+            xDisplacementsCamera.values[:2*fs],
             label='x Displacements',
             linewidth=1,
             color='green',
@@ -95,8 +95,8 @@ def py_plotting(camera_file):
 
         # Plot the camera time domain signal (y displacement)
         axs[1, 0].plot(
-            time_cam[:fs],
-            yDisplacementsCamera.values[:fs],
+            time_cam[:2*fs],
+            yDisplacementsCamera.values[:2*fs],
             label='y Displacements',
             linewidth=1,
             color='red',
@@ -109,8 +109,8 @@ def py_plotting(camera_file):
 
         # Plot the camera time domain signal (z displacement)
         axs[2, 0].plot(
-            time_cam[:fs],
-            zDisplacementsCamera.values[:fs],
+            time_cam[:2*fs],
+            zDisplacementsCamera.values[:2*fs],
             label='z Displacements',
             linewidth=1,
             color='orange',

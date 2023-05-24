@@ -108,9 +108,9 @@ class GUI(customtkinter.CTk):
         self.sidebar_entry_get_calib_cb_dim_var = tk.StringVar()
         self.board_size = "6x5"
         self.square_size = "0.025"
-        self.maker_size = "0.1"
-        self.var_marker_size = tk.StringVar(self, "0.021")
-        self.var_dictionary = tk.StringVar(self, "1")
+        self.maker_size = "0.025"
+        self.var_marker_size = tk.StringVar(self, "0.025") # in meters
+        self.var_dictionary = tk.StringVar(self, "7") # dict 5x5 (1000)
         self.running_processes = {}
         self.camera_1_active = False
         self.camera_2_active = False
@@ -1199,6 +1199,7 @@ class GUI(customtkinter.CTk):
                     self.start_camera(camera_name, device_id, calibration_file, False, False)
                 running_cams = list(self.running_processes.keys())
                 self.recorded_datetime_var = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
+                rospy.sleep(2)
                 if len(running_cams) == 1:
                     camera_name = running_cams[0].replace('_driver', '')
                     print('Running cameras: ', camera_name)
