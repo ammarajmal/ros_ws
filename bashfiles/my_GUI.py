@@ -273,7 +273,7 @@ class GUI(customtkinter.CTk):
         # )
         self.sidebar_marker_size_entry = customtkinter.CTkEntry(
             master=self.sidebar_frame_ui,
-            placeholder_text="0.1",
+            placeholder_text="0.025",
             textvariable=self.var_marker_size,
             placeholder_text_color="#808080",
             width=50
