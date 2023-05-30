@@ -21,7 +21,7 @@ import roslaunch
 import rospkg
 import rospy
 from sensor_msgs.msg import Image, CameraInfo
-from plotting import py_plotting
+from plotting import py_plotting, py_plotting_multi
 
 
 
@@ -88,6 +88,7 @@ class GUI(customtkinter.CTk):
         self.calib_launch = f"{self.launch_path}calib.launch"
         self.detect_launch = f"{self.detect_launch_path}aruco_detect.launch"
         self.multi_camera_active = False
+        self.cam_csv_files = list()
         self.check_camera_1_var = tk.StringVar(self, "on")
         self.check_camera_2_var = tk.StringVar(self, "on")
         self.check_camera_3_var = tk.StringVar(self, "on")
@@ -110,7 +111,7 @@ class GUI(customtkinter.CTk):
         self.square_size = "0.025"
         self.maker_size = "0.025"
         self.var_marker_size = tk.StringVar(self, "0.025") # in meters
-        self.var_dictionary = tk.StringVar(self, "7") # dict 5x5 (1000)
+        self.var_dictionary = tk.StringVar(self, "0") # dict 5x5 (1000)
         self.running_processes = {}
         self.camera_1_active = False
         self.camera_2_active = False
@@ -1559,6 +1560,7 @@ class GUI(customtkinter.CTk):
         print('complete_filename: ', complete_filename, '.bag')
         # if camera_name is not None and camera_name :
         def detection_start(camera_name, filename_, bag_play_rate, cam_n):
+
             if camera_name is not None:
                 just_filename = complete_filename
                 print("Loaded BagFile: ",complete_filename)
@@ -1605,6 +1607,7 @@ class GUI(customtkinter.CTk):
                                 rostopic_process = subprocess.Popen(
                                     ['rostopic', 'echo', '-p', topic_name], stdout=f)
                             print(f'\033[93mSaved data in csc file at: {csv_file_path}\033[0m')
+                            
                             self.csv_file_path_global = csv_file_path
                             # rostopic_process = subprocess.Popen(rostopic_echo_command.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                             # self.running_processes[f"{camera_name}_rostopic_process"] = rostopic_process
@@ -1632,6 +1635,7 @@ class GUI(customtkinter.CTk):
                             print('\033[93mRosbag reading finished..')
                             print('Marker detection completed..\033[0m')
                             print('Successfully Displacement Data saved.\033[0m')
+                            return self.csv_file_path_global
                         except roslaunch.RLException as e_error:
                             rospy.logerr(
                                 f"Error:{e_error} in running :{camera_name}_marker_detection")
@@ -1649,7 +1653,9 @@ class GUI(customtkinter.CTk):
             for cam in cam_num:
                 camera_name = 'camera_' + cam
                 print('Starting detection for Camera No. :', cam)
-                detection_start(camera_name, filename_, bag_play_rate, cam)
+                
+                self.cam_csv_files.append(detection_start(camera_name, filename_, bag_play_rate, cam))
+                # print('Cam CSV Files: ', self.cam_csv_files)
                 # newfilename_ = filename_.replace('.bag', f'_{cam}.bag')
                 # detection_start(camera_name, newfilename_, bag_play_rate)
       
@@ -1727,7 +1733,6 @@ class GUI(customtkinter.CTk):
         # subprocess.call('pkill roscore', shell=True)
         # self.destroy()
         # os.system("xdotool key ctrl+shift+w")
-
         exit()
     def sidebar_set_dictionary_btn_event(self):
         """This function is called when the set dictionary button is clicked."""
@@ -1739,14 +1744,36 @@ class GUI(customtkinter.CTk):
         
 
 
+    # def show_results_button_event(self):
+    #     """This function is called when the Show Results button is clicked."""
+    #     print('\033[92m**********************************************************')
+    #     print('****** Displaying Displacement Measurement Results ******')
+    #     print(
+    #         '********************************************************\033[93m')
+    #     # print(self.cam_csv_files)
+    #     # print(len(self.cam_csv_files))
+    #     # print(self.csv_file_path_global)
+    #     for file in self.cam_csv_files:
+    #         py_plotting(file)
     def show_results_button_event(self):
         """This function is called when the Show Results button is clicked."""
         print('\033[92m**********************************************************')
         print('****** Displaying Displacement Measurement Results ******')
-        print(
-            '********************************************************\033[93m')
-        print()
-        py_plotting(self.csv_file_path_global)
+        print('********************************************************\033[93m')
+
+        num_files = len(self.cam_csv_files)
+
+        if num_files == 1:
+            # Plot a single file
+            py_plotting(self.cam_csv_files[0])
+        elif num_files > 1 and num_files <= 2:
+            py_plotting_multi(self.cam_csv_files)
+
+
+
+
+
+
         
     
         

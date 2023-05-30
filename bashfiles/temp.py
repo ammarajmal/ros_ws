@@ -1,51 +1,125 @@
-#!/usr/bin/env python3
-# themes = {'blue': ("#3B8ED0", "#1F6AA5"),
-#           'green': ("#2CC985", "#2FA572"),
-#           'dark-blue': ("#3a7ebf", "#1f538d")
-# }
+# from plotting_multi import py_plotting_multi
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.fft import fft, fftshift
 
-# color_select = list(themes.keys())[2]  # selection: (0: 'blue') (1: 'green') (2: 'dark-blue')
-
-
-# print(color_select)
-
-
-# filename_ = '/home/ammar/ros_ws/src/gige_cam_driver/bagfiles/cameras_12_10s_2023-05-04_12-17-23.bag'
-# cam_num = '12'
-# for cam in cam_num:
-#     camera_name = 'camera_' + cam
-#     print(camera_name)
-#     new_filename_ = filename_.replace('.bag', f'_{cam}.bag')
-#     print(new_filename_)
-import os
-filename_ = '/home/ammar/ros_ws/src/gige_cam_driver/csvfiles/cameras_12_5s_2023-05-22_18-34-56_cam2.csv'
-file = os.path.basename(filename_)
-# # find the part before first underscore
-# if file.split('_')[0] == 'cameras':
-#     print('multiple cameras')
-# else:
-#     print('single camera')
-
-# # separate the number in the string (file.split('_')[1]) and save in separate variable
-# cam_num = (file.split('_')[1])
-# print(cam_num, len(cam_num))
+file = ['/home/ammar/ros_ws/src/gige_cam_driver/csvfiles/cameras_12_10s_2023-05-30_13-44-04_cam1.csv',
+        '/home/ammar/ros_ws/src/gige_cam_driver/csvfiles/cameras_12_10s_2023-05-30_13-44-04_cam2.csv']
+camera_file = file[0]
+camera_file2 = file[1]
+freq = '5'
+def matploting(camera_file, camera_file2, freq):
+        # Read the data
+        camera_data1 = pd.read_csv(camera_file)
+        camera_data2 = pd.read_csv(camera_file2)
+        fs_cam = 100
 
 
+        # Camera 1 data
+        camera_time1 = camera_data1["%time"]
+        xdisp_camera1 = camera_data1["field.transforms0.transform.translation.x"]
+        ydisp_camera1 = camera_data1["field.transforms0.transform.translation.y"]
+        zdisp_camera1 = camera_data1["field.transforms0.transform.translation.z"]
 
-# cameraData = pd.read_csv(camera_file)
-# print('in plotting function - camera_file name:',camera_file)
-camera_file = file
+        xdisp_camera1 = (np.mean(xdisp_camera1) - xdisp_camera1) * 1000
+        ydisp_camera1 = (np.mean(ydisp_camera1) - ydisp_camera1) * 1000
+        zdisp_camera1 = (np.mean(zdisp_camera1) - zdisp_camera1) * 1000
 
-record_cam_number  = camera_file.split('_')[1]
-record_duration = camera_file.split('_')[2][:-1]
+        # Camera 2 data
+        camera_time2 = camera_data2["%time"]
+        xdisp_camera2 = camera_data2["field.transforms0.transform.translation.x"]
+        ydisp_camera2 = camera_data2["field.transforms0.transform.translation.y"]
+        zdisp_camera2 = camera_data2["field.transforms0.transform.translation.z"]
 
-# record_date = camera_file.split('_')[3]
-# record_time = camera_file.split('_')[4]
-# record_hz = camera_file.split('_')[5].split('Hz')[0]
+        xdisp_camera2 = (xdisp_camera2.mean() - xdisp_camera2) * 1000
+        ydisp_camera2 = (ydisp_camera2.mean() - ydisp_camera2) * 1000
+        zdisp_camera2 = (zdisp_camera2.mean() - zdisp_camera2) * 1000
 
-print("Recoded Details:")
-print("Camera Number: ", record_cam_number)
-print("Record Duration: ", record_duration, 's')
-# print("Record Date: ", record_date)
-# print("Record Time: ", record_time)
-# print("Record Frequency: ", record_hz, 'Hz')
+        # Determine start and end times
+        start_time = max([camera_time1[0], camera_time2[0]])
+        end_time = min([camera_time1.iloc[-1], camera_time2.iloc[-1]])
+
+        #     print((end_time - start_time) *1e-9)
+        # Find indices of data within this time period
+        camera1_indices = np.logical_and(camera_time1 >= start_time, camera_time1 <= end_time)
+        camera2_indices = np.logical_and(camera_time2 >= start_time, camera_time2 <= end_time)
+
+        # Trim the datasets
+        ydisp_camera1 = ydisp_camera1[camera1_indices]
+        camera_time1 = camera_time1[camera1_indices]
+
+        ydisp_camera2 = ydisp_camera2[camera2_indices]
+        camera_time2 = camera_time2[camera2_indices]
+
+        # Converting into seconds from nanoseconds UNIX timestamps
+        camera_time1 = (camera_time1 - camera_time1.iloc[0]) * 1e-9
+        camera_time2 = (camera_time2 - camera_time2.iloc[0]) * 1e-9
+        
+        
+        
+
+
+        # Compute the freq axis for the DFT
+        f_axis_len1 = len(ydisp_camera1)
+        f_axis1 = np.fft.fftshift(np.fft.fftfreq(f_axis_len1, 1/fs_cam))
+        f_axis_positive1 = f_axis1[(f_axis1 >= 0)]
+        
+        f_axis_len2 = len(ydisp_camera2)
+        f_axis2 = np.fft.fftshift(np.fft.fftfreq(f_axis_len2, 1/fs_cam))
+        f_axis_positive2 = f_axis2[(f_axis2 >= 0)]
+
+        # Compute the DFT of the signal
+        dft_y1 = np.fft.fft(ydisp_camera1)
+        dft_y2 = np.fft.fft(ydisp_camera2)
+
+
+        # Shift the DFT to center it on zero frequency
+        dft_shifted_y1 = np.fft.fftshift(dft_y1)
+        dft_shifted_positive_y1 = abs(dft_shifted_y1)[(f_axis1 >= 0)]
+
+        dft_shifted_y2 = np.fft.fftshift(dft_y2)
+        dft_shifted_positive_y2 = abs(dft_shifted_y2)[(f_axis2 >= 0)]
+        
+        # Creating plots
+        no_seconds = 1
+        plot_limit = range(no_seconds*fs_cam)
+        fig, axs = plt.subplots(3, 2, figsize=(10, 8))
+
+        fig.suptitle('Displacement Comparison')
+        # print(type(xdisp_camera1))
+        colors = ['red', 'blue']
+        # print(len(camera_time1.values[plot_limit]), len(ydisp_camera1.values))
+        axs[0, 0].plot(camera_time1.values[plot_limit], ydisp_camera1.values[plot_limit], linewidth=1, color=colors[0], label='Camera 1')
+        axs[0, 0].plot(camera_time2.values[plot_limit], ydisp_camera2.values[plot_limit], linewidth=1, color=colors[1], label='Camera 2')
+        axs[1, 0].plot(camera_time1.values[plot_limit], ydisp_camera1.values[plot_limit], linewidth=1, color=colors[0], label='Camera 1')
+        axs[2, 0].plot(camera_time2.values[plot_limit], ydisp_camera2.values[plot_limit], linewidth=1, color=colors[1], label='Camera 2')
+        
+        
+
+        axs[0, 1].semilogy(f_axis_positive1, dft_shifted_positive_y1, linewidth=1, color=colors[0], label='Camera 1')
+        axs[0, 1].semilogy(f_axis_positive2, dft_shifted_positive_y2, linewidth=1, color=colors[1], label='Camera 2')
+        axs[1, 1].semilogy(f_axis_positive1, dft_shifted_positive_y1, linewidth=1, color=colors[0], label='Camera 1')
+        axs[2, 1].semilogy(f_axis_positive2, dft_shifted_positive_y2, linewidth=1, color=colors[1], label='Camera 2')
+        # labels = ['Camera 1', 'Camera 2']
+        plot_labels = ['Camera1 vs Camera 2 - y Displacements', 'Camera 1 - y Displacements', 'Camera 2 - y Displacements']
+        for i in range(3):
+                axs[i, 0].set_xlabel('Time (s)')
+                axs[i, 0].set_ylabel('Displacement (mm)')
+                axs[i, 0].set_title(plot_labels[i])
+                axs[i, 0].legend(loc='center right')
+                axs[i, 0].grid(True)
+                        
+                axs[i, 1].set_xlabel('Frequency (Hz)')
+                axs[i, 1].set_ylabel('Magnitude (log scale)')
+                axs[i, 1].set_title(plot_labels[i])
+                axs[i, 1].legend(loc='upper right')
+                axs[i, 1].grid(True)
+        
+        
+        plt.tight_layout()
+        plt.show()
+
+# Call the function
+matploting(camera_file, camera_file2, freq)
+

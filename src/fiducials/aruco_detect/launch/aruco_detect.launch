@@ -5,7 +5,7 @@
   <arg name="image" default="image"/>
   <arg name="transport" default="raw"/>
   <arg name="fiducial_len" default="0.025"/>
-  <arg name="dictionary" default="7"/>
+  <arg name="dictionary" default="0"/>
   <arg name="do_pose_estimation" default="true"/>
   <arg name="vis_msgs" default="false"/>
   <arg name="ignore_fiducials" default="" />

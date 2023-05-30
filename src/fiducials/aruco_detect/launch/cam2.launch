@@ -8,7 +8,7 @@
       <arg name="image" value="image"/>
       <arg name="transport" value="raw"/>
       <arg name="fiducial_len" value="$(arg aruco_marker_size)"/>
-      <arg name="dictionary" value="7"/>
+      <arg name="dictionary" value="0"/>
       <arg name="do_pose_estimation" value="true"/>
       
       <arg name="vis_msgs" value="false"/>

@@ -646,7 +646,7 @@ FiducialsNode::FiducialsNode() : nh(), pnh("~"), it(nh)
 
     pnh.param<bool>("publish_images", publish_images, false);
     pnh.param<double>("fiducial_len", fiducial_len, 0.025);
-    pnh.param<int>("dictionary", dicno, 7);
+    pnh.param<int>("dictionary", dicno, 0);
     pnh.param<bool>("do_pose_estimation", doPoseEstimation, true);
     pnh.param<bool>("publish_fiducial_tf", publishFiducialTf, false);
     pnh.param<bool>("vis_msgs", vis_msgs, false);
