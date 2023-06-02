@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 
 # install camera sdk from: https://minsvision.com/rjxz
+# python3 gen_pattern.py -o chessboard.svg --rows 6 --columns 5 --type checkerboard --square_size 20
+
 
 import datetime
 import os
@@ -95,6 +97,7 @@ class GUI(customtkinter.CTk):
         self.camera_selection_var = tk.StringVar(self, "Camera 1")
         self.single_camera_duration_var = tk.StringVar(self, 'Select')
         self.multi_camera_duration_var = tk.StringVar(self, 'Select')
+        self.experiment_name_var = tk.StringVar(self, '')
         self.opened_bagfile_var = ''
         self.recorded_datetime_var = ''
         self.single_camera_dur = ''
@@ -472,6 +475,12 @@ class GUI(customtkinter.CTk):
             font=customtkinter.CTkFont(size=14)
             # text_color="#707070"
         )
+        self.single_experimanent_label = customtkinter.CTkLabel(
+            master=self.record_single_frame,
+            text="  Enter Experiment Name:",
+            font=customtkinter.CTkFont(size=14)
+            # text_color="#707070"
+        )
         self.single_camera_1_radio = customtkinter.CTkRadioButton(
             master=self.record_single_frame,
             text="Camera 1",
@@ -523,6 +532,15 @@ class GUI(customtkinter.CTk):
             corner_radius=5,
             width=20
         )
+        self.single_experimanent_entry = customtkinter.CTkEntry(
+            master=self.record_single_frame,
+            placeholder_text="Enter",
+            justify='center',
+            # placeholder_text_color="#808080",
+            corner_radius=5,
+            width=20
+        )
+        
         self.single_camera_rec_button = customtkinter.CTkButton(
             master=self.record_single_frame,
             text="Record",
@@ -558,6 +576,10 @@ class GUI(customtkinter.CTk):
             row=2, column=3, padx=(0, 20),  pady=(0, 5),   sticky="nsew")
         self.single_camera_rec_button.grid(
             row=3, column=1, padx=(10), pady=(10, 20), sticky="nsew")
+        self.single_experimanent_label.grid(
+            row=3, column=2, padx=(10),  pady=(10, 20),   sticky="nsew")
+        self.single_experimanent_entry.grid(
+            row=3, column=3, padx=(0, 10),  pady=(10, 20),   sticky="nsew")
         # self.single_rec_manual_label.grid(
         #     row=3, column=2, padx=(0, 10), pady=(10, 20), sticky="nsew")
         # self.single_camera_rec_manual_button.grid(
@@ -591,6 +613,12 @@ class GUI(customtkinter.CTk):
         self.multi_dur_select_or_label = customtkinter.CTkLabel(
             master=self.record_multiple_frame,
             text="  or        Enter manually:",
+            font=customtkinter.CTkFont(size=14),
+            # text_color="#707070"
+        )
+        self.multi_experiment_label = customtkinter.CTkLabel(
+            master=self.record_multiple_frame,
+            text="  Enter Experiment Name:",
             font=customtkinter.CTkFont(size=14),
             # text_color="#707070"
         )
@@ -652,6 +680,14 @@ class GUI(customtkinter.CTk):
             corner_radius=5,
             width=20
         )
+        self.multi_experiment_entry = customtkinter.CTkEntry(
+            master=self.record_multiple_frame,
+            placeholder_text="Enter",
+            justify="center",
+            # placeholder_text_color="#808080",
+            corner_radius=5,
+            width=20
+        )
         # self.multi_camera_start_button = customtkinter.CTkButton(
         #     master=self.record_multiple_frame,
         #     text="Start Cameras",
@@ -695,6 +731,10 @@ class GUI(customtkinter.CTk):
         #     row=3, column=0, padx=10, pady=(10, 20),  sticky="nsew")
         self.multi_camera_record_button.grid(
             row=3, column=1, padx=10, pady=(10, 20),  sticky="nsew")
+        self.multi_experiment_label.grid(
+            row=3, column=2, padx=(0, 10), pady=(10, 20), sticky="nsew")
+        self.multi_experiment_entry.grid(
+            row=3, column=3, padx=(0, 20),  pady=(10, 20), sticky="nsew")
         # self.multi_rec_manual_label.grid(
         #     row=3, column=2, padx=(0, 10), pady=(10, 20), sticky="nsew")
         # self.multi_camera_rec_manual_button.grid(
@@ -1048,6 +1088,9 @@ class GUI(customtkinter.CTk):
         rospy.loginfo(f"{camera_name} camera bag file saved successfully.")
 
     def record_single_camera(self):
+        self.experiment_name_var =self.single_experimanent_entry.get()
+        # print('experiment_name:', self.experiment_name_var)
+        # return
         """This function is called when the record single camera button is pressed"""
         if self.sidebar_marker_size_entry.get() != "":
             self.maker_size = self.sidebar_marker_size_entry.get()
@@ -1144,6 +1187,9 @@ class GUI(customtkinter.CTk):
         self.camera_1_active, self.camera_2_active, self.camera_3_active = camera_active_states
 
     def record_multi_camera(self):
+        self.experiment_name_var = self.multi_experiment_entry.get()
+        # print(self.experiment_name_var)
+        # return
         try:
             if self.sidebar_marker_size_entry.get() != "":
                 self.maker_size = self.sidebar_marker_size_entry.get()
@@ -1744,17 +1790,7 @@ class GUI(customtkinter.CTk):
         
 
 
-    # def show_results_button_event(self):
-    #     """This function is called when the Show Results button is clicked."""
-    #     print('\033[92m**********************************************************')
-    #     print('****** Displaying Displacement Measurement Results ******')
-    #     print(
-    #         '********************************************************\033[93m')
-    #     # print(self.cam_csv_files)
-    #     # print(len(self.cam_csv_files))
-    #     # print(self.csv_file_path_global)
-    #     for file in self.cam_csv_files:
-    #         py_plotting(file)
+
     def show_results_button_event(self):
         """This function is called when the Show Results button is clicked."""
         print('\033[92m**********************************************************')
@@ -1766,17 +1802,8 @@ class GUI(customtkinter.CTk):
         if num_files == 1:
             # Plot a single file
             py_plotting(self.cam_csv_files[0])
-        elif num_files > 1 and num_files <= 2:
+        elif num_files > 1 and num_files <= 3:
             py_plotting_multi(self.cam_csv_files)
-
-
-
-
-
-
-        
-    
-        
 
 if __name__ == "__main__":
     app = GUI()
