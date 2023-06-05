@@ -1,8 +1,10 @@
 import pandas as pd
 import numpy as np
 import os
-import matplotlib.pyplot as plt
+import getpass
 
+import matplotlib.pyplot as plt
+username = getpass.getuser()
 
 def py_plotting(camera_file):
     try:
@@ -257,12 +259,14 @@ def py_plotting_double(file, exp_name):
 
     # Create a DataFrame from the dictionary
     df = pd.DataFrame(data)
-    image_output_file = f'/home/ammar/Desktop/Experiment Results/{nameFile}'
+
+
+    image_output_file = f'/home/{username}/Desktop/Experiment Results/{nameFile}'
     plt.subplots_adjust(hspace=0.5, wspace=0.5)
     plt.savefig(image_output_file)
 
     # Specify the path to save the Excel file
-    output_file = f'/home/ammar/Desktop/Experiment Results/{xlsxFile}'
+    output_file = f'/home/{username}/Desktop/Experiment Results/{xlsxFile}'
 
     # Save the DataFrame to an Excel file using the xlsx engine
     df.to_excel(output_file, index=False, engine='xlsxwriter')
@@ -444,12 +448,12 @@ def py_plotting_multi(file, exp_name):
 
         # Create a DataFrame from the dictionary
         df = pd.DataFrame(data)
-        image_output_file = f'/home/ammar/Desktop/Experiment Results/{nameFile}'
+        image_output_file = f'/home/{username}/Desktop/Experiment Results/{nameFile}'
         plt.subplots_adjust(hspace=0.5, wspace=0.5)
         plt.savefig(image_output_file)
 
         # Specify the path to save the Excel file
-        output_file = f'/home/ammar/Desktop/Experiment Results/{xlsxFile}'
+        output_file = f'/home/{username}/Desktop/Experiment Results/{xlsxFile}'
 
         # Save the DataFrame to an Excel file using the xlsx engine
         df.to_excel(output_file, index=False, engine='xlsxwriter')
