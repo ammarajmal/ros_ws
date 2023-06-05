@@ -23,7 +23,7 @@ import roslaunch
 import rospkg
 import rospy
 from sensor_msgs.msg import Image, CameraInfo
-from plotting import py_plotting, py_plotting_multi
+from plotting import py_plotting, py_plotting_multi, py_plotting_double
 
 
 
@@ -112,7 +112,6 @@ class GUI(customtkinter.CTk):
         self.sidebar_entry_get_calib_cb_dim_var = tk.StringVar()
         self.board_size = "6x5"
         self.square_size = "0.025"
-        self.maker_size = "0.025"
         self.var_marker_size = tk.StringVar(self, "0.025") # in meters
         self.var_dictionary = tk.StringVar(self, "0") # dict 5x5 (1000)
         self.running_processes = {}
@@ -1045,10 +1044,8 @@ class GUI(customtkinter.CTk):
             # Remove camera driver from running processes dictionary
             self.running_processes.pop(f'{camera_name}_driver', None)
             self.running_processes.pop(f'{camera_name}_record', None)
-
-            print(f"\033[92m\nSuccessfully saved bag file from {camera_name}!")
-            print(
-                '***************************************************\n\033[0m')
+            print(f"\033[92m\nSuccessfully saved bag file from {camera_name} - Experiment: {self.experiment_name_var}!")
+            print('****************************************************************************************************\n\033[0m')
 
         except roslaunch.RLException as excep_camera:
             rospy.logerr(
@@ -1093,8 +1090,8 @@ class GUI(customtkinter.CTk):
         # return
         """This function is called when the record single camera button is pressed"""
         if self.sidebar_marker_size_entry.get() != "":
-            self.maker_size = self.sidebar_marker_size_entry.get()
-        print('maker_size:', self.maker_size)
+            self.var_marker_size = self.sidebar_marker_size_entry.get()
+        print('maker_size:', self.var_marker_size)
 
         cameras = [
             {'camera_name': 'camera_1', 'device_id': 0,
@@ -1188,12 +1185,11 @@ class GUI(customtkinter.CTk):
 
     def record_multi_camera(self):
         self.experiment_name_var = self.multi_experiment_entry.get()
-        # print(self.experiment_name_var)
-        # return
+
         try:
             if self.sidebar_marker_size_entry.get() != "":
-                self.maker_size = self.sidebar_marker_size_entry.get()
-            print('maker_size:', self.maker_size)
+                self.var_marker_size = self.sidebar_marker_size_entry.get()
+            print('maker_size:', self.var_marker_size)
             multi_manual_dur = self.multi_camera_dur_entry.get()
             multi_combo_dur = self.multi_camera_dur_combo_box.get()
             if multi_manual_dur == "":
@@ -1288,8 +1284,10 @@ class GUI(customtkinter.CTk):
                     print(f"\033[93mDirectory: {os.path.dirname(self.last_recorded_bag_file_name_with_path)} \033[0m")
                     self.multi_camera_active = False
                     self.multi_camera_record_button.configure(text=f"Record", fg_color=themes[COLOR_SELECT])
-                    print('Status of self.running_processes: ',self.running_processes)
-                    print('DONE..!!')
+                    string_print = f'Successfully saved bag file from {camera_name} - Experiment: {self.experiment_name_var}'
+                    print(f"\033[92m\n{string_print}")
+                    print('*'* len(string_print), '\n\033[0m')
+
 
 
                 elif len(running_cams) == 2:
@@ -1337,8 +1335,9 @@ class GUI(customtkinter.CTk):
                     print(f"\033[93mDirectory: {os.path.dirname(self.last_recorded_bag_file_name_with_path)} \033[0m")
                     self.multi_camera_active = False
                     self.multi_camera_record_button.configure(text=f"Record", fg_color=themes[COLOR_SELECT])
-                    print('Status of self.running_processes: ',self.running_processes)
-                    print('DONE..!!')
+                    string_print = f'Successfully saved bag file from {twocameras} - Experiment: {self.experiment_name_var}'
+                    print(f"\033[92m\n{string_print}")
+                    print('*'* len(string_print), '\n\033[0m')
 
                 elif len(running_cams) == 3:
                     camera_name_1 = running_cams[0].replace('_driver', '')
@@ -1388,8 +1387,9 @@ class GUI(customtkinter.CTk):
                     print(f"\033[93mDirectory: {os.path.dirname(self.last_recorded_bag_file_name_with_path)} \033[0m")
                     self.multi_camera_active = False
                     self.multi_camera_record_button.configure(text=f"Record", fg_color=themes[COLOR_SELECT])
-                    print('Status of self.running_processes: ',self.running_processes)
-                    print('DONE..!!')
+                    string_print = f'Successfully saved bag file from {threecameras} - Experiment: {self.experiment_name_var}'
+                    print(f"\033[92m\n{string_print}")
+                    print('*'* len(string_print), '\n\033[0m')
                 else:
                     print("No cameras are running")
             else:
@@ -1425,27 +1425,6 @@ class GUI(customtkinter.CTk):
         print('\033[92m***************************************************')
         print('********  Saving multi camera bag file  ********')
         print('***************************************************')
-        # if self.sidebar_marker_size_entry.get() != "":
-        #     self.maker_size = self.sidebar_marker_size_entry.get()
-        # print('maker_size:', self.maker_size)
-        # multi_manual_dur = self.multi_camera_dur_entry.get()
-        # multi_combo_dur = self.multi_camera_dur_combo_box.get()
-        
-        # # print('multi_manual_dur', multi_manual_dur)
-        # # print('multi_combo_dur', multi_combo_dur)
-        # if multi_manual_dur == "":
-        #     if multi_combo_dur == "Select":
-        #         print("Please select a duration")
-        #         return
-        #     else:
-        #         self.multi_camera_dur = multi_combo_dur
-        #         print(f"\033[93mDuration: {self.multi_camera_dur}", "\033[0m")
-        #         print('******************************************')
-        # else:
-        #     self.multi_camera_dur = multi_manual_dur
-        #     print(f"\033[93mDuration: {self.multi_camera_dur}", "\033[0m")
-        #     print('******************************************')
-            
         cameras = [
             {'camera_name': 'camera_1', 'device_id': 0,
                 'calibration_file': 'cam1', 'button': self.sidebar_btn_cam_1_start},
@@ -1516,16 +1495,20 @@ class GUI(customtkinter.CTk):
         parts = bagfile_name.split('_')
         # Find the part of the bagfile_name that contains the duration value
         for i, part in enumerate(parts):
-            if part.endswith('s'):
+            if part.endswith('s') and not part.startswith('cam'):
                 duration_part = part
                 break
+        print("Name of bagfile: ",bagfile_name)
+        print('Bagfile directory: ', bagfile_dir)
 
         if self.opened_bagfile_var != "":
+            
+            # self.var_marker_size = self.sidebar_marker_size_entry.get()
 
             print('\033[93m')
             print(f"Camera: {parts[0].title()} {parts[1]}")
             print(f"Duration: {duration_part}")
-            print(f"Marker Size: {self.var_marker_size}")
+            # print(f"Marker Size: {self.var_marker_size}")
             print(f"Recorded Time: {parts[3]}_{parts[-1].split('.')[0]}")
             print(f"Bagfile Name: {bagfile_name}")
             print(f"Directory: {bagfile_dir}")
@@ -1599,13 +1582,20 @@ class GUI(customtkinter.CTk):
 
         filename_ = self.get_bagfile()
         print('filename_: ', filename_)
-        
+        print("Initiallay")
+        print(self.cam_csv_files)
+        self.cam_csv_files = list()
+        print('after clearing')
+        print(self.cam_csv_files)
 
         [camera_name, complete_filename] = self.get_camera_name(filename_)
         print('camera_name: ', camera_name)
         print('complete_filename: ', complete_filename, '.bag')
         # if camera_name is not None and camera_name :
         def detection_start(camera_name, filename_, bag_play_rate, cam_n):
+            self.var_marker_size = self.sidebar_marker_size_entry.get()
+            self.var_dictionary = self.sidebar_dictionary_entry.get()
+            
 
             if camera_name is not None:
                 just_filename = complete_filename
@@ -1680,7 +1670,7 @@ class GUI(customtkinter.CTk):
                                 f"{camera_name}_marker_detection")
                             print('\033[93mRosbag reading finished..')
                             print('Marker detection completed..\033[0m')
-                            print('Successfully Displacement Data saved.\033[0m')
+                            print(f'Successfully Displacement Data saved at:\n {self.csv_file_path_global}.\033[0m')
                             return self.csv_file_path_global
                         except roslaunch.RLException as e_error:
                             rospy.logerr(
@@ -1692,7 +1682,10 @@ class GUI(customtkinter.CTk):
         if camera_name.split('_')[0] == 'camera':
             # print(camera_name.split('_')[1], len(camera_name.split('_')[1]))
             # print('Okay!')
-            detection_start(camera_name, filename_, bag_play_rate, None)
+            self.cam_csv_files.append(detection_start(camera_name, filename_, bag_play_rate, None))
+            
+            print('\033[38;5;202mAFTER APPEND OPERATION: ', self.cam_csv_files, '\033[0m')
+
         elif camera_name.split('_')[0] == 'cameras':
             cam_num = camera_name.split('_')[1]
             print('Cameras: ', cam_num, '(',len(cam_num), 'cameras)')
@@ -1701,6 +1694,9 @@ class GUI(customtkinter.CTk):
                 print('Starting detection for Camera No. :', cam)
                 
                 self.cam_csv_files.append(detection_start(camera_name, filename_, bag_play_rate, cam))
+                
+                print('\033[38;5;202mAFTER APPEND OPERATION: ', self.cam_csv_files, '\033[0m')
+
                 # print('Cam CSV Files: ', self.cam_csv_files)
                 # newfilename_ = filename_.replace('.bag', f'_{cam}.bag')
                 # detection_start(camera_name, newfilename_, bag_play_rate)
@@ -1715,13 +1711,11 @@ class GUI(customtkinter.CTk):
             '\033[92m*****************************************************************')
         print('********  Loading last saved bag file for post-processing  ******')
         print('*****************************************************************')
-
         try:
             if self.last_recorded_bag_file_name_with_path != "":
 
                 print("\033[93m")
                 print(f"Camera: {self.camera_selection_var}")
-                print(f"Marker Size: {self.var_marker_size}")
                 print(f"Recorded Time: {self.recorded_datetime_var}")
                 print(
                     f"Loaded Bag File: {self.last_recorded_bag_file_name_with_path}")
@@ -1798,12 +1792,18 @@ class GUI(customtkinter.CTk):
         print('********************************************************\033[93m')
 
         num_files = len(self.cam_csv_files)
-
+        print('Number of CSV files: ', num_files)
+        print('CSV Files: ', self.cam_csv_files)
+        
         if num_files == 1:
             # Plot a single file
             py_plotting(self.cam_csv_files[0])
-        elif num_files > 1 and num_files <= 3:
+        elif num_files == 2:
+            py_plotting_double(self.cam_csv_files)
+        elif num_files == 3:
             py_plotting_multi(self.cam_csv_files)
+        elif num_files == 0:
+            print('No CSV files found')
 
 if __name__ == "__main__":
     app = GUI()
