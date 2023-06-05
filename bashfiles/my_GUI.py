@@ -1799,9 +1799,9 @@ class GUI(customtkinter.CTk):
             # Plot a single file
             py_plotting(self.cam_csv_files[0])
         elif num_files == 2:
-            py_plotting_double(self.cam_csv_files)
+            py_plotting_double(self.cam_csv_files, self.multi_experiment_entry.get())
         elif num_files == 3:
-            py_plotting_multi(self.cam_csv_files)
+            py_plotting_multi(self.cam_csv_files, self.multi_experiment_entry.get())
         elif num_files == 0:
             print('No CSV files found')
 
