@@ -1,0 +1,6 @@
+<launch>
+  <group ns="publisher_group">
+    <node pkg="python_ex" type="sine_publisher.py" name="publisher_node" output="screen">
+    </node>
+  </group>
+</launch>
