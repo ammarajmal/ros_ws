@@ -1,6 +1,15 @@
-<launch>
+<!-- <launch>
   <group ns="sine_pub">
     <node pkg="python_ex" type="sine_publisher.py" name="publisher_node" output="screen">
     </node>
   </group>
+</launch> -->
+<launch>
+    <arg name="node_name" default="publisher_node" />
+    <arg name="anonymous" default="true" />
+    
+    <node pkg="python_ex" type="sine_publisher.py" name="$(arg node_name)" output="screen">
+        <param name="respawn" value="true" />
+        <param name="anonymous" value="$(arg anonymous)" />
+    </node>
 </launch>
