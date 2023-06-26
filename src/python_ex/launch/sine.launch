@@ -1,5 +1,5 @@
 <launch>
-  <group ns="publisher_group">
+  <group ns="sine_pub">
     <node pkg="python_ex" type="sine_publisher.py" name="publisher_node" output="screen">
     </node>
   </group>
