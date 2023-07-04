@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/roslibjs/0.23.0/roslib.js"></script>
+</head>
+<body>
+    <h1>ROS Web Interface</h1>
+    <div id="message"></div>
+    <script type="text/javascript">
+        // Create a ROS connection
+        const ros = new ROSLIB.Ros({
+            url: 'ws://<ROSBRIDGE_SERVER_IP>:9090'  // Replace with your ROSbridge server IP
+        });
+
+        // Create a ROS subscriber
+        const listener = new ROSLIB.Topic({
+            ros: ros,
+            name: '/random_numbers',
+            messageType: 'std_msgs/Int32'
+        });
+
+        // Listen for messages
+        listener.subscribe(function(message) {
+            document.getElementById('message').innerHTML = 'Received: ' + message.data;
+        });
+    </script>
+</body>
+</html>
