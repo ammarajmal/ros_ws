@@ -1,9 +1,15 @@
 <!-- Run the aruco_detect node -->
 <launch>
-  <arg name="ip_address" default="192.168.0.53" />
   <arg name="aruco_marker_size" default="0.025"/>    <!-- Marker Size in meters -->
+     <machine
+      name="NUC1"
+      address="192.168.43.11"
+      env-loader="/opt/ros/noetic/env_remote.sh"
+      default = "true"
+      user="sitl1"
+      password="sitl"
+   />  
   <group ns="cam1_marker">
-  <param name="ip" value="$(arg ip_address)" />
     <include file="$(find aruco_detect)/launch/aruco_detect.launch">
       <arg name="camera" value="/camera_1"/>
       <arg name="image" value="image"/>

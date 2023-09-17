@@ -1,0 +1,28 @@
+<launch>
+   <arg name="cam" default="camera_1" />
+   <arg name="device_id" default="0" />
+   <arg name="calib_file" default="cam1" />
+
+   <machine
+      name="NUC1"
+      address="192.168.43.11"
+      env-loader="/opt/ros/noetic/env_remote.sh"
+      default="true"
+      user="sitl1"
+      password="sitl"
+   />  
+   <node
+      machine="NUC1"
+      pkg="gige_cam_driver"
+      name="$(arg cam)_remote"
+      type="camera_node.py"
+      output="screen">
+      
+      <param name="device_id" value="$(arg device_id)"/>
+      <param name="camera_manager" value="$(arg cam)"/>
+      <param name="calibration_file" value="$(find gige_cam_driver)/config/camera_info_$(arg calib_file).yaml"/>
+      
+      <!-- Set the DISPLAY environment variable to the local display of NUC1 -->
+      <!-- <param name="DISPLAY" value=":0" /> -->
+   </node>
+</launch>
