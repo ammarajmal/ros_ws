@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<launch>
+    <machine 
+        name="NUC2"
+        address="192.168.43.12"
+        env-loader="/opt/ros/noetic/env_remote.sh"
+        default = "true"
+        user="sitl2"
+        password="sitl"
+        
+    />        
+    <node
+        machine="NUC2"
+        pkg="python_ex"
+        name="NUC2_Node"
+        type="sine_publisher.py"
+    />
+
+</launch>
+
+
