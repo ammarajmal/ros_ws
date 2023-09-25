@@ -25,9 +25,8 @@ class Camera(object):
 		self.dev_id           = rospy.get_param("~device_id", 0)
 		self.calibration_file = rospy.get_param("~calibration_file", 0)
 		self.camera_manager   = rospy.get_param("~camera_manager", 0)
-		self.camera_info_manager = CameraInfoManager(cname=self.camera_manager,
-                                   				     url='file://' + self.calibration_file,
-                                         			 namespace=self.camera_manager)
+		self.camera_info_manager = CameraInfoManager(cname=self.camera_manager,url=f'file://{self.calibration_file}' ,namespace=self.camera_manager)
+		# self.camera_info_manager = CameraInfoManager(cname=self.camera_manager,url='file://' + self.calibration_file,namespace=self.camera_manager)
 		self.camera_info_manager.loadCameraInfo()
 
 	def open(self):
@@ -37,7 +36,8 @@ class Camera(object):
 		try:
 			hCamera = CameraInit(self.DevInfo, -1, -1)
 		except CameraException as e:
-			print("CameraInit Failed({}): {}".format(e.error_code, e.message) )
+			print(f"CameraInit Failed({e.error_code}): {e.message}")
+			# print("CameraInit Failed({}): {}".format(e.error_code, e.message) )
 			return False
 		cap = CameraGetCapability(hCamera)
 		monoCamera = (cap.sIspCapacity.bMonoSensor != 0)
@@ -76,7 +76,8 @@ class Camera(object):
 			return frame
 		except CameraException as e:
 			if e.error_code != CAMERA_STATUS_TIME_OUT:
-				print("CameraGetImageBuffer failed({}): {}".format(e.error_code, e.message) )
+				print(f"CameraGetImageBuffer failed({e.error_code}): {e.message}")
+				# print("CameraGetImageBuffer failed({}): {}".format(e.error_code, e.message) )
 			return None
 
 	def run(self):
@@ -86,7 +87,7 @@ class Camera(object):
 			print("No camera was found!")
 			return
 		for i, DevInfo in enumerate(DevList):
-			print("{}: {} {}".format(i, DevInfo.GetFriendlyName(), DevInfo.GetPortType()))
+			print(f"{i}: {DevInfo.GetFriendlyName()} {DevInfo.GetPortType()}")
 		self.DevInfo = DevList[self.dev_id]
 		if not self.open():
 			print("camera not opened")
@@ -114,10 +115,9 @@ class Camera(object):
 				self.close()
 
 
+import contextlib
 if __name__ == '__main__':
-	try:
+	with contextlib.suppress(rospy.ROSInterruptException):
 		driver = Camera()
-		driver.run()
-	except rospy.ROSInterruptException:
-		pass		
+		driver.run()		
 
