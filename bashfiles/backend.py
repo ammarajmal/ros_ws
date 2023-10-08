@@ -3,8 +3,12 @@
 
 import rospkg # For getting the path of the ros packages
 import roslaunch # For launching the ros nodes
-cam_launch = rospkg.RosPack().get_path('gige_cam_driver') + "/launch/cam.launch"
-view_cam_launch = rospkg.RosPack().get_path('gige_cam_driver') + "/launch/view_cam.launch"
+
+cam_launch = rospkg.RosPack().get_path('gige_cam_driver')
+view_cam_launch = rospkg.RosPack().get_path('gige_cam_driver')
+print(cam_launch)
+
+
 uuid_ = roslaunch.rlutil.get_or_generate_uuid(None, False)
 # roslaunch.configure_logging(uuid_)
 BOARD_SIZE = '8x6'

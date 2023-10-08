@@ -8,7 +8,6 @@ import datetime
 import os
 import subprocess
 import time
-import pandas as pd
 import matplotlib.pyplot as plt
 from scipy import signal
 import numpy as np
@@ -17,6 +16,7 @@ import rosbag
 
 import tkinter as tk
 from tkinter import filedialog
+import pandas as pd
 
 import roslaunch
 
