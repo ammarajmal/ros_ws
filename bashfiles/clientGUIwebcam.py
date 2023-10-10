@@ -9,7 +9,6 @@ customtkinter.set_default_color_theme("blue")
 class ClientGUI(customtkinter.CTk):
     def __init__(self):
         super().__init__()
-
         width = 800
         height = 600
         self.title("Camera Dashboard")
