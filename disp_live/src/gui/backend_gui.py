@@ -67,9 +67,7 @@ class ClientGUI(customtkinter.CTk):
         self.running_processes = {}
         self.left_frame = None
         self.left_top_frame = None
-        self.left_top_frame_cam1_button = None
-        self.left_top_frame_cam2_button = None
-        self.left_top_frame_cam3_button = None
+
         self.left_top_frame_label = None
         self.left_top_frame_button = None
         self.left_bottom_frame = None
@@ -81,7 +79,7 @@ class ClientGUI(customtkinter.CTk):
         self.left_bottom_frame_sq_size_entry = None
         self.right_top_frame_label = None
         self.left_top_frame_view_cam_checkbox = None
-        # self.left_top_frame_start_cam1_button = customtkinter.CTkButton(self.left_top_frame)
+        # self.left_top_frame_cam1_button = customtkinter.CTkButton(self.left_top_frame)
         
         
         self.left_bottom_frame_chessboard_label = None
@@ -125,43 +123,33 @@ class ClientGUI(customtkinter.CTk):
         self.left_top_frame_label = customtkinter.CTkLabel(
             self.left_top_frame, text="CAMERA OUTPUT")
         self.left_top_frame_label.place(relx=0.5, rely=0.10, anchor="center")
-        self.left_top_frame_cam1_button = customtkinter.CTkButton(
-            self.left_top_frame, 
-            text="View Camera 1" if self.view_camera else "Start Camera 1",
-            state=("normal" if ACTIVE_CAMERA == "Camera 1" else "disabled"),
-            fg_color=(None if ACTIVE_CAMERA == "Camera 1" else "gray"))
-        self.left_top_frame_cam1_button.place(relx=0.5, rely=0.41, anchor="center")
 
+        self.left_top_frame_cam1_button = customtkinter.CTkButton(
+            self.left_top_frame, text="Start Camera 1",
+            fg_color=themes[COLOR_SELECT][1],
+            command=lambda: self._start_cam_1_button_event(1, True, False))
+        self.left_top_frame_cam1_button.place(relx=0.5, rely=0.25, anchor="center")
+        
         self.left_top_frame_cam2_button = customtkinter.CTkButton(
-            self.left_top_frame,
-            text="View Camera 2" if self.view_camera else "Start Camera 2",
-            state=("normal" if ACTIVE_CAMERA == "Camera 2" else "disabled"),
-            fg_color=(None if ACTIVE_CAMERA == "Camera 2" else "gray"))
-        self.left_top_frame_cam2_button.place(relx=0.5, rely=0.58, anchor="center")
+            self.left_top_frame, text="Start Camera 2",
+            fg_color=themes[COLOR_SELECT][1],
+            command=lambda: self._start_cam_1_button_event(2, True, False))
+        self.left_top_frame_cam2_button.place(relx=0.5, rely=0.45, anchor="center")
 
         self.left_top_frame_cam3_button = customtkinter.CTkButton(
-            self.left_top_frame,
-            text="View Camera 3" if self.view_camera else "Start Camera 3",
-            state=("normal" if ACTIVE_CAMERA == "Camera 3" else "disabled"),
-            fg_color=(None if ACTIVE_CAMERA == "Camera 3" else "gray"))
-        self.left_top_frame_cam3_button.place(relx=0.5, rely=0.75, anchor="center")
-        
-        # self.left_top_frame_view_cam_label = customtkinter.CTkLabel(
-        #     self.left_top_frame, text="View Camera Output")
-        # self.left_top_frame_view_cam_label.place(relx=0.5, rely=0.90, anchor="center")
-        # Create the custom tkinter checkbox using the BooleanVar
+            self.left_top_frame, text="Start Camera 3",
+            fg_color=themes[COLOR_SELECT][1],
+            command=lambda: self._start_cam_1_button_event(3, True, False))
+        self.left_top_frame_cam3_button.place(relx=0.5, rely=0.65, anchor="center")
+                
         self.left_top_frame_view_cam_checkbox = customtkinter.CTkCheckBox(
             self.left_top_frame, text="Enable View",
             checkbox_height=17, checkbox_width=17,
             onvalue=True, offvalue=False, variable=self.view_camera,
             command=self._view_camera_checkbox_event)
-        self.left_top_frame_view_cam_checkbox.place(relx=0.5, rely=0.90, anchor="center")
+        self.left_top_frame_view_cam_checkbox.place(relx=0.5, rely=0.85, anchor="center")
         
-        self.left_top_frame_start_cam1_button = customtkinter.CTkButton(
-            self.left_top_frame, text="Start Camera 1",
-            fg_color=themes[COLOR_SELECT][1],
-            command=lambda: self._start_cam_1_button_event(1, True, False))
-        self.left_top_frame_start_cam1_button.place(relx=0.5, rely=0.25, anchor="center")
+
     
     def _start_cam_1_button_event(self, camera_number, show_camera, calibrate_camera) -> None:
         """This function is used to start the camera node"""
@@ -170,7 +158,7 @@ class ClientGUI(customtkinter.CTk):
         {'camera_name': 'camera_1',
          'device_id': 0,
          'calibration_file': 'cam1',
-         'button': self.left_top_frame_start_cam1_button,
+         'button': self.left_top_frame_cam1_button,
         #  'calibrate_button': self.sidebar_btn_cam_1_calib,
          'name': 'Camera 1'},
         {'camera_name': 'camera_2',
@@ -330,9 +318,9 @@ class ClientGUI(customtkinter.CTk):
         """
         print(self.view_camera.get())
         if self.view_camera.get():
-            self.left_top_frame_start_cam1_button.configure(text="View Camera 1", fg_color=themes[COLOR_SELECT][0])
+            self.left_top_frame_cam1_button.configure(text="View Camera 1", fg_color=themes[COLOR_SELECT][0])
         else:
-            self.left_top_frame_start_cam1_button.configure(text="Start Camera 1",
+            self.left_top_frame_cam1_button.configure(text="Start Camera 1",
                                                             fg_color=themes[COLOR_SELECT][1])
     def _create_left_bottom_frame(self) -> None:
         """_summary_
@@ -416,9 +404,12 @@ class ClientGUI(customtkinter.CTk):
     def _create_right_top_frame_content(self) -> None:
         """_summary_
         """
+        self.right_top_frame_system_label = customtkinter.CTkLabel(
+            self.right_top_frame, text=" System:  ")
+        self.right_top_frame_system_label.place(relx=0.05, rely=0.5, anchor="center")
         self.right_top_frame_label = customtkinter.CTkLabel(
-            self.right_top_frame, text="Status:", text_color="yellow")
-        self.right_top_frame_label.place(relx=0.1, rely=0.5, anchor="center")
+            self.right_top_frame, text=" NUC1 ", text_color="yellow", bg_color=themes[COLOR_SELECT][1])
+        self.right_top_frame_label.place(relx=0.12, rely=0.5, anchor="center")
         self.right_top_frame_ros_status_label = customtkinter.CTkLabel(
             self.right_top_frame, text="ROS System Status: ")
         self.right_top_frame_ros_status_label.place(relx=0.3, rely=0.5, anchor="center")
