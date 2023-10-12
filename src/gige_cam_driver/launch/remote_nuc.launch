@@ -12,7 +12,7 @@
             <arg name="nuc_user" value="sitl1" />
             <arg name="nuc_password" value="sitl" />
             <!-- <arg name="cam" value="camera_1" /> -->
-            <arg name="calib_file" value="cam1" />
+            <arg name="calib_file" value="nuc1" />
         </include>
     </group>
 
@@ -24,7 +24,7 @@
             <arg name="nuc_user" value="sitl2" />
             <arg name="nuc_password" value="sitl" />
             <!-- <arg name="cam" value="camera_2" /> -->
-            <arg name="calib_file" value="cam2" />
+            <arg name="calib_file" value="nuc2" />
         </include>
     </group>
 
@@ -36,7 +36,7 @@
             <arg name="nuc_user" value="sitl3" />
             <arg name="nuc_password" value="sitl" />
             <!-- <arg name="cam" value="camera_3" /> -->
-            <arg name="calib_file" value="cam3" />
+            <arg name="calib_file" value="nuc3" />
         </include>
     </group>
 </launch>
