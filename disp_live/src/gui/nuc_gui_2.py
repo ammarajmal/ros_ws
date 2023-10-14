@@ -47,8 +47,8 @@ class ClientGUI(customtkinter.CTk):
 
 
         
-        self.machine_name = 'NUC 2'
-        self.title(f"{self.machine_name} Dashboard")
+        self.nuc_number = '2'
+        self.title(f"NUC {self.nuc_number} Dashboard")
         self.geometry("1000x600")
         self.resizable(False, False)
         self.protocol("WM_DELETE_WINDOW", self.destroy_routine)
@@ -121,47 +121,37 @@ class ClientGUI(customtkinter.CTk):
         """_summary_
         """
         self.left_top_frame_label = customtkinter.CTkLabel(
-            self.left_top_frame, text=f"START CAMERA - {self.machine_name}")
+            self.left_top_frame, text=f"START CAMERA - NUC {self.nuc_number}")
         self.left_top_frame_label.place(relx=0.5, rely=0.17, anchor="center")
 
         self.left_top_frame_start_nuc_local_cam_button = customtkinter.CTkButton(
             self.left_top_frame, text="Start Camera",
-            command=lambda: self._start_nuc_local_cam_button_event(1, True, False))
+            command=lambda: self._start_nuc_local_cam_button_event(self.nuc_number, True, False))
         self.left_top_frame_start_nuc_local_cam_button.place(relx=0.5, rely=0.45, anchor="center")
         
         self.left_top_frame_view_nuc_local_cam_button = customtkinter.CTkButton(
             self.left_top_frame, text="View Camera",
-            command=lambda: self._start_nuc_local_cam_button_event(1, True, False))
+            command=lambda: self._start_nuc_local_cam_button_event(self.nuc_number, True, False))
         self.left_top_frame_view_nuc_local_cam_button.place(relx=0.5, rely=0.75, anchor="center")
         
     def _start_nuc_remote_cam_button_event(self, camera_number, show_camera, calibrate_camera) -> None:
-        print(f"Starting Camera {camera_number} from {self.machine_name}...")
+        print(f"Starting Camera {camera_number} from NUC {self.nuc_number}...")
         print(f"Camera Node Started...with {show_camera}")
         pass
-    def _start_nuc_local_cam_button_event(self, camera_number, show_camera, calibrate_camera) -> None:
+    def _start_nuc_local_cam_button_event(self, nuc_machine, show_camera, calibrate_camera) -> None:
         """This function is used to start the camera node"""
-        print("Starting Camera 1 Node..")
 
-        cameras = [
-        {'camera_name': 'nuc1_camera',
-         'device_id': 0,
-         'calibration_file': 'nuc1_cam',
-         'button': self.left_top_frame_start_nuc_local_cam_button,
-        #  'calibrate_button': self.sidebar_btn_cam_1_calib,
-         'name': 'Camera 1'},
-        {'camera_name': 'camera_2',
-         'device_id': 1,
-         'calibration_file': 'cam2',
-        #  'button': self.sidebar_btn_cam_2_start,
-        #  'calibrate_button': self.sidebar_btn_cam_2_calib,
-         'name': 'Camera 2'},
-        {'camera_name': 'camera_3',
-         'device_id': 2,
-         'calibration_file': 'cam3',
-        #  'button': self.sidebar_btn_cam_3_start,
-        #  'calibrate_button': self.sidebar_btn_cam_3_calib,
-         'name': 'Camera 3'}
-        ]
+        topic_name = f"/{nuc_machine}/image_raw"
+        # print('\nchecking topic /nuc2/image_raw ..')
+        all_topics = rospy.get_published_topics()
+        if topic_name in [topic[0] for topic in all_topics]:
+            # print(f"{topic_name} is active")
+            print(f'Camera alreay running at NUC {nuc_machine}!')
+            return
+        else:
+            print(f"{topic_name} is not active")
+
+
 
         # Select the camera based on the provided number
         if camera_number < 1 or camera_number > 3:
@@ -312,7 +302,7 @@ class ClientGUI(customtkinter.CTk):
         """_summary_
         """
         self.left_middle_frame_label = customtkinter.CTkLabel(
-        self.left_middle_frame, text=f"CALIBRATE CAMERA - {self.machine_name}")
+        self.left_middle_frame, text=f"CALIBRATE CAMERA - NUC {self.nuc_number}")
         self.left_middle_frame_label.place(relx=0.5, rely=0.13, anchor="center")
 
         self.left_middle_frame_sq_size_label = customtkinter.CTkLabel(
@@ -386,7 +376,7 @@ class ClientGUI(customtkinter.CTk):
             self.right_top_frame, text=" System:  ")
         self.right_top_frame_system_label.place(relx=0.05, rely=0.5, anchor="center")
         self.right_top_frame_label = customtkinter.CTkLabel(
-            self.right_top_frame, text=f"  {self.machine_name}  ", text_color="yellow", bg_color=themes[COLOR_SELECT][1])
+            self.right_top_frame, text=f"  NUC {self.nuc_number}  ", text_color="yellow", bg_color=themes[COLOR_SELECT][1])
         self.right_top_frame_label.place(relx=0.12, rely=0.5, anchor="center")
         self.right_top_frame_ros_status_label = customtkinter.CTkLabel(
             self.right_top_frame, text="ROS System Status: ")

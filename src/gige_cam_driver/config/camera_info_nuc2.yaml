@@ -11,7 +11,7 @@ camera_matrix:
   - 0.0
   - 1.0
   rows: 3
-camera_name: nuc2_camera
+camera_name: nuc2
 distortion_coefficients:
   cols: 5
   data:

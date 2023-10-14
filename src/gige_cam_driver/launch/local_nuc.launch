@@ -1,31 +1,29 @@
 <launch>
     
-        <!-- Common arguments -->
-        <arg name="launch_nuc1" default="false"/>
-        <arg name="launch_nuc2" default="true"/>
-        <arg name="launch_nuc3" default="false"/>
+    <!-- Common argument -->
+    <arg name="launch_nuc" default="nuc1"/>
     
-        <!-- NUC1 -->
-        <group if="$(arg launch_nuc1)">
-            <include file="$(find gige_cam_driver)/launch/cam_basic.launch">
-                <arg name="nuc_name" value="nuc1" />
-                <arg name="calib_file" value="nuc1" />
-            </include>
-        </group>
+    <!-- NUC1 -->
+    <group if="$(eval launch_nuc == 'nuc1')">
+        <include file="$(find gige_cam_driver)/launch/cam_basic.launch">
+            <arg name="nuc_name" value="$(arg launch_nuc)" />
+            <arg name="calib_file" value="$(arg launch_nuc)" />
+        </include>
+    </group>
 
-        <!-- NUC2 -->
-        <group if="$(arg launch_nuc2)">
-            <include file="$(find gige_cam_driver)/launch/cam_basic.launch">
-                <arg name="nuc_name" value="nuc2" />
-                <arg name="calib_file" value="nuc2" />
-            </include>
-        </group>
+    <!-- NUC2 -->
+    <group if="$(eval launch_nuc == 'nuc2')">
+        <include file="$(find gige_cam_driver)/launch/cam_basic.launch">
+            <arg name="nuc_name" value="$(arg launch_nuc)" />
+            <arg name="calib_file" value="$(arg launch_nuc)" />
+        </include>
+    </group>
 
-        <!-- NUC3 -->
-        <group if="$(arg launch_nuc3)">
-            <include file="$(find gige_cam_driver)/launch/cam_basic.launch">
-                <arg name="nuc_name" value="nuc3" />
-                <arg name="calib_file" value="nuc3" />
-            </include>
-        </group>
+    <!-- NUC3 -->
+    <group if="$(eval launch_nuc == 'nuc3')">
+        <include file="$(find gige_cam_driver)/launch/cam_basic.launch">
+            <arg name="nuc_name" value="$(arg launch_nuc)" />
+            <arg name="calib_file" value="$(arg launch_nuc)" />
+        </include>
+    </group>
 </launch>
