@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """ backend definitions for the gui"""
-import subprocess
+# import subprocess
 import tkinter as tk
 import customtkinter
 import rospy
@@ -30,13 +30,10 @@ class ClientGUI(customtkinter.CTk):
         """
         super().__init__()
         rospy.init_node("nuc1_gui", anonymous=False)
-        
         self.package = 'gige_cam_driver'
-
         # ********************************************************************************
         # Path management for Launch files
         # ********************************************************************************
-
         self.launch_path = rospkg.RosPack().get_path('gige_cam_driver') + '/launch/'
         self.csv_folder_path = rospkg.RosPack().get_path('gige_cam_driver') + '/csvfiles/'
         self.detect_launch_path = rospkg.RosPack().get_path('aruco_detect') + '/launch/'
@@ -139,6 +136,7 @@ class ClientGUI(customtkinter.CTk):
         
     def _start_nuc_remote_cam_button_event(self, camera_number, show_camera, calibrate_camera) -> None:
         print(f"Starting Camera {camera_number} from {self.machine_name}...")
+        print(f"Camera Node Started...with {show_camera}")
         pass
     def _start_nuc_local_cam_button_event(self, camera_number, show_camera, calibrate_camera) -> None:
         """This function is used to start the camera node"""
