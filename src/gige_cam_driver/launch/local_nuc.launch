@@ -1,0 +1,31 @@
+<launch>
+    
+        <!-- Common arguments -->
+        <arg name="launch_nuc1" default="false"/>
+        <arg name="launch_nuc2" default="true"/>
+        <arg name="launch_nuc3" default="false"/>
+    
+        <!-- NUC1 -->
+        <group if="$(arg launch_nuc1)">
+            <include file="$(find gige_cam_driver)/launch/cam_basic.launch">
+                <arg name="nuc_name" value="nuc1" />
+                <arg name="calib_file" value="nuc1" />
+            </include>
+        </group>
+
+        <!-- NUC2 -->
+        <group if="$(arg launch_nuc2)">
+            <include file="$(find gige_cam_driver)/launch/cam_basic.launch">
+                <arg name="nuc_name" value="nuc2" />
+                <arg name="calib_file" value="nuc2" />
+            </include>
+        </group>
+
+        <!-- NUC3 -->
+        <group if="$(arg launch_nuc3)">
+            <include file="$(find gige_cam_driver)/launch/cam_basic.launch">
+                <arg name="nuc_name" value="nuc3" />
+                <arg name="calib_file" value="nuc3" />
+            </include>
+        </group>
+</launch>
