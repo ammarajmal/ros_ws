@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """ backend definitions for the gui"""
-import subprocess
+# import subprocess
 import tkinter as tk
 import customtkinter
 import rospy
@@ -15,7 +15,7 @@ themes = {'blue': ("#3B8ED0", "#1F6AA5"),
 
 
 # select value of COLOR_SELECT from (0: blue, 1: green, 2: dark-blue)
-COLOR_SELECT = list(themes.keys())[2]
+COLOR_SELECT = list(themes.keys())[1]
 print(COLOR_SELECT)
 
 # Modes: "System" (standard), "Dark", "Light"

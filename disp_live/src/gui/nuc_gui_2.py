@@ -50,7 +50,7 @@ class ClientGUI(customtkinter.CTk):
 
 
         
-        self.machine_name = 'NUC 1'
+        self.machine_name = 'NUC 2'
         self.title(f"{self.machine_name} Dashboard")
         self.geometry("1000x600")
         self.resizable(False, False)
@@ -76,8 +76,8 @@ class ClientGUI(customtkinter.CTk):
         self.right_top_frame_system_label = None
         self.right_top_frame_label = None
         self.left_top_frame_view_cam_checkbox = None
-        self.left_top_frame_start_nuc1_cam_button = customtkinter.CTkButton(master=self.left_top_frame)
-        self.left_top_frame_view_nuc1_cam_button = customtkinter.CTkButton(master=self.left_top_frame)
+        self.left_top_frame_start_nuc_local_cam_button = customtkinter.CTkButton(master=self.left_top_frame)
+        self.left_top_frame_view_nuc_local_cam_button = customtkinter.CTkButton(master=self.left_top_frame)
         self.left_middle_frame_chessboard_label = None
         self.left_middle_frame_chessboard_entry = None
         self.left_button_frame_calib_update_button = customtkinter.CTkButton(master=self.left_middle_frame)
@@ -88,6 +88,12 @@ class ClientGUI(customtkinter.CTk):
         self.right_top_frame_camera_label = None
         self.right_top_frame_camera_result_label = None
         self.right_middle_frame = None
+        self.left_bottom_frame = customtkinter.CTkFrame(self.left_frame)
+        self.left_bottom_frame_label = customtkinter.CTkLabel(self.left_bottom_frame)
+        self.left_bottom_frame_start_nuc1_cam_button = customtkinter.CTkButton(self.left_bottom_frame)
+        self.left_bottom_frame_start_nuc2_cam_button = customtkinter.CTkButton(self.left_bottom_frame)
+        self.left_bottom_frame_start_nuc3_cam_button = customtkinter.CTkButton(self.left_bottom_frame)
+            
         
 
     def destroy_routine(self) -> None:
@@ -121,17 +127,20 @@ class ClientGUI(customtkinter.CTk):
             self.left_top_frame, text=f"START CAMERA - {self.machine_name}")
         self.left_top_frame_label.place(relx=0.5, rely=0.17, anchor="center")
 
-        self.left_top_frame_start_nuc1_cam_button = customtkinter.CTkButton(
+        self.left_top_frame_start_nuc_local_cam_button = customtkinter.CTkButton(
             self.left_top_frame, text="Start Camera",
-            command=lambda: self._start_nuc1_cam_button_event(1, True, False))
-        self.left_top_frame_start_nuc1_cam_button.place(relx=0.5, rely=0.45, anchor="center")
+            command=lambda: self._start_nuc_local_cam_button_event(1, True, False))
+        self.left_top_frame_start_nuc_local_cam_button.place(relx=0.5, rely=0.45, anchor="center")
         
-        self.left_top_frame_view_nuc1_cam_button = customtkinter.CTkButton(
+        self.left_top_frame_view_nuc_local_cam_button = customtkinter.CTkButton(
             self.left_top_frame, text="View Camera",
-            command=lambda: self._start_nuc1_cam_button_event(2, True, False))
-        self.left_top_frame_view_nuc1_cam_button.place(relx=0.5, rely=0.75, anchor="center")
+            command=lambda: self._start_nuc_local_cam_button_event(1, True, False))
+        self.left_top_frame_view_nuc_local_cam_button.place(relx=0.5, rely=0.75, anchor="center")
         
-    def _start_nuc1_cam_button_event(self, camera_number, show_camera, calibrate_camera) -> None:
+    def _start_nuc_remote_cam_button_event(self, camera_number, show_camera, calibrate_camera) -> None:
+        print(f"Starting Camera {camera_number} from {self.machine_name}...")
+        pass
+    def _start_nuc_local_cam_button_event(self, camera_number, show_camera, calibrate_camera) -> None:
         """This function is used to start the camera node"""
         print("Starting Camera 1 Node..")
 
@@ -139,7 +148,7 @@ class ClientGUI(customtkinter.CTk):
         {'camera_name': 'nuc1_camera',
          'device_id': 0,
          'calibration_file': 'nuc1_cam',
-         'button': self.left_top_frame_start_nuc1_cam_button,
+         'button': self.left_top_frame_start_nuc_local_cam_button,
         #  'calibrate_button': self.sidebar_btn_cam_1_calib,
          'name': 'Camera 1'},
         {'camera_name': 'camera_2',
@@ -346,17 +355,17 @@ class ClientGUI(customtkinter.CTk):
         """_summary_
         """
         self.left_bottom_frame_label = customtkinter.CTkLabel(
-        self.left_bottom_frame, text=f"START OTHER CAMERAS")
+        self.left_bottom_frame, text="START OTHER CAMERAS")
         self.left_bottom_frame_label.place(relx=0.5, rely=0.17, anchor="center")
 
-        self.left_bottom_frame_start_nuc2_cam_button = customtkinter.CTkButton(
-            self.left_bottom_frame, text="Start Camera - NUC 2", fg_color=themes[COLOR_SELECT][1],
-            command=lambda: self._start_nuc1_cam_button_event(1, True, False))
-        self.left_bottom_frame_start_nuc2_cam_button.place(relx=0.5, rely=0.45, anchor="center")
+        self.left_bottom_frame_start_nuc1_cam_button = customtkinter.CTkButton(
+            self.left_bottom_frame, text="Start Camera - NUC 1", fg_color=themes[COLOR_SELECT][1],
+            command=lambda: self._start_nuc_remote_cam_button_event(1, True, False))
+        self.left_bottom_frame_start_nuc1_cam_button.place(relx=0.5, rely=0.45, anchor="center")
         
         self.left_bottom_frame_start_nuc3_cam_button = customtkinter.CTkButton(
             self.left_bottom_frame, text="Start Camera - NUC 3", fg_color=themes[COLOR_SELECT][1],
-            command=lambda: self._start_nuc1_cam_button_event(1, True, False))
+            command=lambda: self._start_nuc_remote_cam_button_event(3, True, False))
         self.left_bottom_frame_start_nuc3_cam_button.place(relx=0.5, rely=0.75, anchor="center")
         
     def _create_right_frame(self) -> None:
