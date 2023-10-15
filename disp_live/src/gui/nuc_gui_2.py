@@ -6,22 +6,27 @@ import customtkinter
 import rospy
 import rospkg
 import roslaunch
+# from sensor_msgs.msg import Image
+# from cv_bridge import CvBridge, CvBridgeError
+# import cv2
+# import numpy as np
+
 themes = {'blue': ("#3B8ED0", "#1F6AA5"),
           'green': ("#2CC985", "#2FA572"),
-          'dark-blue': ("#3a7ebf", "#1f538d")
+          'dark-blue': ("#3a7ebf", "#1f538d"),
+          'red':("#fa5f5a", "#ba3732")
           }
 
-ACTIVE_CAMERA = 'Camera 1'
 
 
 # select value of COLOR_SELECT from (0: blue, 1: green, 2: dark-blue)
 COLOR_SELECT = list(themes.keys())[2]
-print(COLOR_SELECT)
 
 # Modes: "System" (standard), "Dark", "Light"
 customtkinter.set_appearance_mode("System")
 # Themes: "blue" (standard), "green", "dark-blue"
 customtkinter.set_default_color_theme(COLOR_SELECT)
+
 
 class ClientGUI(customtkinter.CTk):
     """ class for client gui code"""   
@@ -29,7 +34,7 @@ class ClientGUI(customtkinter.CTk):
         """initialization function for the client gui
         """
         super().__init__()
-        rospy.init_node("nuc1_gui", anonymous=False)
+        rospy.init_node("nuc2_gui", anonymous=False)
         self.package = 'gige_cam_driver'
         # ********************************************************************************
         # Path management for Launch files
@@ -42,6 +47,7 @@ class ClientGUI(customtkinter.CTk):
         self.uuid = roslaunch.rlutil.get_or_generate_uuid(None, False)
         # roslaunch.configure_logging(self.uuid)
         self.cam_launch = f"{self.launch_path}cam.launch"
+        self.local_nuc_launch=f'{self.launch_path}local_nuc.launch'
         self.view_launch = f"{self.launch_path}viewcam.launch"
         self.calib_launch = f"{self.launch_path}calib.launch"
 
@@ -57,9 +63,9 @@ class ClientGUI(customtkinter.CTk):
         self.view_camera.set(False)  # Set the initial value to False
         
         self._create_widgets()
-        self.nuc1_camera_active = False
-        self.camera_2_active = False
-        self.camera_3_active = False
+        self.nuc1_camera = False
+        self.nuc2_camera = False
+        self.nuc3_camera = False
         self.running_processes = {}
         self.left_frame = None
         self.left_top_frame = None
@@ -73,8 +79,8 @@ class ClientGUI(customtkinter.CTk):
         self.right_top_frame_system_label = None
         self.right_top_frame_label = None
         self.left_top_frame_view_cam_checkbox = None
-        self.left_top_frame_start_nuc_local_cam_button = customtkinter.CTkButton(master=self.left_top_frame)
-        self.left_top_frame_view_nuc_local_cam_button = customtkinter.CTkButton(master=self.left_top_frame)
+        # self.left_top_frame_start_nuc_local_cam_button = customtkinter.CTkButton(master=self.left_top_frame)
+        # self.left_top_frame_view_nuc_local_cam_button = customtkinter.CTkButton(master=self.left_top_frame)
         self.left_middle_frame_chessboard_label = None
         self.left_middle_frame_chessboard_entry = None
         self.left_button_frame_calib_update_button = customtkinter.CTkButton(master=self.left_middle_frame)
@@ -125,172 +131,80 @@ class ClientGUI(customtkinter.CTk):
         self.left_top_frame_label.place(relx=0.5, rely=0.17, anchor="center")
 
         self.left_top_frame_start_nuc_local_cam_button = customtkinter.CTkButton(
-            self.left_top_frame, text="Start Camera",
-            command=lambda: self._start_nuc_local_cam_button_event(self.nuc_number, True, False))
+            self.left_top_frame, text="Start Camera", fg_color=themes["blue"],
+            command=lambda: self._start_nuc_local_cam_button_event(self.nuc_number, False))
         self.left_top_frame_start_nuc_local_cam_button.place(relx=0.5, rely=0.45, anchor="center")
         
         self.left_top_frame_view_nuc_local_cam_button = customtkinter.CTkButton(
             self.left_top_frame, text="View Camera",
-            command=lambda: self._start_nuc_local_cam_button_event(self.nuc_number, True, False))
+            command=lambda: self._start_nuc_local_cam_button_event(self.nuc_number, True))
         self.left_top_frame_view_nuc_local_cam_button.place(relx=0.5, rely=0.75, anchor="center")
         
-    def _start_nuc_remote_cam_button_event(self, camera_number, show_camera, calibrate_camera) -> None:
+    def _start_nuc_remote_cam_button_event(self, camera_number, show_camera) -> None:
         print(f"Starting Camera {camera_number} from NUC {self.nuc_number}...")
         print(f"Camera Node Started...with {show_camera}")
         pass
-    def _start_nuc_local_cam_button_event(self, nuc_machine, show_camera, calibrate_camera) -> None:
-        """This function is used to start the camera node"""
-
-        topic_name = f"/{nuc_machine}/image_raw"
-        # print('\nchecking topic /nuc2/image_raw ..')
+    def check_active_topic(self, nuc_machine):
+        """Checks whether a topic is currently running/active or not.. """
+        topic_name = f"/nuc{nuc_machine}/image_raw"
         all_topics = rospy.get_published_topics()
         if topic_name in [topic[0] for topic in all_topics]:
-            # print(f"{topic_name} is active")
-            print(f'Camera alreay running at NUC {nuc_machine}!')
-            return
+            return True
         else:
-            print(f"{topic_name} is not active")
-
-
-
-        # Select the camera based on the provided number
-        if camera_number < 1 or camera_number > 3:
-            rospy.logerr(f"Invalid camera number: {camera_number}")
-            return
-
-        camera = cameras[camera_number - 1]
-
-        camera_name = camera['camera_name']
-        device_id = camera['device_id']
-        calibration_file = camera['calibration_file']
-        button = camera['calibrate_button'] if calibrate_camera else camera['button']
-        button_name = 'Calibrate' if calibrate_camera else 'Start'
-        # Get the current state of the camera
-        camera_active_states = [self.nuc1_camera_active,
-                                self.camera_2_active,
-                                self.camera_3_active]
-        camera_active = camera_active_states[camera_number - 1]
-
-        # Start or stop the camera depending on its current state
-        try:
-            if not camera_active:
-                # Start the selected camera
-                self.start_camera(camera_name, device_id,
-                                  calibration_file, show_camera, calibrate_camera)
-
-                # Update button text and color
-                button.configure(
-                    text=f"Stop {camera['name']}", fg_color=("#fa5f5a", "#ba3732"))
-
-                # Set the camera active flag to True
-                camera_active_states[camera_number - 1] = True
-            else:
-                # Stop the selected camera
-                self.stop_camera(camera_name)
-
-                # Update button text and color
-                button.configure(
-                    text=f"{button_name} {camera['name']}", fg_color=themes[COLOR_SELECT])
-
-                # Set the camera active flag to False
-                camera_active_states[camera_number - 1] = False
-        except Exception as excep_camera:
-            rospy.logerr(
-                f"Error {'' if camera_active else 'starting'} {camera_name} camera: {str(excep_camera)}")
-            return
-
-        # Update the camera active states
-        self.nuc1_camera_active, self.camera_2_active, self.camera_3_active = camera_active_states
-    def start_camera(self, camera_name, device_id, calibration_file, view_camera, calibrate_camera) -> None:
-        """Starts a camera driver and optionally a camera view"""
-        print("Camera Node Started...")
-            # Check if the camera driver is already running
-        if f'{camera_name}_driver' in self.running_processes:
-            rospy.logwarn(f"{camera_name} camera driver is already running.")
-            return
-        camera_launch_args = [f"{self.cam_launch}",
-                              f"cam:={camera_name}",
-                              f"device_id:={device_id}",
-                              f"calib_file:={calibration_file}"
-                              ]
-        view_launch_args = [self.view_launch,
-                            f"camera_name:={camera_name}"
-                            ]
-
-
-        # Create a ROS launch file with the camera launch command
-        roslaunch_file = [(roslaunch.rlutil.resolve_launch_arguments(
-            camera_launch_args)[0], camera_launch_args[1:])]
-        cam_driver = roslaunch.parent.ROSLaunchParent(
-            self.uuid, roslaunch_file)
-
-        # Start the camera driver
-        try:
-            rospy.sleep(0.5)
-            cam_driver.start()
-            self.running_processes[f'{camera_name}_driver'] = cam_driver
-
-            # Set camera active flag to True
-            if camera_name == 'nuc1_camera':
-                self.nuc1_camera_active = True
-            elif camera_name == 'camera_2':
-                self.camera_2_active = True
-            elif camera_name == 'camera_3':
-                self.camera_3_active = True
-
-            # Print success message
-            rospy.loginfo(f"{camera_name} camera driver started successfully.")
-            rospy.sleep(0.5)
-
-            # If view_camera is True, start the camera view
-            if view_camera:
-                view_launch_file = [(roslaunch.rlutil.resolve_launch_arguments(
-                    view_launch_args)[0], view_launch_args[1:])]
-                view_output = roslaunch.parent.ROSLaunchParent(
-                    self.uuid, view_launch_file)
-                view_output.start()
-                self.running_processes[f'{camera_name}_view'] = view_output
-
-
-        except roslaunch.RLException as excep_camera:
-            rospy.logerr(
-                f"Error starting {camera_name} camera driver: {str(excep_camera)}")
-            return
-    def stop_camera(self, camera_name):
-        """Stop a camera driver."""
-        # Check if camera driver is running
-        if f'{camera_name}_driver' not in self.running_processes:
-            rospy.logwarn(f"{camera_name} camera driver is not running.")
-            return
-
-        # Shutdown the camera driver
-        try:
-            self.running_processes[f'{camera_name}_driver'].shutdown()
-            if f'{camera_name}_view' in self.running_processes:
-                self.running_processes[f'{camera_name}_view'].shutdown()
-            # if f'{camera_name}_calibrate' in self.running_processes:
-            #     self.running_processes[f'{camera_name}_calibrate'].shutdown()
-        except roslaunch.RLException as excep_camera:
-            rospy.logerr(
-                f"Error stopping {camera_name} camera driver: {str(excep_camera)}")
-            return
-
-        # Set camera active flag to False
-        if camera_name == 'nuc1_camera':
-            self.nuc1_camera_active = False
-        elif camera_name == 'camera_2':
-            self.camera_2_active = False
-        elif camera_name == 'camera_3':
-            self.camera_3_active = False
-
-        # Remove camera driver from running processes dictionary
-        self.running_processes.pop(f'{camera_name}_driver', None)
-        self.running_processes.pop(f'{camera_name}_view', None)
-        # self.running_processes.pop(f'{camera_name}_calibrate', None)
-
-        # Print success message
-        rospy.loginfo(f"{camera_name} camera driver stopped successfully.")        
+            return False
+        
+    def _start_nuc_local_cam_button_event(self, nuc_machine, show_camera) -> None:
+        """This function is used to start or stop the camera node based on its current state."""
+        # If camera is not running, start it
+        if not self.check_active_topic(nuc_machine):
+            camera_launch_args = [f"{self.local_nuc_launch}", f"launch_nuc:=nuc{nuc_machine}"]
+            roslaunch_file = [(roslaunch.rlutil.resolve_launch_arguments(camera_launch_args)[0], camera_launch_args[1:])]
+            nuc_cam_driver = roslaunch.parent.ROSLaunchParent(self.uuid, roslaunch_file)
+            
+            nuc_cam_driver.start()
+            self.running_processes[f'nuc{nuc_machine}_driver'] = nuc_cam_driver
+            
+            # Update button text to indicate that the camera can be stopped
+            rospy.loginfo(f'NUC {nuc_machine} Camera started successfully!')
+            if show_camera:
+                print('Now displaying camera output..')
+                cam_view_args = [f'{self.view_launch}', f'camera_name:=nuc{nuc_machine}']
+                roslaunch_file = [(roslaunch.rlutil.resolve_launch_arguments(cam_view_args)[0], cam_view_args[1:])]
+                nuc_cam_view = roslaunch.parent.ROSLaunchParent(self.uuid, roslaunch_file)
                 
+                nuc_cam_view.start()
+                self.running_processes[f'nuc{nuc_machine}_view'] = nuc_cam_view
+                
+                # Update button text to indicate that the camera can be stopped
+                self.left_top_frame_view_nuc_local_cam_button.configure(text="Stop View", fg_color=themes["red"])
+                rospy.loginfo(f'NUC {nuc_machine} Camera view started successfully!')
+            else:
+                self.left_top_frame_start_nuc_local_cam_button.configure(text="Stop Camera", fg_color= themes["red"])
+
+
+        # If camera is running, stop it
+        else:
+            if show_camera:
+                try:
+                    self.running_processes[f'nuc{nuc_machine}_view'].shutdown() # Stop the camera view
+                    self.running_processes.pop(f'nuc{nuc_machine}_view', None)
+                    rospy.loginfo(f'NUC {nuc_machine} Camera view stopped successfully!')
+                except roslaunch.RLException as excep_view:
+                    rospy.logerr(
+                        f'Error stopping nuc{nuc_machine} camera view: {str(excep_view)}')
+                finally:
+                    self.left_top_frame_view_nuc_local_cam_button.configure(text="View Camera", fg_color=themes["blue"])
+
+            try:
+                self.running_processes[f'nuc{nuc_machine}_driver'].shutdown()
+                self.running_processes.pop(f'nuc{nuc_machine}_driver', None)
+                rospy.loginfo(f'NUC {nuc_machine} Camera stopped successfully!')
+            except roslaunch.RLException as excep_camera:
+                rospy.logerr(
+                    f'Error stopping nuc{nuc_machine} camera driver: {str(excep_camera)}')
+            finally:
+                # Update button text to indicate that the camera can be started
+                self.left_top_frame_start_nuc_local_cam_button.configure(text="Start Camera", fg_color=themes["blue"])
     
     def _create_left_middle_frame(self) -> None:
         """_summary_
@@ -348,12 +262,12 @@ class ClientGUI(customtkinter.CTk):
 
         self.left_bottom_frame_start_nuc1_cam_button = customtkinter.CTkButton(
             self.left_bottom_frame, text="Start Camera - NUC 1", fg_color=themes[COLOR_SELECT][1],
-            command=lambda: self._start_nuc_remote_cam_button_event(1, True, False))
+            command=lambda: self._start_nuc_remote_cam_button_event(1, True))
         self.left_bottom_frame_start_nuc1_cam_button.place(relx=0.5, rely=0.45, anchor="center")
         
         self.left_bottom_frame_start_nuc3_cam_button = customtkinter.CTkButton(
             self.left_bottom_frame, text="Start Camera - NUC 3", fg_color=themes[COLOR_SELECT][1],
-            command=lambda: self._start_nuc_remote_cam_button_event(3, True, False))
+            command=lambda: self._start_nuc_remote_cam_button_event(3, True))
         self.left_bottom_frame_start_nuc3_cam_button.place(relx=0.5, rely=0.75, anchor="center")
         
     def _create_right_frame(self) -> None:
@@ -388,7 +302,7 @@ class ClientGUI(customtkinter.CTk):
             self.right_top_frame, text="Active Camera: ")
         self.right_top_frame_camera_label.place(relx=0.6, rely=0.5, anchor="center")
         self.right_top_frame_camera_result_label = customtkinter.CTkLabel(
-            self.right_top_frame, text=ACTIVE_CAMERA, text_color="white")
+            self.right_top_frame, text=f'Camera {self.nuc_number}', text_color="white")
         self.right_top_frame_camera_result_label.place(relx=0.72, rely=0.5, anchor="center")
         
     def _create_right_middle_frame(self) -> None:
