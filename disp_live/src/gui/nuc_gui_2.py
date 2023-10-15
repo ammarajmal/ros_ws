@@ -142,7 +142,6 @@ class ClientGUI(customtkinter.CTk):
         
     def _start_nuc_remote_cam_button_event(self, camera_number, show_camera) -> None:
         print(f"Starting Camera {camera_number} from NUC {self.nuc_number}...")
-        print(f"Camera Node Started...with {show_camera}")
         pass
     def check_active_topic(self, nuc_machine):
         """Checks whether a topic is currently running/active or not.. """
