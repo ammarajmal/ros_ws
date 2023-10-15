@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """ backend definitions for the gui"""
-# import subprocess
+import subprocess
 import tkinter as tk
 import customtkinter
 import rospy
@@ -51,7 +51,6 @@ class ClientGUI(customtkinter.CTk):
         self.view_launch = f"{self.launch_path}viewcam.launch"
         self.calib_launch = f"{self.launch_path}calib.launch"
 
-
         
         self.nuc_number = '2'
         self.title(f"NUC {self.nuc_number} Dashboard")
@@ -62,10 +61,16 @@ class ClientGUI(customtkinter.CTk):
         self.view_camera = tk.BooleanVar()
         self.view_camera.set(False)  # Set the initial value to False
         
-        self._create_widgets()
+
         self.nuc1_camera = False
         self.nuc2_camera = False
         self.nuc3_camera = False
+
+        self.board_size = "9x8"
+        self.square_size = "0.025" # in meters
+        # self.var_marker_size = tk.StringVar() # in meters
+        # self.var_chessboard_size = tk.StringVar()
+        self.var_dictionary = tk.StringVar(self, "0") # dict 5x5 (1000)
         self.running_processes = {}
         self.left_frame = None
         self.left_top_frame = None
@@ -81,6 +86,7 @@ class ClientGUI(customtkinter.CTk):
         self.left_top_frame_view_cam_checkbox = None
         # self.left_top_frame_start_nuc_local_cam_button = customtkinter.CTkButton(master=self.left_top_frame)
         # self.left_top_frame_view_nuc_local_cam_button = customtkinter.CTkButton(master=self.left_top_frame)
+        
         self.left_middle_frame_chessboard_label = None
         self.left_middle_frame_chessboard_entry = None
         self.left_button_frame_calib_update_button = customtkinter.CTkButton(master=self.left_middle_frame)
@@ -93,9 +99,12 @@ class ClientGUI(customtkinter.CTk):
         self.right_middle_frame = None
         self.left_bottom_frame = customtkinter.CTkFrame(self.left_frame)
         self.left_bottom_frame_label = customtkinter.CTkLabel(self.left_bottom_frame)
+        self.left_button_frame_calib_update_label = customtkinter.CTkLabel(self.left_middle_frame)
         self.left_bottom_frame_start_nuc1_cam_button = customtkinter.CTkButton(self.left_bottom_frame)
         self.left_bottom_frame_start_nuc2_cam_button = customtkinter.CTkButton(self.left_bottom_frame)
         self.left_bottom_frame_start_nuc3_cam_button = customtkinter.CTkButton(self.left_bottom_frame)
+        
+        self._create_widgets()
             
         
 
@@ -219,32 +228,90 @@ class ClientGUI(customtkinter.CTk):
         self.left_middle_frame_label.place(relx=0.5, rely=0.13, anchor="center")
 
         self.left_middle_frame_sq_size_label = customtkinter.CTkLabel(
-            self.left_middle_frame, text="Square Size: ")
+            self.left_middle_frame, text="Square Size: (m)")
         self.left_middle_frame_sq_size_label.place(relx=0.1, rely=0.22)
 
         self.left_middle_frame_sq_size_entry = customtkinter.CTkEntry(
-            self.left_middle_frame)
-        self.left_middle_frame_sq_size_entry.place(relx=0.62, rely=0.22, relwidth=0.3)
+            master=self.left_middle_frame,
+            placeholder_text=self.square_size,
+            placeholder_text_color="gray"
+        )
+        self.left_middle_frame_sq_size_entry.place(relx=0.62, rely=0.22, relwidth=0.25)
         
         self.left_middle_frame_chessboard_label = customtkinter.CTkLabel(
-            self.left_middle_frame, text="Chessboard Size: ")
+            self.left_middle_frame, text="Chessboard Size: (m)")
         self.left_middle_frame_chessboard_label.place(relx=0.1, rely=0.40)
 
         self.left_middle_frame_chessboard_entry = customtkinter.CTkEntry(
-            self.left_middle_frame)
-        self.left_middle_frame_chessboard_entry.place(relx=0.62, rely=0.40, relwidth=0.3)
+            master=self.left_middle_frame,
+            placeholder_text=self.board_size,
+            placeholder_text_color="gray"
+        )
+        self.left_middle_frame_chessboard_entry.place(relx=0.62, rely=0.40, relwidth=0.25)
         
         self.left_button_frame_calib_update_button = customtkinter.CTkButton(
-            self.left_middle_frame, text="Update", fg_color='green')
+            self.left_middle_frame, text="Update",
+            command=self._left_button_frame_calib_update_button_event)
         self.left_button_frame_calib_update_button.place(relx=0.5, rely=0.65, relwidth=0.4, anchor="center")
         
+        self.left_button_frame_calib_update_label = customtkinter.CTkLabel(
+            self.left_middle_frame,
+            text_color='green',
+            text='',
+            font=customtkinter.CTkFont(size=20, weight="bold")
+            )
+        self.left_button_frame_calib_update_label.place(relx=0.80, rely=0.65, anchor='c')
+        
         self.left_middle_frame_start_calib_button = customtkinter.CTkButton(
-            self.left_middle_frame,text="Start Calibration")
+            self.left_middle_frame,text="Start Calibration",
+            command=self._start_camera_calibration)
         self.left_middle_frame_start_calib_button.place(relx=0.5, rely=0.85, anchor="center")
         
-        self.left_middle_frame_start_calib_button.bind(
-            "<Button-1>", lambda event: self._calibrate_camera(1))
+    def _start_camera_calibration(self):
+        print('** Starting Camera Calibration **')
+        print(f'Board Size: {self.board_size}')
+        print(f'Square Size: {self.square_size}')
+        self._start_nuc_local_cam_button_event(self.nuc_number, show_camera=False)
+        cmd = ['rosrun', 'camera_calibration', 'cameracalibrator.py',
+               '--size', self.board_size, '--square', self.square_size, '--k-coefficients=2',
+               '--fix-principal-point', 'i', '--fix-aspect-ratio',
+               f'image:=/nuc{self.nuc_number}/image_raw', f'camera:=/nuc{self.nuc_number}']
 
+        # Execute the command
+        subprocess.call(cmd)
+        self._start_nuc_local_cam_button_event(self.nuc_number, show_camera=False)
+        
+    def _left_button_frame_calib_update_button_event(self):
+        if self.left_middle_frame_chessboard_entry.get()== "" and self.left_middle_frame_sq_size_entry.get() == "":
+            print('nothing updated')
+            print(f'Original square size: {self.square_size}')
+            print(f'Original board size: {self.board_size}')
+            rospy.logwarn('Please enter new calibtration parameters!')
+            
+        elif self.left_middle_frame_chessboard_entry.get()== "":
+            rospy.loginfo('Checkerboard parameters updated successfully')
+            self.square_size = self.left_middle_frame_sq_size_entry.get()
+            print(f'Updated square size: {self.square_size}')
+            print(f'Original board size: {self.board_size}')
+            self.left_button_frame_calib_update_label.configure(text="☑", fg_color='yellow')
+        elif self.left_middle_frame_sq_size_entry.get() == "":
+            rospy.loginfo('Checkerboard parameters updated successfully')
+            self.board_size = self.left_middle_frame_chessboard_entry.get()
+            print(f'Original square size: {self.square_size}')
+            print(f'Updated board size: {self.board_size}')
+            self.left_button_frame_calib_update_label.configure(text="☑", fg_color='yellow')
+        else:
+            rospy.loginfo('Checkerboard parameters updated successfully')
+            self.left_button_frame_calib_update_label.configure(text="☑", fg_color='yellow')
+            self.board_size = self.left_middle_frame_chessboard_entry.get()
+            self.square_size = self.left_middle_frame_sq_size_entry.get()
+            print(f'Updated square size: {self.square_size}')
+            print(f'Updated board size: {self.board_size}')
+            print('Chessboard Parameters Updated!')
+            
+
+        
+    
     def _create_left_bottom_frame(self) -> None:
         """_summary_
         """
