@@ -10,10 +10,6 @@ themes = {'blue': ("#3B8ED0", "#1F6AA5"),
           'green': ("#2CC985", "#2FA572"),
           'dark-blue': ("#3a7ebf", "#1f538d")
           }
-
-
-
-
 # select value of COLOR_SELECT from (0: blue, 1: green, 2: dark-blue)
 COLOR_SELECT = list(themes.keys())[1]
 
@@ -21,7 +17,6 @@ COLOR_SELECT = list(themes.keys())[1]
 customtkinter.set_appearance_mode("System")
 # Themes: "blue" (standard), "green", "dark-blue"
 customtkinter.set_default_color_theme(COLOR_SELECT)
-
 class ClientGUI(customtkinter.CTk):
     """ class for client gui code"""   
     def __init__(self)-> None:
@@ -35,7 +30,6 @@ class ClientGUI(customtkinter.CTk):
         # ********************************************************************************
         # Path management for Launch files
         # ********************************************************************************
-
         self.launch_path = rospkg.RosPack().get_path('gige_cam_driver') + '/launch/'
         self.csv_folder_path = rospkg.RosPack().get_path('gige_cam_driver') + '/csvfiles/'
         self.detect_launch_path = rospkg.RosPack().get_path('aruco_detect') + '/launch/'
@@ -47,7 +41,6 @@ class ClientGUI(customtkinter.CTk):
         self.nuc1_launch = f"{self.launch_path}nuc1_remote_cam.launch"
         self.nuc2_launch = f"{self.launch_path}nuc2_remote_cam.launch"
         self.nuc3_launch = f"{self.launch_path}nuc3_remote_cam.launch"
-        
         self.view_launch = f"{self.launch_path}viewcam.launch"
         self.calib_launch = f"{self.launch_path}calib.launch"
 
