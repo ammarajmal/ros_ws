@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """ backend definitions for the gui"""
+
 import subprocess
 import tkinter as tk
 import customtkinter
@@ -35,7 +36,6 @@ class ClientGUI(customtkinter.CTk):
         self.launch_path = rospkg.RosPack().get_path('gige_cam_driver') + '/launch/'
         self.csv_folder_path = rospkg.RosPack().get_path('gige_cam_driver') + '/csvfiles/'
         self.detect_launch_path = rospkg.RosPack().get_path('aruco_detect') + '/launch/'
-        self.bagfile_path = self.launch_path.replace("launch/", "bagfiles/")
 
         self.uuid = roslaunch.rlutil.get_or_generate_uuid(None, False)
         # roslaunch.configure_logging(self.uuid)
@@ -275,32 +275,31 @@ class ClientGUI(customtkinter.CTk):
         self._start_nuc_local_cam_button_event(self.nuc_number, show_camera=False)
 
     def _left_button_frame_calib_update_button_event(self):
-        if self.left_middle_frame_chessboard_entry.get()== "" and self.left_middle_frame_sq_size_entry.get() == "":
-            print('nothing updated')
-            print(f'Original square size: {self.square_size}')
-            print(f'Original board size: {self.board_size}')
-            rospy.logwarn('Please enter new calibtration parameters!')
+        chessboard_entry = self.left_middle_frame_chessboard_entry.get()
+        sq_size_entry = self.left_middle_frame_sq_size_entry.get()
 
-        elif self.left_middle_frame_chessboard_entry.get()== "":
-            rospy.loginfo('Checkerboard parameters updated successfully')
-            self.square_size = self.left_middle_frame_sq_size_entry.get()
-            print(f'Updated square size: {self.square_size}')
-            print(f'Original board size: {self.board_size}')
-            self.left_button_frame_calib_update_label.configure(text="☑", fg_color='yellow')
-        elif self.left_middle_frame_sq_size_entry.get() == "":
-            rospy.loginfo('Checkerboard parameters updated successfully')
-            self.board_size = self.left_middle_frame_chessboard_entry.get()
+        if not chessboard_entry and not sq_size_entry:
+            print('Nothing updated')
             print(f'Original square size: {self.square_size}')
+            print(f'Original board size: {self.board_size}')
+            rospy.logwarn('Please enter new calibration parameters!')
+            return
+
+        if chessboard_entry:
+            self.board_size = chessboard_entry
             print(f'Updated board size: {self.board_size}')
-            self.left_button_frame_calib_update_label.configure(text="☑", fg_color='yellow')
         else:
-            rospy.loginfo('Checkerboard parameters updated successfully')
-            self.left_button_frame_calib_update_label.configure(text="☑", fg_color='yellow')
-            self.board_size = self.left_middle_frame_chessboard_entry.get()
-            self.square_size = self.left_middle_frame_sq_size_entry.get()
+            print(f'Original board size: {self.board_size}')
+
+        if sq_size_entry:
+            self.square_size = sq_size_entry
             print(f'Updated square size: {self.square_size}')
-            print(f'Updated board size: {self.board_size}')
-            print('Chessboard Parameters Updated!')
+        else:
+            print(f'Original square size: {self.square_size}')
+
+        rospy.loginfo('Checkerboard parameters updated successfully')
+        self.left_button_frame_calib_update_label.configure(text="☑", fg_color='yellow')
+        print('Chessboard Parameters Updated!')
 
     def _create_left_bottom_frame(self) -> None:
         """_summary_
