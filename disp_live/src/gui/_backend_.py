@@ -31,7 +31,7 @@ def remote_cam_start_(machine_num, remote_nuc_launch,ros_uuid, processes_, butto
                 processes_[f'nuc{machine_num}_remote_cam_driver'].shutdown()
                 processes_.pop(f'nuc{machine_num}_remote_cam_driver', None)
                 rospy.loginfo(f'NUC {machine_num} Camera stopped successfully!')
-            except roslaunch.RLException as excep_camera:
+            except:
                 rospy.logerr(
                     f'Error stopping nuc{machine_num} camera driver: {str(excep_camera)}')
             finally:
