@@ -44,7 +44,7 @@ class ClientGUI(customtkinter.CTk):
         self.view_launch = f"{self.launch_path}viewcam.launch"
         self.calib_launch = f"{self.launch_path}calib.launch"
 
-        self.nuc_number = '2'
+        self.nuc_number = '3'
         self.title(f"NUC {self.nuc_number} Dashboard")
         self.geometry("1000x600")
         self.resizable(False, False)

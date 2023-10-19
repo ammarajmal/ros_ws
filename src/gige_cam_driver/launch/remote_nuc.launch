@@ -1,7 +1,7 @@
 <launch>
     <!-- Common arguments -->
     <arg name="launch_nuc1" default="false"/>
-    <arg name="launch_nuc2" default="true"/>
+    <arg name="launch_nuc2" default="false"/>
     <arg name="launch_nuc3" default="false"/>
 
     <!-- NUC1 -->
