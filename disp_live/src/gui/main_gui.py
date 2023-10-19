@@ -174,9 +174,6 @@ class ClientGUI(customtkinter.CTk):
                     self.__update_camera_button_text(local_nuc_number, 'stopped')
         except roslaunch.RLException as e:
             print(e)
-            
-        
-
     def check_active_topic(self, nuc_machine):
         """Checks whether a topic is currently running/active or not.. """
         topic_name = f"/nuc{nuc_machine}/image_raw"
@@ -203,11 +200,15 @@ class ClientGUI(customtkinter.CTk):
 
         self.left_middle_frame_start_all_cams_button = customtkinter.CTkButton(
             self.left_middle_frame, text="Start All NUC Cameras", fg_color=themes[COLOR_SELECT][1],
+            command=self._start_all_nuc_remote_cams_button_event
             )
         self.left_middle_frame_start_all_cams_button.place(relx=0.5, rely=0.6, anchor="center")
 
     def _start_all_nuc_remote_cams_button_event(self) -> None:
         print('all cameras started!')
+        self._start_nuc_remote_cam_button_event(1)
+        self._start_nuc_remote_cam_button_event(2)
+        self._start_nuc_remote_cam_button_event(3)
     def _create_left_bottom_frame(self) -> None:
         """_summary_
         """
@@ -310,7 +311,7 @@ class ClientGUI(customtkinter.CTk):
             self.right_top_frame, text=" System:  ")
         self.right_top_frame_system_label.place(relx=0.05, rely=0.5, anchor="center")
         self.right_top_frame_label = customtkinter.CTkLabel(
-            self.right_top_frame, text=f"  NUC {self.nuc_number}  ", text_color="yellow",
+            self.right_top_frame, text=f"  Main PC  ", text_color="yellow",
             bg_color=themes[COLOR_SELECT][1])
         self.right_top_frame_label.place(relx=0.12, rely=0.5, anchor="center")
         self.right_top_frame_ros_status_label = customtkinter.CTkLabel(
