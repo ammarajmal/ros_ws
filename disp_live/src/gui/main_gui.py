@@ -7,6 +7,8 @@ import customtkinter
 import rospy
 import rospkg
 import roslaunch
+import time
+from _backend_ import *
 
 themes = {'blue': ("#3B8ED0", "#1F6AA5"),
           'green': ("#2CC985", "#2FA572"),
@@ -16,7 +18,6 @@ themes = {'blue': ("#3B8ED0", "#1F6AA5"),
 
 # select value of COLOR_SELECT from (0: blue, 1: green, 2: dark-blue)
 COLOR_SELECT = list(themes.keys())[2]
-
 # Modes: "System" (standard), "Dark", "Light"
 customtkinter.set_appearance_mode("System")
 # Themes: "blue" (standard), "green", "dark-blue"
@@ -35,6 +36,7 @@ class ClientGUI(customtkinter.CTk):
         # ********************************************************************************
         self.launch_path = rospkg.RosPack().get_path('gige_cam_driver') + '/launch/'
         self.detect_launch_path = rospkg.RosPack().get_path('aruco_detect') + '/launch/'
+        self.remote_nuc_launch = f'{self.launch_path}remote_nuc.launch'
 
         self.uuid = roslaunch.rlutil.get_or_generate_uuid(None, False)
         # roslaunch.configure_logging(self.uuid)
@@ -110,90 +112,47 @@ class ClientGUI(customtkinter.CTk):
         self.left_top_frame_label.place(relx=0.5, rely=0.15, anchor="center")
 
         self.left_top_frame_start_nuc1_remote_cam_button = customtkinter.CTkButton(
-            self.left_top_frame, text="Camera - NUC 1", fg_color=themes["blue"],
-            command=lambda: self._start_nuc_remote_cam_button_event(1))
+            self.left_top_frame, text="Start Camera - NUC 1", fg_color=themes["blue"],
+            command=lambda: self._start_nuc_remote_cam_button_event_updated(1))
         self.left_top_frame_start_nuc1_remote_cam_button.place(relx=0.5, rely=0.35, anchor="center")
 
         self.left_top_frame_start_nuc2_remote_cam_button = customtkinter.CTkButton(
-            self.left_top_frame, text="Camera - NUC 2",
-            command=lambda: self._start_nuc_remote_cam_button_event(2))
+            self.left_top_frame, text="Start Camera - NUC 2",
+            command=lambda: self._start_nuc_remote_cam_button_event_updated(2))
         self.left_top_frame_start_nuc2_remote_cam_button.place(relx=0.5, rely=0.56, anchor="center")
 
         self.left_top_frame_start_nuc3_remote_cam_button = customtkinter.CTkButton(
-            self.left_top_frame, text="Camera - NUC 3",
-            command=lambda: self._start_nuc_remote_cam_button_event(3))
+            self.left_top_frame, text="Start Camera - NUC 3",
+            command=lambda: self._start_nuc_remote_cam_button_event_updated(3))
         self.left_top_frame_start_nuc3_remote_cam_button.place(relx=0.5, rely=0.77, anchor="center")
-
-    def _start_nuc_remote_cam_button_event(self, camera_number) -> None:
-        print(f"Starting Camera {camera_number} from Main Computer...")
-
-    def check_active_topic(self, nuc_machine):
-        """Checks whether a topic is currently running/active or not.. """
-        topic_name = f"/nuc{nuc_machine}/image_raw"
-        all_topics = rospy.get_published_topics()
-        if topic_name in [topic[0] for topic in all_topics]:
-            return True
-        else:
-            return False
-
-    def _start_nuc_local_cam_button_event(self, nuc_machine, show_camera) -> None:
-        """This function is used to start or stop the camera node based on its current state."""
-        # If camera is not running, start it
-        if not self.check_active_topic(nuc_machine):
-            camera_launch_args = [f"{self.local_nuc_launch}", f"launch_nuc:=nuc{nuc_machine}"]
-            roslaunch_file = [(roslaunch.rlutil.resolve_launch_arguments(camera_launch_args)[0],
-                               camera_launch_args[1:])]
-            nuc_cam_driver = roslaunch.parent.ROSLaunchParent(self.uuid, roslaunch_file)
-
-            nuc_cam_driver.start()
-            self.running_processes[f'nuc{nuc_machine}_driver'] = nuc_cam_driver
-
-            # Update button text to indicate that the camera can be stopped
-            rospy.loginfo(f'NUC {nuc_machine} Camera started successfully!')
-            if show_camera:
-                print('Now displaying camera output..')
-                cam_view_args = [f'{self.view_launch}',
-                                 f'camera_name:=nuc{nuc_machine}']
-                roslaunch_file = [(roslaunch.rlutil.resolve_launch_arguments(cam_view_args)[0],
-                                   cam_view_args[1:])]
-                nuc_cam_view = roslaunch.parent.ROSLaunchParent(self.uuid, roslaunch_file)
-
-                nuc_cam_view.start()
-                self.running_processes[f'nuc{nuc_machine}_view'] = nuc_cam_view
-
-                # Update button text to indicate that the camera can be stopped
-                self.left_top_frame_start_nuc2_remote_cam_button.configure(text="Stop View",
-                                                                        fg_color=themes["red"])
-                rospy.loginfo(f'NUC {nuc_machine} Camera view started successfully!')
-            else:
-                self.left_top_frame_start_nuc1_remote_cam_button.configure(text="Stop Camera",
-                                                                         fg_color=themes["red"])
-
-        # If camera is running, stop it
-        else:
-            if show_camera:
-                try:
-                    self.running_processes[f'nuc{nuc_machine}_view'].shutdown()
-                    self.running_processes.pop(f'nuc{nuc_machine}_view', None)
-                    rospy.loginfo(f'NUC {nuc_machine} Camera view stopped successfully!')
-                except roslaunch.RLException as excep_view:
-                    rospy.logerr(
-                        f'Error stopping nuc{nuc_machine} camera view: {str(excep_view)}')
-                finally:
-                    self.left_top_frame_start_nuc2_remote_cam_button.configure(text="View Camera",
+    
+    def __update_camera_button_text(self, _nuc_number, cam_state):
+        if cam_state == 'stopped':
+            if _nuc_number == 1:
+                self.left_top_frame_start_nuc1_remote_cam_button.configure(text="Start Camera - NUC 1",
+                                                                        fg_color=themes["blue"])
+            elif _nuc_number == 2:
+                self.left_top_frame_start_nuc2_remote_cam_button.configure(text="Start Camera - NUC 2",
                                                                             fg_color=themes["blue"])
-
-            try:
-                self.running_processes[f'nuc{nuc_machine}_driver'].shutdown()
-                self.running_processes.pop(f'nuc{nuc_machine}_driver', None)
-                rospy.loginfo(f'NUC {nuc_machine} Camera stopped successfully!')
-            except roslaunch.RLException as excep_camera:
-                rospy.logerr(
-                    f'Error stopping nuc{nuc_machine} camera driver: {str(excep_camera)}')
-            finally:
-                # Update button text to indicate that the camera can be started
-                self.left_top_frame_start_nuc1_remote_cam_button.configure(text="Start Camera",
-                                                                         fg_color=themes["blue"])
+            elif _nuc_number == 3:
+                self.left_top_frame_start_nuc3_remote_cam_button.configure(text="Start Camera - NUC 3",
+                                                                            fg_color=themes["blue"])
+        elif cam_state == 'started':
+            if _nuc_number == 1:
+                    self.left_top_frame_start_nuc1_remote_cam_button.configure(text="Stop Camera - NUC 1",
+                                                                        fg_color=themes["red"])
+            elif _nuc_number == 2:
+                self.left_top_frame_start_nuc2_remote_cam_button.configure(text="Stop Camera - NUC 2",
+                                                                            fg_color=themes["red"])
+            elif _nuc_number == 3:
+                self.left_top_frame_start_nuc3_remote_cam_button.configure(text="Stop Camera - NUC 3",
+                                                                            fg_color=themes["red"])
+    def _start_nuc_remote_cam_button_event_updated(self, _nuc_number) -> None:
+        remote_cam_start_(machine_num = _nuc_number,
+                          remote_nuc_launch = self.remote_nuc_launch,
+                          ros_uuid = self.uuid,
+                          processes_ = self.running_processes,
+                          button_ = self.__update_camera_button_text)
 
     def _create_left_middle_frame(self) -> None:
         """_summary_
@@ -210,11 +169,30 @@ class ClientGUI(customtkinter.CTk):
         self.left_middle_frame_label.place(relx=0.5, rely=0.25, anchor="center")
 
         self.left_middle_frame_start_all_cams_button = customtkinter.CTkButton(
-            self.left_middle_frame, text="Start All Cameras", fg_color=themes[COLOR_SELECT][1],
-            command=lambda: self._start_nuc_remote_cam_button_event(0))
+            self.left_middle_frame, text="Start All NUC Cameras",
+            command=self._start_all_nuc_remote_cams_button_event
+            )
         self.left_middle_frame_start_all_cams_button.place(relx=0.5, rely=0.6, anchor="center")
 
+    def _start_all_nuc_remote_cams_button_event(self) -> None:
+        all_cams = check_active_topic(1) and check_active_topic(2) and check_active_topic(3)
+        if not all_cams:
+            self._start_nuc_remote_cam_button_event_updated(1)
+            self._start_nuc_remote_cam_button_event_updated(2)
+            self._start_nuc_remote_cam_button_event_updated(3)
+            time.sleep(1)
+            self.left_middle_frame_start_all_cams_button.configure(fg_color=themes['red'])
+            print('All cameras started successfully!')
+            all_cams = True
+        else:
+            self._start_nuc_remote_cam_button_event_updated(1)
+            self._start_nuc_remote_cam_button_event_updated(2)
+            self._start_nuc_remote_cam_button_event_updated(3)
+            self.left_middle_frame_start_all_cams_button.configure(fg_color=themes['blue'])
+            print('All cameras stopped successfully!')
 
+
+        
     def _create_left_bottom_frame(self) -> None:
         """_summary_
         """
@@ -267,33 +245,20 @@ class ClientGUI(customtkinter.CTk):
         self.left_button_frame_maker_update_label.place(relx=0.80, rely=0.65, anchor='c')
 
 
-    def _start_camera_calibration(self):
-        print('** Starting Camera Calibration **')
-        print(f'Marker Size: {self.maker_size}')
-        print(f'Dictionary: {self.aruco_dict}')
-        self._start_nuc_local_cam_button_event(self.nuc_number, show_camera=False)
-        cmd = ['rosrun', 'camera_calibration', 'cameracalibrator.py',
-               '--size', self.maker_size, '--square', self.aruco_dict, '--k-coefficients=2',
-               '--fix-principal-point', 'i', '--fix-aspect-ratio',
-               f'image:=/nuc{self.nuc_number}/image_raw', f'camera:=/nuc{self.nuc_number}']
-
-        # Execute the command
-        subprocess.call(cmd)
-        self._start_nuc_local_cam_button_event(self.nuc_number, show_camera=False)
 
     def _left_button_frame_marker_update_button_event(self):
-        chessboard_entry = self.left_bottom_frame_marker_size_entry.get()
+        marker_entry = self.left_bottom_frame_marker_size_entry.get()
         sq_size_entry = self.left_bottom_frame_dict_entry.get()
 
-        if not chessboard_entry and not sq_size_entry:
+        if not marker_entry and not sq_size_entry:
             print('Nothing updated')
             print(f'Original Dictionary: {self.aruco_dict}')
             print(f'Original Marker Size: {self.maker_size}')
             rospy.logwarn('Please enter new marker parameters!')
             return
 
-        if chessboard_entry:
-            self.maker_size = chessboard_entry
+        if marker_entry:
+            self.maker_size = marker_entry
             print(f'Updated Marker Size: {self.maker_size}')
         else:
             print(f'Original Marker Size: {self.maker_size}')
@@ -330,7 +295,7 @@ class ClientGUI(customtkinter.CTk):
             self.right_top_frame, text=" System:  ")
         self.right_top_frame_system_label.place(relx=0.05, rely=0.5, anchor="center")
         self.right_top_frame_label = customtkinter.CTkLabel(
-            self.right_top_frame, text=f"  NUC {self.nuc_number}  ", text_color="yellow",
+            self.right_top_frame, text="  Main PC  ", text_color="yellow",
             bg_color=themes[COLOR_SELECT][1])
         self.right_top_frame_label.place(relx=0.12, rely=0.5, anchor="center")
         self.right_top_frame_ros_status_label = customtkinter.CTkLabel(
@@ -345,6 +310,10 @@ class ClientGUI(customtkinter.CTk):
         self.right_top_frame_camera_result_label = customtkinter.CTkLabel(
             self.right_top_frame, text=f'Camera {self.nuc_number}', text_color="white")
         self.right_top_frame_camera_result_label.place(relx=0.72, rely=0.5, anchor="center")
+    
+    def _create_right_top_frame_content_(self) -> None:
+        """_summary_"""
+        
 
     def _create_right_middle_frame(self) -> None:
         """_summary_

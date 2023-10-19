@@ -1,0 +1,38 @@
+<!-- Run the aruco_detect node -->
+<launch>
+    <!-- Common arguments -->
+    <arg name="image" value="image"/>
+    <arg name="transport" value="raw"/>
+    <arg name="fiducial_len" value="$(arg aruco_marker_size)"/>
+    <arg name="dictionary" value="0"/>
+    <arg name="do_pose_estimation" value="true"/>
+    <arg name="vis_msgs" value="false"/>
+    <arg name="ignore_fiducials" value=""/>
+    <arg name="fiducial_len_override" value=""/>
+    <arg name="verbose" value="false"/>
+
+    <arg name="launch_nuc" default="nuc1"/>
+
+    <!-- NUC 1 -->
+    <group if="$(eval launch_nuc == 'nuc1')">
+        <include file="$(find aruco_detect)/launch/aruco_detect.launch">
+        <arg name="aruco_marker_size" default="0.025"/> 
+        <arg name="camera" value="/nuc1"/>
+        </include>
+    </group>
+    <!-- NUC 2 -->
+    <group if="$(eval launch_nuc == 'nuc2')">
+        <include file="$(find aruco_detect)/launch/aruco_detect.launch">
+        <arg name="aruco_marker_size" default="0.025"/> 
+        <arg name="camera" value="/nuc2"/>
+        </include>
+    </group>
+        <!-- NUC 3 -->
+    <group if="$(eval launch_nuc == 'nuc3')">
+        <include file="$(find aruco_detect)/launch/aruco_detect.launch">
+        <arg name="aruco_marker_size" default="0.025"/> 
+        <arg name="camera" value="/nuc3"/>
+        </include>
+    </group>
+</launch>
+
