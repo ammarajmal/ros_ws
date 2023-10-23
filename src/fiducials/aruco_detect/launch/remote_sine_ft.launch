@@ -9,7 +9,7 @@
         <arg name="nuc_name" value="nuc1"/>
         <arg name="amplitude" default="1"/>
         <arg name="frequency" default="1"/>
-        <arg name="fid_id" default="1"/>
+        <arg name="fiducial_id" default="1"/>
         </include>
     </group>
 
@@ -19,7 +19,7 @@
         <arg name="nuc_name" value="nuc2"/>
         <arg name="amplitude" default="2"/>
         <arg name="frequency" default="2"/>
-        <arg name="fid_id" default="21"/>
+        <arg name="fiducial_id" default="2"/>
         </include>
     </group>
 
@@ -30,7 +30,7 @@
         <arg name="nuc_name" value="nuc3"/>
         <arg name="amplitude" default="3"/>
         <arg name="frequency" default="3"/>
-        <arg name="fid_id" default="3"/>
+        <arg name="fiducial_id" default="3"/>
         </include>
     </group>
 
