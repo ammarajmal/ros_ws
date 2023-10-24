@@ -71,14 +71,15 @@ class ClientGUI(customtkinter.CTk):
             master=self.left_bottom_frame)
         self.right_frame = None
         self.right_top_frame = None
-        self.right_top_frame_ros_status_label = None
         self.right_top_frame_ros_status_result_label = None
         self.right_top_frame_camera_label = None
         self.right_top_frame_camera_result_label = None
+        self.right_top_frame_ros_sys_status_button = None
         self.right_middle_frame = None
         self.left_middle_frame = customtkinter.CTkFrame(self.left_frame)
         self.left_middle_frame_label = customtkinter.CTkLabel(self.left_middle_frame)
         self.left_button_frame_maker_update_label = customtkinter.CTkLabel(self.left_bottom_frame)
+        
         self._create_widgets()
 
     def destroy_routine(self) -> None:
@@ -181,14 +182,16 @@ class ClientGUI(customtkinter.CTk):
             self._start_nuc_remote_cam_button_event_updated(2)
             self._start_nuc_remote_cam_button_event_updated(3)
             time.sleep(1)
-            self.left_middle_frame_start_all_cams_button.configure(fg_color=themes['red'])
+            self.left_middle_frame_start_all_cams_button.configure(fg_color=themes['red'],
+                                                                   text="Stop All NUC Cameras")
             print('All cameras started successfully!')
             all_cams = True
         else:
             self._start_nuc_remote_cam_button_event_updated(1)
             self._start_nuc_remote_cam_button_event_updated(2)
             self._start_nuc_remote_cam_button_event_updated(3)
-            self.left_middle_frame_start_all_cams_button.configure(fg_color=themes['blue'])
+            self.left_middle_frame_start_all_cams_button.configure(fg_color=themes['blue'],
+                                                                   text="Start All NUC Cameras")
             print('All cameras stopped successfully!')
 
 
@@ -280,47 +283,65 @@ class ClientGUI(customtkinter.CTk):
         self.right_frame.place(relx=0.25, rely=0, relwidth=0.75, relheight=1)
         self._create_right_top_frame()
         self._create_right_middle_frame()
+        self._create_right_lower_frame()
 
     def _create_right_top_frame(self) -> None:
         """_summary_
         """
         self.right_top_frame = tk.Frame(self.right_frame, bg=themes[COLOR_SELECT][0])
-        self.right_top_frame.place(relx=0.01, rely=.03, relwidth=.94, relheight=0.08)
+        self.right_top_frame.place(relx=0.01, rely=.04, relwidth=.94, relheight=0.08)
         self._create_right_top_frame_content()
-
     def _create_right_top_frame_content(self) -> None:
         """_summary_
         """
         self.right_top_frame_system_label = customtkinter.CTkLabel(
             self.right_top_frame, text=" System:  ")
-        self.right_top_frame_system_label.place(relx=0.05, rely=0.5, anchor="center")
+        self.right_top_frame_system_label.place(relx=0.15, rely=0.5, anchor="center")
         self.right_top_frame_label = customtkinter.CTkLabel(
             self.right_top_frame, text="  Main PC  ", text_color="yellow",
             bg_color=themes[COLOR_SELECT][1])
-        self.right_top_frame_label.place(relx=0.12, rely=0.5, anchor="center")
-        self.right_top_frame_ros_status_label = customtkinter.CTkLabel(
-            self.right_top_frame, text="ROS System Status: ")
-        self.right_top_frame_ros_status_label.place(relx=0.3, rely=0.5, anchor="center")
+        self.right_top_frame_label.place(relx=0.24, rely=0.5, anchor="center")
+        self.right_top_frame_ros_sys_status_button = customtkinter.CTkButton(
+            self.right_top_frame, text="Check Camera Status:",
+            fg_color=themes[COLOR_SELECT][1], border_color='gray', border_width=1,
+            command=self._check_ros_status)
+        self.right_top_frame_ros_sys_status_button.place(relx=0.5, rely=0.5, anchor="center")
         self.right_top_frame_ros_status_result_label = customtkinter.CTkLabel(
-            self.right_top_frame, text="Running", text_color="white")
-        self.right_top_frame_ros_status_result_label.place(relx=0.42, rely=0.5, anchor="center")
-        self.right_top_frame_camera_label = customtkinter.CTkLabel(
-            self.right_top_frame, text="Active Camera: ")
-        self.right_top_frame_camera_label.place(relx=0.6, rely=0.5, anchor="center")
-        self.right_top_frame_camera_result_label = customtkinter.CTkLabel(
-            self.right_top_frame, text=f'Camera {self.nuc_number}', text_color="white")
-        self.right_top_frame_camera_result_label.place(relx=0.72, rely=0.5, anchor="center")
-    
-    def _create_right_top_frame_content_(self) -> None:
-        """_summary_"""
-        
-
+            self.right_top_frame, text="No Active Camera", text_color="yellow")
+        self.right_top_frame_ros_status_result_label.place(relx=0.72, rely=0.5, anchor="center")
+    def _check_ros_status(self):
+        active_systems = str()
+        nuc1 = check_active_topic(1)
+        nuc2 = check_active_topic(2)
+        nuc3 = check_active_topic(3)
+        # Now, check which of the nuc1, nuc2, and nuc3 is True, add to active_systems
+        if nuc1 is True:
+            active_systems += '     NUC 1'
+        if nuc2 is True:
+            active_systems += '     NUC 2'
+        if nuc3 is True:
+            active_systems += '     NUC 3'
+        if nuc1 is False and nuc2 is False and nuc3 is False:
+            active_systems = "No Active Camera"
+        print(active_systems)
+        self.right_top_frame_ros_status_result_label.configure(text=active_systems)
     def _create_right_middle_frame(self) -> None:
         """_summary_
         """
         self.right_middle_frame = tk.Frame(self.right_frame, bg=themes[COLOR_SELECT][0])
-        self.right_middle_frame.place(relx=.01, rely=0.14, relwidth=.94, relheight=0.79)
-
+        self.right_middle_frame.place(relx=.01, rely=0.15, relwidth=.94, relheight=0.16)
+        self._createright_middle_frame_content()
+    def _create_right_lower_frame(self) -> None:
+        """_summary_
+        """
+        self.right_lower_frame = tk.Frame(self.right_frame, bg=themes[COLOR_SELECT][0])
+        self.right_lower_frame.place(relx=.01, rely=0.35, relwidth=.94, relheight=0.16)
+        self._create_right_lower_frame_content()
+    def _createright_middle_frame_content(self) -> None:
+        pass
+    def _create_right_lower_frame_content(self) -> None:
+        pass
+    
 if __name__ == "__main__":
     root = ClientGUI()
     root.mainloop()

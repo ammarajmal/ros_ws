@@ -39,5 +39,6 @@ def remote_cam_start_(machine_num, remote_nuc_launch,ros_uuid, processes_, butto
                 button_(machine_num, 'stopped')
     except roslaunch.RLException as e:
         print(e)
+    
 if __name__ == "__main__":
     print(check_active_topic(2))
