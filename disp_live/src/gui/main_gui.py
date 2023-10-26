@@ -40,6 +40,7 @@ class ClientGUI(customtkinter.CTk):
 
         self.uuid = roslaunch.rlutil.get_or_generate_uuid(None, False)
         # roslaunch.configure_logging(self.uuid)
+        self.left_width = 0.40
 
         self.nuc_number = '2'
         self.title("Displacements Dashboard")
@@ -95,17 +96,15 @@ class ClientGUI(customtkinter.CTk):
     def _create_left_frame(self) -> None:
         """_summary_"""
         self.left_frame = tk.Frame(self, bg=themes[COLOR_SELECT][1])
-        self.left_frame.place(relx=0, rely=0, relwidth=0.25, relheight=1)
+        self.left_frame.place(relx=0, rely=0, relwidth=self.left_width, relheight=1)
         self._create_left_top_frame()
         self._create_left_middle_frame()
         self._create_left_bottom_frame()
-
     def _create_left_top_frame(self) -> None:
         """_summary_"""
         self.left_top_frame = customtkinter.CTkFrame(self.left_frame)
         self.left_top_frame.place(relx=0.1, rely=0.04, relwidth=0.8, relheight=0.30)
         self._create_left_top_frame_content()
-
     def _create_left_top_frame_content(self) -> None:
         """_summary_"""
         self.left_top_frame_label = customtkinter.CTkLabel(
@@ -115,18 +114,35 @@ class ClientGUI(customtkinter.CTk):
         self.left_top_frame_start_nuc1_remote_cam_button = customtkinter.CTkButton(
             self.left_top_frame, text="Start Camera - NUC 1", fg_color=themes["blue"],
             command=lambda: self._start_nuc_remote_cam_button_event_updated(1))
-        self.left_top_frame_start_nuc1_remote_cam_button.place(relx=0.5, rely=0.35, anchor="center")
+        self.left_top_frame_start_nuc1_remote_cam_button.place(relx=0.27, rely=0.35, anchor="center")
+
+        self.left_top_frame_stop_nuc1_remote_cam_button = customtkinter.CTkButton(
+            self.left_top_frame, text="Stop Camera - NUC 1", fg_color=themes["blue"],
+            command=lambda: self._stop_nuc_remote_cam_button_event_updated(1), state="disabled")
+        self.left_top_frame_stop_nuc1_remote_cam_button.place(relx=0.73, rely=0.35, anchor="center")
+
 
         self.left_top_frame_start_nuc2_remote_cam_button = customtkinter.CTkButton(
             self.left_top_frame, text="Start Camera - NUC 2",
             command=lambda: self._start_nuc_remote_cam_button_event_updated(2))
-        self.left_top_frame_start_nuc2_remote_cam_button.place(relx=0.5, rely=0.56, anchor="center")
+        self.left_top_frame_start_nuc2_remote_cam_button.place(relx=0.27, rely=0.56, anchor="center")
+        
+        self.left_top_frame_stop_nuc2_remote_cam_button = customtkinter.CTkButton(
+            self.left_top_frame, text="Stop Camera - NUC 2",
+            command=lambda: self._stop_nuc_remote_cam_button_event_updated(2), state="disabled")
+        self.left_top_frame_stop_nuc2_remote_cam_button.place(relx=0.73, rely=0.56, anchor="center")
 
         self.left_top_frame_start_nuc3_remote_cam_button = customtkinter.CTkButton(
             self.left_top_frame, text="Start Camera - NUC 3",
             command=lambda: self._start_nuc_remote_cam_button_event_updated(3))
-        self.left_top_frame_start_nuc3_remote_cam_button.place(relx=0.5, rely=0.77, anchor="center")
-    
+        self.left_top_frame_start_nuc3_remote_cam_button.place(relx=0.27, rely=0.77, anchor="center")
+
+        self.left_top_frame_stop_nuc3_remote_cam_button = customtkinter.CTkButton(
+            self.left_top_frame, text="Stop Camera - NUC 3",
+            command=lambda: self._stop_nuc_remote_cam_button_event_updated(3), state="disabled")
+        self.left_top_frame_stop_nuc3_remote_cam_button.place(relx=0.73, rely=0.77, anchor="center")
+
+        
     def __update_camera_button_text(self, _nuc_number, cam_state):
         if cam_state == 'stopped':
             if _nuc_number == 1:
@@ -149,19 +165,34 @@ class ClientGUI(customtkinter.CTk):
                 self.left_top_frame_start_nuc3_remote_cam_button.configure(text="Stop Camera - NUC 3",
                                                                             fg_color=themes["red"])
     def _start_nuc_remote_cam_button_event_updated(self, _nuc_number) -> None:
-        remote_cam_start_(machine_num = _nuc_number,
+        remote_cam_start_updated(machine_num = _nuc_number,
                           remote_nuc_launch = self.remote_nuc_launch,
                           ros_uuid = self.uuid,
                           processes_ = self.running_processes,
-                          button_ = self.__update_camera_button_text)
-
+                          button_ = self.__update_camera_button_text,
+                          start_button = self.start_button_address(_nuc_number),
+                          stop_button  = self.stop_button_address(_nuc_number))
+    def start_button_address(self, _nuc_number):
+        if _nuc_number == 1:
+            return self.left_top_frame_start_nuc1_remote_cam_button
+        elif _nuc_number == 2:
+            return self.left_top_frame_start_nuc2_remote_cam_button
+        elif _nuc_number == 3:
+            return self.left_top_frame_start_nuc3_remote_cam_button
+    def stop_button_address(self, _nuc_number):
+        if _nuc_number == 1:
+            return self.left_top_frame_stop_nuc1_remote_cam_button
+        elif _nuc_number == 2:
+            return self.left_top_frame_stop_nuc2_remote_cam_button
+        elif _nuc_number == 3:
+            return self.left_top_frame_stop_nuc3_remote_cam_button
+    
     def _create_left_middle_frame(self) -> None:
         """_summary_
         """
         self.left_middle_frame = customtkinter.CTkFrame(self.left_frame)
         self.left_middle_frame.place(relx=0.1, rely=0.38, relwidth=0.8, relheight=0.14)
         self._create_left_middle_frame_content()
-
     def _create_left_middle_frame_content(self) -> None:
         """_summary_
         """
@@ -174,10 +205,10 @@ class ClientGUI(customtkinter.CTk):
             command=self._start_all_nuc_remote_cams_button_event
             )
         self.left_middle_frame_start_all_cams_button.place(relx=0.5, rely=0.6, anchor="center")
-
     def _start_all_nuc_remote_cams_button_event(self) -> None:
-        all_cams = check_active_topic(1) and check_active_topic(2) and check_active_topic(3)
-        if not all_cams:
+        """Starting all the nuc cameras remotely """
+        nuc1_status, nuc2_status, nuc3_status = return_nuc_status()
+        if not (nuc1_status and nuc2_status and nuc3_status):
             self._start_nuc_remote_cam_button_event_updated(1)
             self._start_nuc_remote_cam_button_event_updated(2)
             self._start_nuc_remote_cam_button_event_updated(3)
@@ -185,24 +216,56 @@ class ClientGUI(customtkinter.CTk):
             self.left_middle_frame_start_all_cams_button.configure(fg_color=themes['red'],
                                                                    text="Stop All NUC Cameras")
             print('All cameras started successfully!')
-            all_cams = True
-        else:
+        elif nuc1_status and nuc2_status and nuc3_status:
             self._start_nuc_remote_cam_button_event_updated(1)
             self._start_nuc_remote_cam_button_event_updated(2)
             self._start_nuc_remote_cam_button_event_updated(3)
+            time.sleep(1)
             self.left_middle_frame_start_all_cams_button.configure(fg_color=themes['blue'],
                                                                    text="Start All NUC Cameras")
             print('All cameras stopped successfully!')
-
-
-        
+        elif nuc1_status and nuc2_status and not nuc3_status:
+            self._start_nuc_remote_cam_button_event_updated(3)
+            # time.sleep(1)
+            # self.left_middle_frame_start_all_cams_button.configure(fg_color=themes['red'],
+            #                                                        text="Stop All NUC Cameras")
+            print('NUC1 & NUC2 cameras started successfully!')
+        elif nuc1_status and not nuc2_status and nuc3_status:
+            self._start_nuc_remote_cam_button_event_updated(2)
+            # time.sleep(1)
+            # self.left_middle_frame_start_all_cams_button.configure(fg_color=themes['red'],
+            #                                                        text="Stop All NUC Cameras")
+            print('NUC1 & NUC3 cameras started successfully!')
+        elif not nuc1_status and nuc2_status and nuc3_status:
+            self._start_nuc_remote_cam_button_event_updated(1)
+            # time.sleep(1)
+            # self.left_middle_frame_start_all_cams_button.configure(fg_color=themes['red'],
+            #                                                        text="Stop All NUC Cameras")
+            print('NUC2 & NUC3 cameras started successfully!')
+        elif nuc1_status and not nuc2_status and not nuc3_status:
+            self._start_nuc_remote_cam_button_event_updated(2)
+            self._start_nuc_remote_cam_button_event_updated(3)
+            # time.sleep(1)
+            # self.left_middle_frame_start_all_cams_button.configure(fg_color=themes['red'],
+            #                                                        text="Stop All NUC Cameras")
+        elif not nuc1_status and nuc2_status and not nuc3_status:
+            self._start_nuc_remote_cam_button_event_updated(1)
+            self._start_nuc_remote_cam_button_event_updated(3)
+            # time.sleep(1)
+            # self.left_middle_frame_start_all_cams_button.configure(fg_color=themes['red'],
+            #                                                        text="Stop All NUC Cameras")
+        elif not nuc1_status and not nuc2_status and nuc3_status:
+            self._start_nuc_remote_cam_button_event_updated(1)
+            self._start_nuc_remote_cam_button_event_updated(2)
+            # time.sleep(1)
+            # self.left_middle_frame_start_all_cams_button.configure(fg_color=themes['red'],
+            #                                                        text="Stop All NUC Cameras")
     def _create_left_bottom_frame(self) -> None:
         """_summary_
         """
         self.left_bottom_frame = customtkinter.CTkFrame(self.left_frame)
         self.left_bottom_frame.place(relx=0.1, rely=0.56, relwidth=0.8, relheight=0.32)
         self._create_left_bottom_frame_content()
-
     def _create_left_bottom_frame_content(self) -> None:
         """_summary_
         """
@@ -246,9 +309,6 @@ class ClientGUI(customtkinter.CTk):
             font=customtkinter.CTkFont(size=20, weight="bold")
             )
         self.left_button_frame_maker_update_label.place(relx=0.80, rely=0.65, anchor='c')
-
-
-
     def _left_button_frame_marker_update_button_event(self):
         marker_entry = self.left_bottom_frame_marker_size_entry.get()
         sq_size_entry = self.left_bottom_frame_dict_entry.get()
@@ -275,16 +335,14 @@ class ClientGUI(customtkinter.CTk):
         rospy.loginfo('Marker parameters updated successfully')
         self.left_button_frame_maker_update_label.configure(text="☑", fg_color='yellow')
         print('Marker Parameters Updated!')
-
     def _create_right_frame(self) -> None:
         """_summary_
         """
         self.right_frame = tk.Frame(self, bg=themes[COLOR_SELECT][1])
-        self.right_frame.place(relx=0.25, rely=0, relwidth=0.75, relheight=1)
+        self.right_frame.place(relx=self.left_width, rely=0, relwidth=1-self.left_width, relheight=1)
         self._create_right_top_frame()
         self._create_right_middle_frame()
         self._create_right_lower_frame()
-
     def _create_right_top_frame(self) -> None:
         """_summary_
         """
@@ -328,8 +386,8 @@ class ClientGUI(customtkinter.CTk):
     def _create_right_middle_frame(self) -> None:
         """_summary_
         """
-        self.right_middle_frame = tk.Frame(self.right_frame, bg=themes[COLOR_SELECT][0])
-        self.right_middle_frame.place(relx=.01, rely=0.15, relwidth=.94, relheight=0.16)
+        self.right_middle_frame = customtkinter.CTkFrame(self.right_frame, fg_color=themes[COLOR_SELECT][0])
+        self.right_middle_frame.place(relx=.01, rely=0.15, relwidth=.94, relheight=0.15)
         self._createright_middle_frame_content()
     def _create_right_lower_frame(self) -> None:
         """_summary_
@@ -338,7 +396,31 @@ class ClientGUI(customtkinter.CTk):
         self.right_lower_frame.place(relx=.01, rely=0.35, relwidth=.94, relheight=0.16)
         self._create_right_lower_frame_content()
     def _createright_middle_frame_content(self) -> None:
-        pass
+        """_summary_
+        """
+        self.right_middle_frame_nuc1_button = customtkinter.CTkButton(
+            self.right_middle_frame, text="Start NUC 1 Detection", fg_color=themes[COLOR_SELECT][1],
+            command=lambda: self._start_nuc_remote_cam_button_event_updated(1))
+        self.right_middle_frame_nuc1_button.place(relx=0.25, rely=0.3, anchor="center")
+        
+        self.right_middle_frame_nuc2_button = customtkinter.CTkButton(
+            self.right_middle_frame, text="Start NUC 2 Detection", fg_color=themes[COLOR_SELECT][1],
+            command=lambda: self._start_nuc_remote_cam_button_event_updated(2))
+        self.right_middle_frame_nuc2_button.place(relx=0.5, rely=0.3, anchor="center")
+        
+        self.right_middle_frame_nuc3_button = customtkinter.CTkButton(
+            self.right_middle_frame, text="Start NUC 3 Detection", fg_color=themes[COLOR_SELECT][1],
+            command=lambda: self._start_nuc_remote_cam_button_event_updated(3))
+        self.right_middle_frame_nuc3_button.place(relx=0.75, rely=0.3, anchor="center")
+        
+        self.right_middle_frame_all_nucs_button = tk.Button(
+            self.right_middle_frame, text="Start All NUCs Detection", fg=themes[COLOR_SELECT][1],
+            command=self._start_all_nuc_remote_cams_button_event)
+        self.right_middle_frame_all_nucs_button.place(relx=0.5, rely=0.7, anchor="center", relwidth = 0.71, relheight=0.3)
+        
+        
+        
+        
     def _create_right_lower_frame_content(self) -> None:
         pass
     
