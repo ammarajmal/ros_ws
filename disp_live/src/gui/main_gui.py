@@ -31,6 +31,7 @@ class ClientGUI(customtkinter.CTk):
         self.launch_path = rospkg.RosPack().get_path('gige_cam_driver') + '/launch/'
         self.detect_launch_path = rospkg.RosPack().get_path('aruco_detect') + '/launch/'
         self.remote_nuc_launch = f'{self.launch_path}remote_nuc.launch'
+        self.remote_detect_launch = f'{self.detect_launch_path}my_aruco_detect.launch'
 
         self.uuid = roslaunch.rlutil.get_or_generate_uuid(None, False)
         # roslaunch.configure_logging(self.uuid)
@@ -136,28 +137,7 @@ class ClientGUI(customtkinter.CTk):
             command=lambda: self._stop_nuc_remote_cam_button_event_updated(3), state="disabled")
         self.left_top_frame_stop_nuc3_remote_cam_button.place(relx=0.73, rely=0.77, anchor="center")
 
-        
-    # def __update_camera_button_text(self, _nuc_number, cam_state):
-    #     if cam_state == 'stopped':
-    #         if _nuc_number == 1:
-    #             self.left_top_frame_start_nuc1_remote_cam_button.configure(text="Start Camera - NUC 1",
-    #                                                                     fg_color=themes["blue"])
-    #         elif _nuc_number == 2:
-    #             self.left_top_frame_start_nuc2_remote_cam_button.configure(text="Start Camera - NUC 2",
-    #                                                                         fg_color=themes["blue"])
-    #         elif _nuc_number == 3:
-    #             self.left_top_frame_start_nuc3_remote_cam_button.configure(text="Start Camera - NUC 3",
-    #                                                                         fg_color=themes["blue"])
-    #     elif cam_state == 'started':
-    #         if _nuc_number == 1:
-    #                 self.left_top_frame_start_nuc1_remote_cam_button.configure(text="Stop Camera - NUC 1",
-    #                                                                     fg_color=themes["red"])
-    #         elif _nuc_number == 2:
-    #             self.left_top_frame_start_nuc2_remote_cam_button.configure(text="Stop Camera - NUC 2",
-    #                                                                         fg_color=themes["red"])
-    #         elif _nuc_number == 3:
-    #             self.left_top_frame_start_nuc3_remote_cam_button.configure(text="Stop Camera - NUC 3",
-    #                                                                         fg_color=themes["red"])
+
     def _start_nuc_remote_cam_button_event_updated(self, _nuc_number) -> None:
         remote_cam_start_updated(machine_num = _nuc_number,
                                  remote_nuc_launch = self.remote_nuc_launch,
@@ -169,13 +149,35 @@ class ClientGUI(customtkinter.CTk):
         
     def _stop_nuc_remote_cam_button_event_updated(self, _nuc_number) -> None:
         remote_cam_stop_updated(machine_num = _nuc_number,
-                                 remote_nuc_launch = self.remote_nuc_launch,
-                                 ros_uuid = self.uuid,
                                  start_btn = self.start_button_address(_nuc_number),
                                  stop_btn  = self.stop_button_address(_nuc_number))
         self._check_ros_status()
 
-        
+    def _start_nuc_remote_detec_button_event(self, _nuc_number) -> None:
+        remote_detect_start(machine_num = _nuc_number,
+                            remote_detect_launch_file = self.remote_detect_launch,
+                            ros_uuid = self.uuid,
+                            start_detect_btn = self.start_detect_button_address(_nuc_number),
+                            stop_detect_btn = self.stop_detect_button_address(_nuc_number))
+
+    def _stop_nuc_remote_detect_button_event(self, _nuc_number) -> None:
+        remote_detect_stop(machine_num = _nuc_number)
+                           # start_btn = self.start_button_address(_nuc_number),
+                           # stop_btn  = self.stop_button_address(_nuc_number))
+    def start_detect_button_address(self, _nuc_number):
+        if _nuc_number == 1:
+            return self.right_middle_frame_start_nuc1_detect_button
+        elif _nuc_number == 2:
+            return self.right_middle_frame_start_nuc2_detect_button
+        elif _nuc_number == 3:
+            return self.right_middle_frame_start_nuc3_detect_button
+    def stop_detect_button_address(self, _nuc_number):
+        if _nuc_number == 1:
+            return self.right_middle_frame_stop_nuc1_detect_button
+        elif _nuc_number == 2:
+            return self.right_middle_frame_stop_nuc2_detect_button
+        elif _nuc_number == 3:
+            return self.right_middle_frame_stop_nuc3_detect_button
         
     def start_button_address(self, _nuc_number):
         if _nuc_number == 1:
@@ -378,32 +380,32 @@ class ClientGUI(customtkinter.CTk):
             
         self.right_middle_frame_start_nuc1_detect_button = customtkinter.CTkButton(
             self.right_middle_frame, text="Start NUC 1 Detection", fg_color=themes[COLOR_SELECT][1],
-            command=lambda: self._start_nuc_remote_cam_button_event_updated(1))
+            command=lambda: self._start_nuc_remote_detec_button_event(1))
         self.right_middle_frame_start_nuc1_detect_button.place(relx=0.21, rely=0.35, anchor="center")
 
-        self.right_middle_frame_nuc2_button = customtkinter.CTkButton(
+        self.right_middle_frame_start_nuc2_detect_button = customtkinter.CTkButton(
             self.right_middle_frame, text="Start NUC 2 Detection", fg_color=themes[COLOR_SELECT][1],
-            command=lambda: self._start_nuc_remote_cam_button_event_updated(2))
-        self.right_middle_frame_nuc2_button.place(relx=0.48, rely=0.35, anchor="center")
+            command=lambda: self._start_nuc_remote_detec_button_event(2))
+        self.right_middle_frame_start_nuc2_detect_button.place(relx=0.48, rely=0.35, anchor="center")
         
-        self.right_middle_frame_nuc3_button = customtkinter.CTkButton(
+        self.right_middle_frame_start_nuc3_detect_button = customtkinter.CTkButton(
             self.right_middle_frame, text="Start NUC 3 Detection", fg_color=themes[COLOR_SELECT][1],
-            command=lambda: self._start_nuc_remote_cam_button_event_updated(3))
-        self.right_middle_frame_nuc3_button.place(relx=0.75, rely=0.35, anchor="center")
+            command=lambda: self._start_nuc_remote_detec_button_event(3))
+        self.right_middle_frame_start_nuc3_detect_button.place(relx=0.75, rely=0.35, anchor="center")
 
         self.right_middle_frame_stop_nuc1_detect_button = customtkinter.CTkButton(
             self.right_middle_frame, text="Stop NUC 1 Detection", fg_color=themes[COLOR_SELECT][1],
-            command=lambda: self._stop_nuc_remote_cam_button_event_updated(1), state="disabled")
+            command=lambda: self._stop_nuc_remote_detect_button_event(1), state="disabled")
         self.right_middle_frame_stop_nuc1_detect_button.place(relx=0.21, rely=0.55, anchor="center")
 
         self.right_middle_frame_stop_nuc2_detect_button = customtkinter.CTkButton(
             self.right_middle_frame, text="Stop NUC 2 Detection", fg_color=themes[COLOR_SELECT][1],
-            command=lambda: self._stop_nuc_remote_cam_button_event_updated(2), state="disabled")
+            command=lambda: self._stop_nuc_remote_detect_button_event(2), state="disabled")
         self.right_middle_frame_stop_nuc2_detect_button.place(relx=0.48, rely=0.55, anchor="center")
 
         self.right_middle_frame_stop_nuc3_detect_button = customtkinter.CTkButton(
             self.right_middle_frame, text="Stop NUC 3 Detection", fg_color=themes[COLOR_SELECT][1],
-            command=lambda: self._stop_nuc_remote_cam_button_event_updated(3), state="disabled")
+            command=lambda: self._stop_nuc_remote_detect_button_event(3), state="disabled")
         self.right_middle_frame_stop_nuc3_detect_button.place(relx=0.75, rely=0.55, anchor="center")
         
         self.right_middle_frame_start_all_detect_button = customtkinter.CTkButton(
