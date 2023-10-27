@@ -66,8 +66,8 @@ def remote_cam_start_updated(machine_num, remote_nuc_launch,ros_uuid, start_btn,
             print(f"Camera at NUC {machine_num} is already running..")
     except roslaunch.RLException as e:
         print(e)
-
-def remote_cam_stop_updated(machine_num, remote_nuc_launch, ros_uuid, start_btn, stop_btn):
+    
+def remote_cam_stop_updated(machine_num, start_btn, stop_btn):
     """Stops a remote camera at given machine and updates button"""
     try:
         if check_active_topic(machine_num):
@@ -83,6 +83,47 @@ def remote_cam_stop_updated(machine_num, remote_nuc_launch, ros_uuid, start_btn,
             print(f"Camera at NUC {machine_num} is already stopped..")
     except roslaunch.RLException as e:
         print(e)
+def remote_detect_stop(machine_num):
+    try:
+        if is_node_running(f"/nuc{machine_num}/fiducial_transforms"):
+            print(f"Stopping Detection at NUC {machine_num} from {MACHINE_NAME}...")
+            kill_ros_node(f"/nuc{machine_num}/fiducial_transforms")
+            rospy.loginfo(f'NUC {machine_num} Detection stopped successfully!')
+            # start_btn.configure(fg_color=themes['blue'])
+            # stop_btn.configure(fg_color=themes['blue'], state='disabled')
+        else:
+            print(f"Detection at NUC {machine_num} is already stopped..")
+    except roslaunch.RLException as e:
+        print(e)
+def remote_detect_start(machine_num, remote_detect_launch_file, ros_uuid, start_detect_btn, stop_detect_btn):
+    if check_active_topic(machine_num):
+        print(f"Starting Detection at NUC {machine_num} from {MACHINE_NAME}...")
+        try:
+            if not is_node_running(f"/nuc{machine_num}/fiducial_transforms"):
+                print(f"/nuc{machine_num}/fiducial_transforms is not running!")
+                detection_launch_args = [f"{remote_detect_launch_file}",
+                                        f'launch_nuc:=nuc{machine_num}']
+                roslaunch_file = [(roslaunch.rlutil.resolve_launch_arguments(detection_launch_args)[0],
+                                    detection_launch_args[1:])]
+                nuc_remote_detect_driver = roslaunch.parent.ROSLaunchParent(ros_uuid, roslaunch_file)
+                nuc_remote_detect_driver.start()
+                rospy.sleep(1)
+                stop_detect_btn.configure(fg_color=themes['red'], state='normal')
+                start_detect_btn.configure(fg_color=themes['green'])
+                try:
+                    if is_node_running(f"/nuc{machine_num}/fiducial_transforms"):
+                        print(f"/nuc{machine_num}/fiducial_transforms is running!")
+                        rospy.loginfo(f'NUC {machine_num} Detection started successfully!')
+                        # start_btn.configure(fg_color=themes['green'])
+                        # stop_btn.configure(fg_color=themes['red'], state='normal')
+                except roslaunch.RLException as e:
+                    print(f"Error in Starting NUC {machine_num} Detection: {e}")
+        except roslaunch.RLException as e:
+            print(e)
+    else:
+        print(f"Camera at NUC {machine_num} is not running..")
+        
+            
 def return_nuc_status():
     """ return the status of the nuc """
     return is_node_running("/nuc1"), is_node_running("/nuc2"), is_node_running("/nuc3")

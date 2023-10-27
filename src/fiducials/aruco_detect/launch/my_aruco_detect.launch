@@ -3,7 +3,7 @@
     <!-- Common arguments -->
     <arg name="image" value="image"/>
     <arg name="transport" value="raw"/>
-    <arg name="aruco_marker_size" default="0.025"/> 
+    <arg name="aruco_marker_size" default="0.035"/> 
     <arg name="fiducial_len" value="$(arg aruco_marker_size)"/>
     <arg name="dictionary" value="0"/>
     <arg name="do_pose_estimation" value="true"/>
