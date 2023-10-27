@@ -70,6 +70,7 @@ def remote_cam_start_updated(machine_num, remote_nuc_launch,ros_uuid, start_btn,
 def remote_cam_stop_updated(machine_num, start_btn, stop_btn):
     """Stops a remote camera at given machine and updates button"""
     try:
+        
         if check_active_topic(machine_num):
             print(f"Stopping Camera {machine_num} from {MACHINE_NAME}...")
             kill_ros_node(f"/nuc{machine_num}")
@@ -99,7 +100,8 @@ def remote_detect_start(machine_num, remote_detect_launch_file, ros_uuid, start_
     if check_active_topic(machine_num):
         print(f"Starting Detection at NUC {machine_num} from {MACHINE_NAME}...")
         try:
-            if not is_node_running(f"/nuc{machine_num}/fiducial_transforms"):
+            # if not is_node_running(f"/nuc{machine_num}/aruco_detect"): needs to be updated~ 
+            if not is_node_running(f"/aruco_detect"):
                 print(f"/nuc{machine_num}/fiducial_transforms is not running!")
                 detection_launch_args = [f"{remote_detect_launch_file}",
                                         f'launch_nuc:=nuc{machine_num}']
@@ -111,7 +113,8 @@ def remote_detect_start(machine_num, remote_detect_launch_file, ros_uuid, start_
                 stop_detect_btn.configure(fg_color=themes['red'], state='normal')
                 start_detect_btn.configure(fg_color=themes['green'])
                 try:
-                    if is_node_running(f"/nuc{machine_num}/fiducial_transforms"):
+                    # if is_node_running(f"/nuc{machine_num}/fiducial_transforms"):
+                    if is_node_running(f"/aruco_detect"):
                         print(f"/nuc{machine_num}/fiducial_transforms is running!")
                         rospy.loginfo(f'NUC {machine_num} Detection started successfully!')
                         # start_btn.configure(fg_color=themes['green'])
