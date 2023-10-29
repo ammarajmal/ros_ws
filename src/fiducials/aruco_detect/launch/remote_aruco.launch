@@ -18,6 +18,10 @@
         <include file="$(find aruco_detect)/launch/aruco_basic.launch">
             <arg name="nuc_name" value="/nuc1"/>
             <arg name="fiducial_len" default="0.020"/>
+            <arg name="dictionary" value="0"/>
+            <arg name="nuc_address" value="192.168.43.201" />
+            <arg name="nuc_user" value="sitl1" />
+            <arg name="nuc_password" value="sitl" />
         </include>
       </group>
       <!-- NUC 2  -->
@@ -25,6 +29,10 @@
         <include file="$(find aruco_detect)/launch/aruco_detect.launch">
             <arg name="nuc_name" value="/nuc2"/>
             <arg name="fiducial_len" default="0.020"/>
+            <arg name="dictionary" value="0"/>
+            <arg name="nuc_address" value="192.168.43.202"/>
+            <arg name="nuc_user" value="sitl2"/>
+            <arg name="nuc_password" value="sitl"/>
         </include>
       </group>
       <!-- NUC1 3  -->
@@ -32,6 +40,10 @@
         <include file="$(find aruco_detect)/launch/aruco_detect.launch">
             <arg name="nuc_name" value="/nuc3"/>
             <arg name="fiducial_len" default="0.020"/>
+            <arg name="dictionary" value="0"/>
+            <arg name="nuc_address" value="192.168.43.203"/>
+            <arg name="nuc_user" value="sitl3"/>
+            <arg name="nuc_password" value="sitl"/>
         </include>
       </group>
 </launch>

@@ -2,15 +2,16 @@
 <launch>
     
     <!-- namespace for nuc input -->
+    <arg name="nuc_name" default="/nuc1"/>
     <arg name="nuc_address" default="" />
     <arg name="nuc_user" default="" />
     <arg name="nuc_password" default="" />
     <arg name="env_loader_path" default="/opt/ros/noetic/env_remote.sh" />
 
-    <arg name="nuc_name" default="/nuc1"/>
+
     <arg name="image" default="image"/>
     <arg name="transport" default="raw"/>
-    <arg name="fiducial_len" default="0.02"/>
+    <arg name="fiducial_len" default="0.035"/>
     <arg name="dictionary" default="0"/>
     <arg name="do_pose_estimation" default="true"/>
     <arg name="vis_msgs" default="false"/>
@@ -44,8 +45,8 @@
         <param name="fiducial_len_override" value="$(arg fiducial_len_override)"/>
         <param name="verbose" value="$(arg verbose)"/>
         <remap from="camera" to="$(arg nuc_name)/$(arg image)_$(arg transport)"/>
-        <remap from="camera_info" to="$(arg nuc_name)/camera_info"/>
-        <remap from="/fiducial_transforms" to="/$(arg nuc_name)/fiducial_transforms"/>
+        <remap from="camera_info" to="$(arg nuc_name)/detect/camera_info"/>
+        <!-- <remap from="/fiducial_transforms" to="/$(arg nuc_name)/fiducial_transforms"/>
         <remap from="/fiducial_poses" to="/$(arg nuc_name)/fiducial_poses"/>
         <remap from="/fiducial_images" to="/$(arg nuc_name)/fiducial_images"/>
         <remap from="/fiducial_images/compressed" to="/$(arg nuc_name)/fiducial_images/compressed"/>
@@ -55,7 +56,6 @@
         <remap from="/fiducial_images/depth" to="/$(arg nuc_name)/fiducial_images/depth"/>
         <remap from="/fiducial_images/depth/compressed" to="/$(arg nuc_name)/fiducial_images/depth/compressed"/>
         <remap from="/fiducial_images/depth/theora" to="/$(arg nuc_name)/fiducial_images/depth/theora"/>
-        <remap from="/fiducial_images/depth/compressedDepth" to="/$(arg nuc_name)/fiducial_images/depth/compressedDepth"/>
-        1
+        <remap from="/fiducial_images/depth/compressedDepth" to="/$(arg nuc_name)/fiducial_images/depth/compressedDepth"/> -->
   </node>
 </launch>

@@ -9,6 +9,7 @@ import rospkg
 import roslaunch
 import time
 from _backend_ import *
+from _backend_ import _check_ros_status_function
 
 
 
@@ -31,7 +32,7 @@ class ClientGUI(customtkinter.CTk):
         self.launch_path = rospkg.RosPack().get_path('gige_cam_driver') + '/launch/'
         self.detect_launch_path = rospkg.RosPack().get_path('aruco_detect') + '/launch/'
         self.remote_nuc_launch = f'{self.launch_path}remote_nuc.launch'
-        self.remote_detect_launch = f'{self.detect_launch_path}my_aruco_detect.launch'
+        self.remote_detect_launch = f'{self.detect_launch_path}remote_aruco.launch'
 
         self.uuid = roslaunch.rlutil.get_or_generate_uuid(None, False)
         # roslaunch.configure_logging(self.uuid)
@@ -144,14 +145,14 @@ class ClientGUI(customtkinter.CTk):
                                  ros_uuid = self.uuid,
                                  start_btn = self.start_button_address(_nuc_number),
                                  stop_btn  = self.stop_button_address(_nuc_number))
-        self._check_ros_status()
+        _check_ros_status_function(self.right_top_frame_ros_status_result_label)
 
         
     def _stop_nuc_remote_cam_button_event_updated(self, _nuc_number) -> None:
         remote_cam_stop_updated(machine_num = _nuc_number,
                                  start_btn = self.start_button_address(_nuc_number),
                                  stop_btn  = self.stop_button_address(_nuc_number))
-        self._check_ros_status()
+        _check_ros_status_function(self.right_top_frame_ros_status_result_label)
 
     def _start_nuc_remote_detec_button_event(self, _nuc_number) -> None:
         remote_detect_start(machine_num = _nuc_number,
@@ -338,27 +339,12 @@ class ClientGUI(customtkinter.CTk):
         self.right_top_frame_ros_sys_status_button = customtkinter.CTkButton(
             self.right_top_frame, text="Camera Status:",
             fg_color=themes[COLOR_SELECT][1], border_color='gray', border_width=1,
-            command=self._check_ros_status)
+            command= lambda: _check_ros_status_function(self.right_top_frame_ros_status_result_label))
         self.right_top_frame_ros_sys_status_button.place(relx=0.45, rely=0.5, anchor='center', relwidth=0.18)
         self.right_top_frame_ros_status_result_label = customtkinter.CTkLabel(
             self.right_top_frame, text="No Active Camera", text_color="yellow")
         self.right_top_frame_ros_status_result_label.place(relx=0.72, rely=0.5, anchor="center")
-    def _check_ros_status(self):
-        active_systems = str()
-        nuc1 = check_active_topic(1)
-        nuc2 = check_active_topic(2)
-        nuc3 = check_active_topic(3)
-        # Now, check which of the nuc1, nuc2, and nuc3 is True, add to active_systems
-        if nuc1 is True:
-            active_systems += '     NUC 1'
-        if nuc2 is True:
-            active_systems += '     NUC 2'
-        if nuc3 is True:
-            active_systems += '     NUC 3'
-        if nuc1 is False and nuc2 is False and nuc3 is False:
-            active_systems = "No Active Camera"
-        print(active_systems)
-        self.right_top_frame_ros_status_result_label.configure(text=active_systems)
+
     def _create_right_middle_frame(self) -> None:
         """_summary_
         """

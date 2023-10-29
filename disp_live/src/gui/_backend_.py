@@ -10,11 +10,27 @@ themes = {'blue': ("#3B8ED0", "#1F6AA5"),
           }
 # select value of COLOR_SELECT from (0: blue, 1: green, 2: dark-blue)
 COLOR_SELECT = list(themes.keys())[2]
+def _check_ros_status_function(status_btn):
+    active_systems = str()
+    nuc1 = check_active_topic(1)
+    nuc2 = check_active_topic(2)
+    nuc3 = check_active_topic(3)
+    # Now, check which of the nuc1, nuc2, and nuc3 is True, add to active_systems
+    if nuc1 is True:
+        active_systems += '     NUC 1'
+    if nuc2 is True:
+        active_systems += '     NUC 2'
+    if nuc3 is True:
+        active_systems += '     NUC 3'
+    if nuc1 is False and nuc2 is False and nuc3 is False:
+        active_systems = "No Active Camera"
+    print(active_systems)
+    status_btn.configure(text=active_systems)
 
 def is_node_running(node_name):
     try:
         # Use the subprocess module to run the 'rosnode list' command
-        # and capture its output
+        # and capture its outputis_node_running
         output = subprocess.check_output(['rosnode', 'list'], universal_newlines=True)
 
         # Check if the node name is in the list of running nodes
@@ -101,7 +117,7 @@ def remote_detect_start(machine_num, remote_detect_launch_file, ros_uuid, start_
         print(f"Starting Detection at NUC {machine_num} from {MACHINE_NAME}...")
         try:
             # if not is_node_running(f"/nuc{machine_num}/aruco_detect"): needs to be updated~ 
-            if not is_node_running(f"/aruco_detect"):
+            if not is_node_running("/aruco_detect"):
                 print(f"/nuc{machine_num}/fiducial_transforms is not running!")
                 detection_launch_args = [f"{remote_detect_launch_file}",
                                         f'launch_nuc:=nuc{machine_num}']
@@ -114,7 +130,7 @@ def remote_detect_start(machine_num, remote_detect_launch_file, ros_uuid, start_
                 start_detect_btn.configure(fg_color=themes['green'])
                 try:
                     # if is_node_running(f"/nuc{machine_num}/fiducial_transforms"):
-                    if is_node_running(f"/aruco_detect"):
+                    if is_node_running("/aruco_detect"):
                         print(f"/nuc{machine_num}/fiducial_transforms is running!")
                         rospy.loginfo(f'NUC {machine_num} Detection started successfully!')
                         # start_btn.configure(fg_color=themes['green'])
