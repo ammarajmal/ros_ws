@@ -7,6 +7,7 @@ import customtkinter
 import rospy
 import rospkg
 import roslaunch
+from _backend_ import is_node_running, kill_ros_node
 
 themes = {'blue': ("#3B8ED0", "#1F6AA5"),
           'green': ("#2CC985", "#2FA572"),
@@ -28,7 +29,8 @@ class ClientGUI(customtkinter.CTk):
         """initialization function for the client gui
         """
         super().__init__()
-        rospy.init_node("nuc2_gui", anonymous=False)
+        self.nuc_number = '3'
+        rospy.init_node(f"nuc{self.nuc_number}_gui", anonymous=False)
         self.package = 'gige_cam_driver'
         # ********************************************************************************
         # Path management for Launch files
@@ -44,7 +46,7 @@ class ClientGUI(customtkinter.CTk):
         self.view_launch = f"{self.launch_path}viewcam.launch"
         self.calib_launch = f"{self.launch_path}calib.launch"
 
-        self.nuc_number = '3'
+        
         self.title(f"NUC {self.nuc_number} Dashboard")
         self.geometry("1000x600")
         self.resizable(False, False)
@@ -109,13 +111,13 @@ class ClientGUI(customtkinter.CTk):
         self.left_frame = tk.Frame(self, bg=themes[COLOR_SELECT][1])
         self.left_frame.place(relx=0, rely=0, relwidth=0.25, relheight=1)
         self._create_left_top_frame()
-        self._create_left_middle_frame()
-        self._create_left_bottom_frame()
+        # self._create_left_middle_frame()
+        # self._create_left_bottom_frame()
 
     def _create_left_top_frame(self) -> None:
         """_summary_"""
         self.left_top_frame = customtkinter.CTkFrame(self.left_frame)
-        self.left_top_frame.place(relx=0.1, rely=0.04, relwidth=0.8, relheight=0.20)
+        self.left_top_frame.place(relx=0.1, rely=0.04, relwidth=0.8, relheight=0.30)
         self._create_left_top_frame_content()
 
     def _create_left_top_frame_content(self) -> None:
@@ -125,36 +127,80 @@ class ClientGUI(customtkinter.CTk):
         self.left_top_frame_label.place(relx=0.5, rely=0.17, anchor="center")
 
         self.left_top_frame_start_nuc_local_cam_button = customtkinter.CTkButton(
-            self.left_top_frame, text="Start Camera", fg_color=themes["blue"],
+            self.left_top_frame, text="Start Camera",
             command=lambda: self._start_nuc_local_cam_button_event(self.nuc_number, False))
-        self.left_top_frame_start_nuc_local_cam_button.place(relx=0.5, rely=0.45, anchor="center")
+        self.left_top_frame_start_nuc_local_cam_button.place(relx=0.5, rely=0.35, anchor="center")
+
+        self.left_top_frame_view_only_nuc_local_cam_button = customtkinter.CTkButton(
+            self.left_top_frame, text="View Camera", fg_color='gray',
+            command=lambda: self._view_nuc_local_cam_button_event(self.nuc_number))
+        self.left_top_frame_view_only_nuc_local_cam_button.place(relx=0.5, rely=0.55, anchor="center")
 
         self.left_top_frame_view_nuc_local_cam_button = customtkinter.CTkButton(
-            self.left_top_frame, text="View Camera",
+            self.left_top_frame, text="Start & View Camera",
             command=lambda: self._start_nuc_local_cam_button_event(self.nuc_number, True))
         self.left_top_frame_view_nuc_local_cam_button.place(relx=0.5, rely=0.75, anchor="center")
 
     def _start_nuc_remote_cam_button_event(self, camera_number) -> None:
         print(f"Starting Camera {camera_number} from NUC {self.nuc_number}...")
 
-    def check_active_topic(self, nuc_machine):
+    def check_active_topic(self, topic_name):
         """Checks whether a topic is currently running/active or not.. """
-        topic_name = f"/nuc{nuc_machine}/image_raw"
         all_topics = rospy.get_published_topics()
         if topic_name in [topic[0] for topic in all_topics]:
             return True
         else:
             return False
+    def _view_nuc_local_cam_button_event(self, view_nuc_machine) -> None:
+        """This function is used to view camera output for a given camera """
+        node_name = f"/nuc{view_nuc_machine}"
+        view_node_name = f"/nuc{view_nuc_machine}_view"
+        if not is_node_running(node_name):
+            print('Camera Node is not running')
+        else:
+            if not is_node_running(view_node_name):
+                print('Now displaying camera output..')
+                cam_view_args = [f'{self.view_launch}',
+                                 f'camera_name:=nuc{view_nuc_machine}']
+                roslaunch_file = [(roslaunch.rlutil.resolve_launch_arguments(cam_view_args)[0],
+                                   cam_view_args[1:])]
+                nuc_cam_view = roslaunch.parent.ROSLaunchParent(self.uuid, roslaunch_file)
+                nuc_cam_view.start()
+                rospy.loginfo(f"Camera View at NUC {view_nuc_machine} started successfully.!!")
+                self.left_top_frame_view_only_nuc_local_cam_button.configure(text='Stop Camera View', fg_color=themes['red'])
+                
+            else:
+                rospy.loginfo("Now Stopping Camera Camera View.!!")
+                try:
+                    if is_node_running(view_node_name):
+                        kill_ros_node(view_node_name)
+                        rospy.loginfo(f'NUC {view_nuc_machine} Camera View stopped successfully!')
+                        self.left_top_frame_view_only_nuc_local_cam_button.configure(text='View Camera', fg_color=themes[COLOR_SELECT][0])
+                except (e):
+                    rospy.logerr(f"Error Stopping Camera View.!!, {e}")
+                    
+                    
 
+                # nuc_cam_view.start()
+                # self.running_processes[f'nuc{view_nuc_machine}_view'] = nuc_cam_view
+
+                        
+        # camera_topic_name = f"/nuc{view_nuc_machine}/image_raw"
+        # if not self.check_active_topic(camera_topic_name):
+        #     rospy.logerr(f'Camera at NUC {view_nuc_machine} not Running!')
+        # else:
+        #     rospy.loginfo("Camera at NUC {view_nuc_machine} is Running!")
+        #     rospy.loginfo("Now Starting Camera View.!!")
+            
     def _start_nuc_local_cam_button_event(self, nuc_machine, show_camera) -> None:
         """This function is used to start or stop the camera node based on its current state."""
         # If camera is not running, start it
-        if not self.check_active_topic(nuc_machine):
+        camera_topic_name = f"/nuc{nuc_machine}/image_raw"
+        if not self.check_active_topic(camera_topic_name):
             camera_launch_args = [f"{self.local_nuc_launch}", f"launch_nuc:=nuc{nuc_machine}"]
             roslaunch_file = [(roslaunch.rlutil.resolve_launch_arguments(camera_launch_args)[0],
                                camera_launch_args[1:])]
             nuc_cam_driver = roslaunch.parent.ROSLaunchParent(self.uuid, roslaunch_file)
-
             nuc_cam_driver.start()
             self.running_processes[f'nuc{nuc_machine}_driver'] = nuc_cam_driver
 
@@ -172,12 +218,14 @@ class ClientGUI(customtkinter.CTk):
                 self.running_processes[f'nuc{nuc_machine}_view'] = nuc_cam_view
 
                 # Update button text to indicate that the camera can be stopped
-                self.left_top_frame_view_nuc_local_cam_button.configure(text="Stop View",
+                self.left_top_frame_view_nuc_local_cam_button.configure(text="Stop View & Camera ",
                                                                         fg_color=themes["red"])
                 rospy.loginfo(f'NUC {nuc_machine} Camera view started successfully!')
             else:
                 self.left_top_frame_start_nuc_local_cam_button.configure(text="Stop Camera",
                                                                          fg_color=themes["red"])
+                self.left_top_frame_view_only_nuc_local_cam_button.configure(state='normal',
+                                                                        fg_color=themes['green'])
 
         # If camera is running, stop it
         else:
@@ -190,8 +238,8 @@ class ClientGUI(customtkinter.CTk):
                     rospy.logerr(
                         f'Error stopping nuc{nuc_machine} camera view: {str(excep_view)}')
                 finally:
-                    self.left_top_frame_view_nuc_local_cam_button.configure(text="View Camera",
-                                                                            fg_color=themes["blue"])
+                    self.left_top_frame_view_nuc_local_cam_button.configure(text="Start & View Camera",
+                                                                            fg_color=themes[COLOR_SELECT][0])
 
             try:
                 self.running_processes[f'nuc{nuc_machine}_driver'].shutdown()
@@ -203,7 +251,8 @@ class ClientGUI(customtkinter.CTk):
             finally:
                 # Update button text to indicate that the camera can be started
                 self.left_top_frame_start_nuc_local_cam_button.configure(text="Start Camera",
-                                                                         fg_color=themes["blue"])
+                                                                         fg_color=themes[COLOR_SELECT][0])
+                self.left_top_frame_view_only_nuc_local_cam_button.configure(fg_color='gray')
 
     def _create_left_middle_frame(self) -> None:
         """_summary_
