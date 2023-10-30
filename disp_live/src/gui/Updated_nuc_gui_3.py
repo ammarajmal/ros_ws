@@ -102,12 +102,12 @@ class ClientGUI(customtkinter.CTk):
         self.quit()
 
     def _create_widgets(self) -> None:
-        """_summary_"""
+        """Starting point of the GUI"""
         self._create_left_frame()
         self._create_right_frame()
 
     def _create_left_frame(self) -> None:
-        """_summary_"""
+        """ routine to create the whole left panel of GUI """
         self.left_frame = tk.Frame(self, bg=themes[COLOR_SELECT][1])
         self.left_frame.place(relx=0, rely=0, relwidth=0.25, relheight=1)
         self._create_left_top_frame()
@@ -115,16 +115,14 @@ class ClientGUI(customtkinter.CTk):
         # self._create_left_bottom_frame()
 
     def _create_left_top_frame(self) -> None:
-        """_summary_"""
+        """ routine to create the top frame of the left panel of GUI"""
         self.left_top_frame = customtkinter.CTkFrame(self.left_frame)
         self.left_top_frame.place(relx=0.1, rely=0.04, relwidth=0.8, relheight=0.30)
         self._create_left_top_frame_content()
     def _create_left_middle_frame(self) -> None:
-        """_summary_
-        """
-        self.left_middle_frame = customtkinter.CTkFrame(self.left_frame,
-                                                        fg_color=themes[COLOR_SELECT][0])
-        self.left_middle_frame.place(relx=0.1, rely=0.64, relwidth=0.8, relheight=0.2)
+        """ routine to create the middle frame of the left panel of GUI """
+        self.left_middle_frame = customtkinter.CTkFrame(self.left_frame)
+        self.left_middle_frame.place(relx=0.1, rely=0.37, relwidth=0.8, relheight=0.2)
         self._create_left_middle_frame_content()
     def _create_left_bottom_frame(self) -> None:
         """_summary_
@@ -161,7 +159,7 @@ class ClientGUI(customtkinter.CTk):
 
         self.left_top_frame_view_nuc_local_cam_button = customtkinter.CTkButton(
             self.left_top_frame, text="Start & View Camera", border_width=2,
-            border_color=themes['red'][0], text_color=themes['red'][0], fg_color='transparent',
+            border_color=themes['red'][0], 
             command=lambda: self._start_nuc_local_cam_button_event(self.nuc_number, True))
         self.left_top_frame_view_nuc_local_cam_button.place(relx=0.5, rely=0.80, anchor="center")
     def _create_left_middle_frame_content(self) -> None:
@@ -265,7 +263,6 @@ class ClientGUI(customtkinter.CTk):
             nuc_cam_driver = roslaunch.parent.ROSLaunchParent(self.uuid, roslaunch_file)
             nuc_cam_driver.start()
             self.running_processes[f'nuc{nuc_machine}_driver'] = nuc_cam_driver
-
             # Update button text to indicate that the camera can be stopped
             rospy.loginfo(f'NUC {nuc_machine} Camera started successfully!')
             if show_camera:
@@ -278,7 +275,6 @@ class ClientGUI(customtkinter.CTk):
 
                 nuc_cam_view.start()
                 self.running_processes[f'nuc{nuc_machine}_view'] = nuc_cam_view
-
                 # Update button text to indicate that the camera can be stopped
                 self.left_top_frame_view_nuc_local_cam_button.configure(text="Stop View & Camera ",
                                                                         fg_color=themes["red"])
@@ -363,14 +359,12 @@ class ClientGUI(customtkinter.CTk):
         self.right_frame.place(relx=0.25, rely=0, relwidth=0.75, relheight=1)
         self._create_right_top_frame()
         self._create_right_bottom_frame()
-
     def _create_right_top_frame(self) -> None:
         """_summary_
         """
         self.right_top_frame = tk.Frame(self.right_frame, bg=themes[COLOR_SELECT][0])
         self.right_top_frame.place(relx=0.01, rely=.03, relwidth=.94, relheight=0.08)
         self._create_right_top_frame_content()
-
     def _create_right_top_frame_content(self) -> None:
         """_summary_
         """
@@ -393,7 +387,6 @@ class ClientGUI(customtkinter.CTk):
         self.right_top_frame_camera_result_label = customtkinter.CTkLabel(
             self.right_top_frame, text=f'Camera {self.nuc_number}', text_color="white")
         self.right_top_frame_camera_result_label.place(relx=0.72, rely=0.5, anchor="center")
-
     def _create_right_bottom_frame(self) -> None:
         """_summary_
         """
