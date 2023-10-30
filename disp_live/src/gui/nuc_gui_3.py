@@ -130,11 +130,21 @@ class ClientGUI(customtkinter.CTk):
             self.left_top_frame, text="Start Camera",
             command=lambda: self._start_nuc_local_cam_button_event(self.nuc_number, False))
         self.left_top_frame_start_nuc_local_cam_button.place(relx=0.5, rely=0.35, anchor="center")
+        
+        self.left_top_frame_start_nuc_local_cam_label_number = customtkinter.CTkLabel(
+            self.left_top_frame, text="①", font=customtkinter.CTkFont(size=20), text_color=themes[COLOR_SELECT][0])
+        self.left_top_frame_start_nuc_local_cam_label_number.place(relx=0.08, rely=0.35, anchor="center")
+
 
         self.left_top_frame_view_only_nuc_local_cam_button = customtkinter.CTkButton(
             self.left_top_frame, text="View Camera", fg_color='gray',
             command=lambda: self._view_nuc_local_cam_button_event(self.nuc_number))
         self.left_top_frame_view_only_nuc_local_cam_button.place(relx=0.5, rely=0.55, anchor="center")
+        
+        self.left_top_frame_view_only_nuc_local_cam_label_number = customtkinter.CTkLabel(
+            self.left_top_frame, text="②", font=customtkinter.CTkFont(size=20), text_color=themes[COLOR_SELECT][0])
+        self.left_top_frame_view_only_nuc_local_cam_label_number.place(relx=0.08, rely=0.55, anchor="center")
+        
 
         self.left_top_frame_view_nuc_local_cam_button = customtkinter.CTkButton(
             self.left_top_frame, text="Start & View Camera",
