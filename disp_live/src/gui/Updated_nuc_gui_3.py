@@ -7,7 +7,7 @@ import customtkinter
 import rospy
 import rospkg
 import roslaunch
-from _backend_ import is_node_running, kill_ros_node
+from _backend_ import is_node_running, kill_ros_node, detection_start, detection_stop
 
 themes = {'blue': ("#3B8ED0", "#1F6AA5"),
           'green': ("#2CC985", "#2FA572"),
@@ -41,10 +41,11 @@ class ClientGUI(customtkinter.CTk):
 
         self.uuid = roslaunch.rlutil.get_or_generate_uuid(None, False)
         # roslaunch.configure_logging(self.uuid)
-        self.cam_launch = f"{self.launch_path}cam.launch"
+        # self.cam_launch = f"{self.launch_path}cam.launch"
         self.local_nuc_launch = f'{self.launch_path}local_nuc.launch'
         self.view_launch = f"{self.launch_path}viewcam.launch"
         self.calib_launch = f"{self.launch_path}calib.launch"
+        self.detect_launch = f"{self.detect_launch_path}local_detect.launch"
 
         
         self.title(f"NUC {self.nuc_number} Dashboard")
@@ -88,7 +89,7 @@ class ClientGUI(customtkinter.CTk):
         self.left_middle_frame = customtkinter.CTkFrame(self.left_frame)
         self.left_middle_frame_label = customtkinter.CTkLabel(self.left_middle_frame)
         self.left_button_frame_calib_update_label = customtkinter.CTkLabel(self.left_bottom_frame)
-        self.left_middle_frame_start_nuc1_cam_button = customtkinter.CTkButton(
+        self.left_middle_frame_start_local_detect_button = customtkinter.CTkButton(
             self.left_middle_frame)
         self.left_middle_frame_start_nuc2_cam_button = customtkinter.CTkButton(
             self.left_middle_frame)
@@ -167,14 +168,14 @@ class ClientGUI(customtkinter.CTk):
         self.left_middle_frame_label = customtkinter.CTkLabel(
         self.left_middle_frame, text=f"START DETECTION - NUC {self.nuc_number}")
         self.left_middle_frame_label.place(relx=0.5, rely=0.17, anchor="center")
-        self.left_middle_frame_start_nuc1_cam_button = customtkinter.CTkButton(
-            self.left_middle_frame, text="Start Camera - NUC 1", fg_color=themes[COLOR_SELECT][1],
-            command=lambda: self._start_nuc_remote_cam_button_event(1))
-        self.left_middle_frame_start_nuc1_cam_button.place(relx=0.5, rely=0.45, anchor="center")
-        self.left_middle_frame_start_nuc3_cam_button = customtkinter.CTkButton(
-            self.left_middle_frame, text="Start Camera - NUC 3", fg_color=themes[COLOR_SELECT][1],
-            command=lambda: self._start_nuc_remote_cam_button_event(3))
-        self.left_middle_frame_start_nuc3_cam_button.place(relx=0.5, rely=0.75, anchor="center")
+        self.left_middle_frame_start_local_detect_button = customtkinter.CTkButton(
+            self.left_middle_frame, text="Start Detection", fg_color=themes[COLOR_SELECT][1],
+            command=lambda: detection_start(self.nuc_number, self.detect_launch, self.uuid, self.left_middle_frame_start_local_detect_button, self.left_middle_frame_stop_local_detect_button))
+        self.left_middle_frame_start_local_detect_button.place(relx=0.5, rely=0.45, anchor="center")
+        self.left_middle_frame_stop_local_detect_button = customtkinter.CTkButton(
+            self.left_middle_frame, text="Stop Detection ", fg_color='gray',
+            command=lambda: detection_stop(self.nuc_number, self.left_middle_frame_start_local_detect_button, self.left_middle_frame_stop_local_detect_button))
+        self.left_middle_frame_stop_local_detect_button.place(relx=0.5, rely=0.75, anchor="center")
     def _create_left_bottom_frame_content(self) -> None:
         """ The contents of the bottom frame - calibration parameters """
         self.left_bottom_frame_label = customtkinter.CTkLabel(
@@ -215,7 +216,7 @@ class ClientGUI(customtkinter.CTk):
             self.left_bottom_frame,text="Start Calibration",
             command=self._start_camera_calibration)
         self.left_bottom_frame_start_calib_button.place(relx=0.5, rely=0.85, anchor="center")
-
+    
     def _start_nuc_remote_cam_button_event(self, camera_number) -> None:
         print(f"Starting Camera {camera_number} from NUC {self.nuc_number}...")
     def check_active_topic(self, topic_name):
@@ -230,7 +231,7 @@ class ClientGUI(customtkinter.CTk):
         node_name = f"/nuc{view_nuc_machine}"
         view_node_name = f"/nuc{view_nuc_machine}_view"
         if not is_node_running(node_name):
-            rospy.logwarn('Camera Node is not running')
+            rospy.logerr(f"Camera at NUC {view_nuc_machine} is not running..")
         else:
             if not is_node_running(view_node_name):
                 print('Now displaying camera output..')

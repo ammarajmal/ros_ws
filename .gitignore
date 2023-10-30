@@ -5,3 +5,5 @@ logs/
 .catkin_tools/
 src/camera_info_manager_py
 disp_live/src/gui/__pycache__/_backend_.cpython-38.pyc
+disp_live/src/gui/__pycache__/_backend_.cpython-38.pyc
+src/camera_info_manager_py

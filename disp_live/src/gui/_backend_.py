@@ -47,6 +47,47 @@ def kill_ros_node(node_name):
         # Handle any errors that occur when running the command
         print(f"Failed to kill node {node_name}")
 
+def detection_start(machine_number, launch_file, ros_uuid, start_btn, stop_btn):
+    """ Starts the detection node on the given machine """
+    
+    # Check if the detection node is already running
+    if is_node_running(f"/nuc{machine_number}/fiducial_transforms"):
+        print(f"Detection at NUC {machine_number} is already running..")
+        return  # Exit the function immediately
+
+    print(f"Starting Detection at NUC {machine_number} from {MACHINE_NAME}...")
+    
+    try:
+        if is_node_running(f"/nuc{machine_number}"):
+            print(f" Starting Detection at NUC {machine_number}!")
+            detection_launch_args = [f"{launch_file}",
+                                     f'launch_nuc:=nuc{machine_number}']
+            roslaunch_file = [(roslaunch.rlutil.resolve_launch_arguments(detection_launch_args)[0],
+                               detection_launch_args[1:])]
+            nuc_detect_driver = roslaunch.parent.ROSLaunchParent(ros_uuid, roslaunch_file)
+            nuc_detect_driver.start()
+            rospy.sleep(1)
+            try:
+                if is_node_running(f"/nuc{machine_number}/fiducial_transforms"):
+                    print(f"/nuc{machine_number}/fiducial_transforms is running!")
+                    rospy.loginfo(f'NUC {machine_number} Detection started successfully!')
+                    start_btn.configure(fg_color=themes['red'][0])  # Assuming you want to change the color to red when started
+                    stop_btn.configure(fg_color=themes['green'][0], state='normal')  # Assuming you want to change the color to green when started
+            except roslaunch.RLException as e:
+                print(f"Error in Starting NUC {machine_number} Detection: {e}")
+        else:
+            rospy.logerr(f"Camera at NUC {machine_number} is not running..")
+    except roslaunch.RLException as e:
+        print(e)
+
+def detection_stop(machine_number, start_btn, stop_btn)-> None:
+    """ Stops the detection node on the given machine """
+    if is_node_running("/fiducial_transforms"):
+        print(f"Stopping Detection at NUC {machine_number} from {MACHINE_NAME}...")
+        kill_ros_node(f"/nuc{machine_number}/fiducial_transforms")
+        rospy.loginfo(f'NUC {machine_number} Detection stopped successfully!')
+        start_btn.configure(fg_color=themes[COLOR_SELECT][0])
+        stop_btn.configure(fg_color=themes[COLOR_SELECT][0])
 
 
 
