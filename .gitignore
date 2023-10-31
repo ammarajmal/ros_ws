@@ -1,6 +1,7 @@
 build/
 devel/
 logs/
+cmake.lock
 **/*.bag
 .catkin_tools/
 src/camera_info_manager_py
