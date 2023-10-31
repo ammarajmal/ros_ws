@@ -170,12 +170,42 @@ class ClientGUI(customtkinter.CTk):
         self.left_middle_frame_label.place(relx=0.5, rely=0.17, anchor="center")
         self.left_middle_frame_start_local_detect_button = customtkinter.CTkButton(
             self.left_middle_frame, text="Start Detection", fg_color=themes[COLOR_SELECT][1],
-            command=lambda: detection_start(self.nuc_number, self.detect_launch, self.uuid, self.left_middle_frame_start_local_detect_button, self.left_middle_frame_stop_local_detect_button))
+            command=lambda: self._start_detection(self.nuc_number, self.detect_launch, self.uuid))
         self.left_middle_frame_start_local_detect_button.place(relx=0.5, rely=0.45, anchor="center")
         self.left_middle_frame_stop_local_detect_button = customtkinter.CTkButton(
             self.left_middle_frame, text="Stop Detection ", fg_color='gray',
-            command=lambda: detection_stop(self.nuc_number, self.left_middle_frame_start_local_detect_button, self.left_middle_frame_stop_local_detect_button))
+            command=lambda: self._stop_detection(self.nuc_number))
         self.left_middle_frame_stop_local_detect_button.place(relx=0.5, rely=0.75, anchor="center")
+    def _start_detection(self, nuc_number, detect_launch, uuid):
+        """ routine for starting dectection  """
+        start_button = self.left_middle_frame_start_local_detect_button
+        stop_button = self.left_middle_frame_stop_local_detect_button
+        try:
+            if not is_node_running(f'nuc{nuc_number}/aruco_detect'):
+                detection_start(nuc_number, detect_launch, uuid)
+                if is_node_running(f'nuc{nuc_number}/aruco_detect'):
+                    start_button.configure(fg_color=themes['red'])
+                    stop_button.configure(fg_color=themes['green'])
+            else:
+                rospy.logwarn(f'NUC {nuc_number} Detection is already running..')
+        except Exception as e:
+            print(f'Error: {e}')
+    def _stop_detection(self, nuc_number):
+        """ routine for stopping dectection """
+        start_button = self.left_middle_frame_start_local_detect_button
+        stop_button = self.left_middle_frame_stop_local_detect_button
+        try:
+            if is_node_running(f'/nuc{nuc_number}/aruco_detect'):
+                print('detection node is running, now trying to stop it.. ')
+                detection_stop(nuc_number)
+                if not is_node_running(f'nuc{nuc_number}/aruco_detect'):
+                    start_button.configure(fg_color=themes[COLOR_SELECT][0])
+                    stop_button.configure(fg_color='gray')
+            else:
+                rospy.logerr(f'NUC {nuc_number} Detection is not running..')
+        except Exception as e:
+            print(f'Error: {e}')
+    
     def _create_left_bottom_frame_content(self) -> None:
         """ The contents of the bottom frame - calibration parameters """
         self.left_bottom_frame_label = customtkinter.CTkLabel(

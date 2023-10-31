@@ -1,7 +1,7 @@
 <!-- Run the aruco_detect node -->
 <launch>
     <!-- namespace for camera input -->
-    <arg name="camera" default="/nuc1"/>
+    <arg name="camera" default="nuc1"/>
     <arg name="image" default="image"/>
     <arg name="transport" default="raw"/>
     <arg name="fiducial_len" default="0.025"/>
@@ -11,41 +11,21 @@
     <arg name="ignore_fiducials" default="" />
     <arg name="fiducial_len_override" default="" />
     <arg name="verbose" default="false"/>
-    <arg name="publish_images" default="true" />
+    <arg name="publish_images" default="false" />
 
-  <node 
-    name="$(arg camera)_detect"
-    pkg="aruco_detect"
-    type="aruco_detect"
-    output="screen"
-    respawn="false">
-    <param name="image_transport" value="$(arg transport)"/>
-    <param name="publish_images" value="$(arg publish_images)" />
-    <param name="fiducial_len" value="$(arg fiducial_len)"/>
-    <param name="dictionary" value="$(arg dictionary)"/>
-    <param name="do_pose_estimation" value="$(arg do_pose_estimation)"/>
-    <param name="vis_msgs" value="$(arg vis_msgs)"/>
-    <param name="ignore_fiducials" value="$(arg ignore_fiducials)"/>
-    <param name="fiducial_len_override" value="$(arg fiducial_len_override)"/>
-    <param name="verbose" value="$(arg verbose)"/>
-    <remap from="camera" to="$(arg camera)/$(arg image)_$(arg transport)"/>
-    <remap from="camera_info" to="$(arg camera)/camera_info"/>
-    <remap from="aruco_detect/parameter_descriptions" to="$(arg camera)/aruco_detect/parameter_descriptions"/>
-    <remap from="aruco_detect/parameter_updates" to="$(arg camera)/aruco_detect/parameter_updates"/>
-    <remap from="fiducial_images" to="$(arg camera)/fiducial_images"/>
-    <remap from="fiducial_images/compressed" to="$(arg camera)/fiducial_images/compressed"/>
-    <remap from="fiducial_images/compressed/parameter_descriptions" to="$(arg camera)/fiducial_images/compressed/parameter_descriptions"/>
-    <remap from="fiducial_images/compressed/parameter_updates" to="$(arg camera)/fiducial_images/compressed/parameter_updates"/>
-    <remap from="fiducial_images/compressedDepth" to="$(arg camera)/fiducial_images/compressedDepth"/>
-    <remap from="fiducial_images/compressedDepth/parameter_descriptions" to="$(arg camera)/fiducial_images/compressedDepth/parameter_descriptions"/>
-    <remap from="fiducial_images/compressedDepth/parameter_updates" to="$(arg camera)/fiducial_images/compressedDepth/parameter_updates"/>
-    <remap from="fiducial_images/theora" to="$(arg camera)/fiducial_images/theora"/>
-    <remap from="fiducial_images/theora/parameter_descriptions" to="$(arg camera)/fiducial_images/theora/parameter_descriptions"/>
-    <remap from="fiducial_images/theora/parameter_updates" to="$(arg camera)/fiducial_images/theora/parameter_updates"/>
-    <remap from="fiducial_transforms" to="$(arg camera)/fiducial_transforms"/>
-    <remap from="fiducial_vertices" to="$(arg camera)/fiducial_vertices"/>
-    <remap from="ignored_fiducials" to="$(arg camera)/ignored_fiducials"/>
-    
-    
-  </node>
+    <group ns="$(arg camera)">
+        <node name="aruco_detect" pkg="aruco_detect" type="aruco_detect" output="screen" respawn="false">
+            <param name="image_transport" value="$(arg transport)"/>
+            <param name="publish_images" value="$(arg publish_images)" />
+            <param name="fiducial_len" value="$(arg fiducial_len)"/>
+            <param name="dictionary" value="$(arg dictionary)"/>
+            <param name="do_pose_estimation" value="$(arg do_pose_estimation)"/>
+            <param name="vis_msgs" value="$(arg vis_msgs)"/>
+            <param name="ignore_fiducials" value="$(arg ignore_fiducials)"/>
+            <param name="fiducial_len_override" value="$(arg fiducial_len_override)"/>
+            <param name="verbose" value="$(arg verbose)"/>
+            <remap from="camera" to="$(arg image)_$(arg transport)"/>
+            <remap from="camera_info" to="camera_info"/>
+        </node>
+    </group>
 </launch>
