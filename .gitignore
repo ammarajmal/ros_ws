@@ -3,5 +3,3 @@ devel/
 logs/
 **/*.bag
 .catkin_tools/
-.disp_live/src/gui/__pycache__/_backend_.cpython-38.pyc
-.catkin_tools/profiles/default/devel_collisions.txt
