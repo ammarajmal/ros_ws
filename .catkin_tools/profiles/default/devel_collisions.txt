@@ -1,2 +1,0 @@
-/home/ammar/ros_ws/devel/./cmake.lock 57
-/home/sitl2/ros_ws/devel/./cmake.lock 95
