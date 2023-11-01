@@ -1,10 +1,8 @@
 <?xml version="1.0"?>
 <launch>
-
     <arg name="nuc_name" default="" />
     <arg name="device_id" default="0" />
     <arg name="calib_file" default="" />
-
     <node   name="$(arg nuc_name)"
             pkg="gige_cam_driver"
             type="camera_node.py"

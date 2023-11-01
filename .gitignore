@@ -3,4 +3,3 @@ devel/
 logs/
 **/*.bag
 .catkin_tools/
-src/camera_info_manager_py

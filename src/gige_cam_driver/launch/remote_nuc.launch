@@ -6,7 +6,7 @@
     <group if="$(eval launch_nuc == 'nuc1')">
         <include file="$(find gige_cam_driver)/launch/nuc_basic.launch">
             <arg name="nuc_name" value="nuc1" />
-            <arg name="nuc_address" value="192.168.43.11" />
+            <arg name="nuc_address" value="192.168.1.201" />
             <arg name="nuc_user" value="sitl1" />
             <arg name="nuc_password" value="sitl" />
             <arg name="calib_file" value="nuc1" />
@@ -17,7 +17,7 @@
     <group if="$(eval launch_nuc == 'nuc2')">
         <include file="$(find gige_cam_driver)/launch/nuc_basic.launch">
             <arg name="nuc_name" value="nuc2" />
-            <arg name="nuc_address" value="192.168.43.12" />
+            <arg name="nuc_address" value="192.168.1.202" />
             <arg name="nuc_user" value="sitl2" />
             <arg name="nuc_password" value="sitl" />
             <arg name="calib_file" value="nuc2" />
@@ -28,7 +28,7 @@
     <group if="$(eval launch_nuc == 'nuc3')">
         <include file="$(find gige_cam_driver)/launch/nuc_basic.launch">
             <arg name="nuc_name" value="nuc3" />
-            <arg name="nuc_address" value="192.168.43.13" />
+            <arg name="nuc_address" value="192.168.1.203" />
             <arg name="nuc_user" value="sitl3" />
             <arg name="nuc_password" value="sitl" />
             <arg name="calib_file" value="nuc3" />

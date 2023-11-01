@@ -1,0 +1,18 @@
+<launch>
+    <!-- Common arguments -->
+    <arg name="nuc_name" default="nuc1"/>
+    <arg name="amplitude" default="1"/>
+    <arg name="frequency" default="1"/>
+    <arg name="fiducial_id" default="7"/>
+  <node
+    pkg="aruco_detect"
+    type="fiducial_publisher.py"
+    name="$(arg nuc_name)_sine_ft"
+    output="screen"
+    >
+    <param name="amplitude" value="$(arg amplitude)"/>
+    <param name="frequency" value="$(arg frequency)"/>
+    <param name="node_name" value="$(arg nuc_name)"/>
+    <param name="fiducial_identifier" value="$(arg fiducial_id)"/>
+  </node>
+</launch>

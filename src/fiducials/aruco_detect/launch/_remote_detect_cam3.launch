@@ -1,6 +1,6 @@
 <launch>
   <!-- Set the camera namespace and topic -->
-  <arg name="camera" default="/camera_3"/>
+  <arg name="camera" default="/nuc3"/>
   <arg name="image" default="image"/>
   <arg name="transport" default="raw"/>
   <arg name="fiducial_len" default="0.035"/>

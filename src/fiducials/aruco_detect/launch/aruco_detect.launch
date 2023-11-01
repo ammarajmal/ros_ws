@@ -25,5 +25,6 @@
     <param name="verbose" value="$(arg verbose)"/>
     <remap from="camera" to="$(arg camera)/$(arg image)_$(arg transport)"/>
     <remap from="camera_info" to="$(arg camera)/camera_info"/>
+    
   </node>
 </launch>
