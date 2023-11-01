@@ -4,6 +4,7 @@ logs/
 **/*.bag
 .catkin_tools/
 .catkin_tools/profiles/default/devel_collisions.txt
+devel_manifest.txt
 vscode/
 ___pycache__/
 build
