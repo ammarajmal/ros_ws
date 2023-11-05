@@ -40,24 +40,20 @@ class ClientGUI(customtkinter.CTk):
         self.detect_launch_path = rospkg.RosPack().get_path('aruco_detect') + '/launch/'
 
         self.uuid = roslaunch.rlutil.get_or_generate_uuid(None, False)
-        # roslaunch.configure_logging(self.uuid)
-        # self.cam_launch = f"{self.launch_path}cam.launch"
         self.local_nuc_launch = f'{self.launch_path}local_nuc.launch'
         self.view_launch = f"{self.launch_path}viewcam.launch"
         self.calib_launch = f"{self.launch_path}calib.launch"
         self.detect_launch = f"{self.detect_launch_path}local_detect.launch"
 
-        
         self.title(f"NUC {self.nuc_number} Dashboard")
-        self.geometry("1000x600")
+        self.geometry("960x500")
         self.resizable(False, False)
         self.protocol("WM_DELETE_WINDOW", self.destroy_routine)
-        # Create a BooleanVar to use as the variable for the checkbox
         self.view_camera = tk.BooleanVar()
         self.view_camera.set(False)  # Set the initial value to False
-        self.nuc1_camera = False
-        self.nuc2_camera = False
-        self.nuc3_camera = False
+        # self.nuc1_camera = False
+        # self.nuc2_camera = False
+        # self.nuc3_camera = False
         self.board_size = "9x8"
         self.square_size = "0.025"  # in meters
         self.var_dictionary = tk.StringVar(self, "0")  # dict 5x5 (1000)
@@ -79,6 +75,7 @@ class ClientGUI(customtkinter.CTk):
         self.left_bottom_frame_chessboard_entry = None
         self.left_button_frame_calib_update_button = customtkinter.CTkButton(
             master=self.left_bottom_frame)
+        self.middle_frame = None
         self.right_frame = None
         self.right_top_frame = None
         self.right_top_frame_ros_status_label = None
@@ -86,51 +83,123 @@ class ClientGUI(customtkinter.CTk):
         self.right_top_frame_camera_label = None
         self.right_top_frame_camera_result_label = None
         self.right_bottom_frame = None
-        self.left_middle_frame = customtkinter.CTkFrame(self.left_frame)
-        self.left_middle_frame_label = customtkinter.CTkLabel(self.left_middle_frame)
+        self.middle_top_frame = customtkinter.CTkFrame(self.left_frame)
+        self.middle_top_frame_label = customtkinter.CTkLabel(self.middle_top_frame)
         self.left_button_frame_calib_update_label = customtkinter.CTkLabel(self.left_bottom_frame)
-        self.left_middle_frame_start_local_detect_button = customtkinter.CTkButton(
-            self.left_middle_frame)
-        self.left_middle_frame_start_nuc2_cam_button = customtkinter.CTkButton(
-            self.left_middle_frame)
-        self.left_middle_frame_start_nuc3_cam_button = customtkinter.CTkButton(
-            self.left_middle_frame)
+        self.middle_top_frame_start_local_detect_button = customtkinter.CTkButton(
+            self.middle_top_frame)
+        self.middle_top_frame_start_nuc2_cam_button = customtkinter.CTkButton(
+            self.middle_top_frame)
+        self.middle_top_frame_start_nuc3_cam_button = customtkinter.CTkButton(
+            self.middle_top_frame)
         self._create_widgets()
 
     def destroy_routine(self) -> None:
         """_summary_"""
         self.destroy()
         self.quit()
-
     def _create_widgets(self) -> None:
         """Starting point of the GUI"""
         self._create_left_frame()
+        self._create_middle_frame()
         self._create_right_frame()
 
     def _create_left_frame(self) -> None:
-        """ routine to create the whole left panel of GUI """
+        """ Camera Settings Frame """
         self.left_frame = tk.Frame(self, bg=themes[COLOR_SELECT][1])
-        self.left_frame.place(relx=0, rely=0, relwidth=0.25, relheight=1)
+        self.left_frame.place(relx=0, rely=0, relwidth=0.3, relheight=1)
         self._create_left_top_frame()
-        self._create_left_middle_frame()
-        # self._create_left_bottom_frame()
+        self._create_left_bottom_frame()
+    def _create_middle_frame(self) -> None:
+        """ Detection Settings Frame """
+        self.middle_frame = tk.Frame(self, bg=themes[COLOR_SELECT][1])
+        self.middle_frame.place(relx=0.3, rely=0, relwidth=0.3, relheight=1)
+        self._create_middle_top_frame()
+        self._create_middle_bottom_frame()
+    def _create_right_frame(self) -> None:
+        """ System Status Frame """
+        self.right_frame = tk.Frame(self, bg=themes[COLOR_SELECT][1])
+        self.right_frame.place(relx=0.6, rely=0, relwidth=0.4, relheight=1)
+        self._create_right_top_frame()
+        self._create_right_bottom_frame()
 
     def _create_left_top_frame(self) -> None:
         """ routine to create the top frame of the left panel of GUI"""
         self.left_top_frame = customtkinter.CTkFrame(self.left_frame)
-        self.left_top_frame.place(relx=0.1, rely=0.04, relwidth=0.8, relheight=0.30)
+        self.left_top_frame.place(relx=0.12, rely=0.06, relwidth=0.8, relheight=0.38)
         self._create_left_top_frame_content()
-    def _create_left_middle_frame(self) -> None:
-        """ routine to create the middle frame of the left panel of GUI """
-        self.left_middle_frame = customtkinter.CTkFrame(self.left_frame)
-        self.left_middle_frame.place(relx=0.1, rely=0.37, relwidth=0.8, relheight=0.2)
-        self._create_left_middle_frame_content()
     def _create_left_bottom_frame(self) -> None:
-        """_summary_
-        """
+        """ Camera Calibration Frame """
         self.left_bottom_frame = customtkinter.CTkFrame(self.left_frame)
-        self.left_bottom_frame.place(relx=0.1, rely=0.28, relwidth=0.8, relheight=0.32)
+        self.left_bottom_frame.place(relx=0.12, rely=0.50, relwidth=0.8, relheight=0.42)
         self._create_left_bottom_frame_content()
+    def _create_middle_top_frame(self) -> None:
+        """ routine to create the middle frame of the left panel of GUI """
+        self.middle_top_frame = customtkinter.CTkFrame(self.middle_frame)
+        self.middle_top_frame.place(relx=0.06, rely=0.06, relwidth=0.8, relheight=0.38)
+        self._create_middle_top_frame_content()
+    def _create_middle_bottom_frame(self) -> None:
+        """ routine to create the top frame of the left panel of GUI"""
+        self.middle_bottom_frame = customtkinter.CTkFrame(self.middle_frame)
+        self.middle_bottom_frame.place(relx=0.06, rely=0.50, relwidth=0.8, relheight=0.42)
+        self._create_middle_bottom_frame_content()
+    def _create_right_top_frame(self) -> None:
+        """ SYSTEM IDENTIFICATION FRAME """
+        self.right_top_frame = tk.Frame(self.right_frame, bg=themes[COLOR_SELECT][0])
+        self.right_top_frame.place(relx=0.01, rely=.03, relwidth=.94, relheight=0.08)
+        self._create_right_top_frame_content()
+    def _create_right_bottom_frame(self) -> None:
+        """ System Data Logging Frame """
+        self.right_bottom_frame = tk.Frame(self.right_frame, bg=themes[COLOR_SELECT][0])
+        self.right_bottom_frame.place(relx=.01, rely=0.14, relwidth=.94, relheight=0.79)
+        self._create_right_bottom_frame_content()
+
+    def _create_right_top_frame_content(self) -> None:
+        """System Identification Frame Contents"""
+        self.right_top_frame_system_label = customtkinter.CTkLabel(
+            self.right_top_frame, text=" System:  ")
+        self.right_top_frame_system_label.place(relx=0.40, rely=0.5, anchor="center")
+        self.right_top_frame_label = customtkinter.CTkLabel(
+            self.right_top_frame, text=f"  NUC {self.nuc_number}  ", text_color="yellow",
+            bg_color=themes[COLOR_SELECT][1])
+        self.right_top_frame_label.place(relx=0.55, rely=0.5, anchor="center")
+    def _create_right_bottom_frame_content(self) -> None:
+        """ System Data Logging Frame Contents """
+        self.right_bottom_frame_ros_status_label = customtkinter.CTkLabel(
+            self.right_bottom_frame, text="ROS Status: ", text_color="white")
+        self.right_bottom_frame_ros_status_label.place(relx=0.05, rely=0.05)
+        self.right_bottom_frame_ros_status_result_label = customtkinter.CTkLabel(
+            self.right_bottom_frame, text="Running", text_color="yellow")
+        self.right_bottom_frame_ros_status_result_label.place(relx=0.35, rely=0.05)
+        self.right_bottom_frame_camera_label = customtkinter.CTkLabel(
+            self.right_bottom_frame, text="Camera Status: ", text_color="white")
+        self.right_bottom_frame_camera_label.place(relx=0.05, rely=0.15)
+        self.right_bottom_frame_camera_result_label = customtkinter.CTkLabel(
+            self.right_bottom_frame, text="Running", text_color="yellow")
+        self.right_bottom_frame_camera_result_label.place(relx=0.35, rely=0.15)
+        self.right_bottom_frame_detection_label = customtkinter.CTkLabel(
+            self.right_bottom_frame, text="Detection Status: ", text_color="white")
+        self.right_bottom_frame_detection_label.place(relx=0.05, rely=0.25)
+        self.right_bottom_frame_detection_result_label = customtkinter.CTkLabel(
+            self.right_bottom_frame, text="Idle", text_color=themes['red'][1])
+        self.right_bottom_frame_detection_result_label.place(relx=0.35, rely=0.25)
+        self.right_bottom_frame_calibration_label = customtkinter.CTkLabel(
+            self.right_bottom_frame, text="Calibration Status: ", text_color="white")
+        self.right_bottom_frame_calibration_label.place(relx=0.05, rely=0.35)
+        self.right_bottom_frame_calibration_result_label = customtkinter.CTkLabel(
+            self.right_bottom_frame, text="Completed", text_color="yellow")
+        self.right_bottom_frame_calibration_result_label.place(relx=0.35, rely=0.35)
+        self.right_bottom_frame_logging_label = customtkinter.CTkLabel(
+            self.right_bottom_frame, text="Logging Status: ", text_color="white")
+        self.right_bottom_frame_logging_label.place(relx=0.05, rely=0.45)
+        self.right_bottom_frame_logging_result_label = customtkinter.CTkLabel(
+            self.right_bottom_frame, text="Running", text_color="yellow")
+        self.right_bottom_frame_logging_result_label.place(relx=0.35, rely=0.45)
+            
+
+
+
+
 
     def _create_left_top_frame_content(self) -> None:
         """The contents of the top frame - Camera Start/Stop"""
@@ -163,49 +232,6 @@ class ClientGUI(customtkinter.CTk):
             border_color=themes['red'][0], 
             command=lambda: self._start_nuc_local_cam_button_event(self.nuc_number, True))
         self.left_top_frame_view_nuc_local_cam_button.place(relx=0.5, rely=0.80, anchor="center")
-    def _create_left_middle_frame_content(self) -> None:
-        """ The contents of the middle frame - Detection Start/Stop """
-        self.left_middle_frame_label = customtkinter.CTkLabel(
-        self.left_middle_frame, text=f"START DETECTION - NUC {self.nuc_number}")
-        self.left_middle_frame_label.place(relx=0.5, rely=0.17, anchor="center")
-        self.left_middle_frame_start_local_detect_button = customtkinter.CTkButton(
-            self.left_middle_frame, text="Start Detection", fg_color=themes[COLOR_SELECT][1],
-            command=lambda: self._start_detection(self.nuc_number, self.detect_launch, self.uuid))
-        self.left_middle_frame_start_local_detect_button.place(relx=0.5, rely=0.45, anchor="center")
-        self.left_middle_frame_stop_local_detect_button = customtkinter.CTkButton(
-            self.left_middle_frame, text="Stop Detection ", fg_color='gray',
-            command=lambda: self._stop_detection(self.nuc_number))
-        self.left_middle_frame_stop_local_detect_button.place(relx=0.5, rely=0.75, anchor="center")
-    def _start_detection(self, nuc_number, detect_launch, uuid):
-        """ routine for starting dectection  """
-        start_button = self.left_middle_frame_start_local_detect_button
-        stop_button = self.left_middle_frame_stop_local_detect_button
-        try:
-            if not is_node_running(f'nuc{nuc_number}/aruco_detect'):
-                detection_start(nuc_number, detect_launch, uuid)
-                if is_node_running(f'nuc{nuc_number}/aruco_detect'):
-                    start_button.configure(fg_color=themes['red'])
-                    stop_button.configure(fg_color=themes['green'])
-            else:
-                rospy.logwarn(f'NUC {nuc_number} Detection is already running..')
-        except Exception as e:
-            print(f'Error: {e}')
-    def _stop_detection(self, nuc_number):
-        """ routine for stopping dectection """
-        start_button = self.left_middle_frame_start_local_detect_button
-        stop_button = self.left_middle_frame_stop_local_detect_button
-        try:
-            if is_node_running(f'/nuc{nuc_number}/aruco_detect'):
-                print('detection node is running, now trying to stop it.. ')
-                detection_stop(nuc_number)
-                if not is_node_running(f'nuc{nuc_number}/aruco_detect'):
-                    start_button.configure(fg_color=themes[COLOR_SELECT][0])
-                    stop_button.configure(fg_color='gray')
-            else:
-                rospy.logerr(f'NUC {nuc_number} Detection is not running..')
-        except Exception as e:
-            print(f'Error: {e}')
-    
     def _create_left_bottom_frame_content(self) -> None:
         """ The contents of the bottom frame - calibration parameters """
         self.left_bottom_frame_label = customtkinter.CTkLabel(
@@ -246,9 +272,91 @@ class ClientGUI(customtkinter.CTk):
             self.left_bottom_frame,text="Start Calibration",
             command=self._start_camera_calibration)
         self.left_bottom_frame_start_calib_button.place(relx=0.5, rely=0.85, anchor="center")
-    
-    def _start_nuc_remote_cam_button_event(self, camera_number) -> None:
-        print(f"Starting Camera {camera_number} from NUC {self.nuc_number}...")
+        
+    def _create_middle_top_frame_content(self) -> None:
+        """ The contents of the middle frame - Detection Start/Stop """
+        self.middle_top_frame_label = customtkinter.CTkLabel(
+        self.middle_top_frame, text=f"START DETECTION - NUC {self.nuc_number}")
+        self.middle_top_frame_label.place(relx=0.5, rely=0.17, anchor="center")
+        self.middle_top_frame_start_local_detect_button = customtkinter.CTkButton(
+            self.middle_top_frame, text="Start Detection", fg_color=themes[COLOR_SELECT][1],
+            command=lambda: self._start_detection(self.nuc_number, self.detect_launch, self.uuid))
+        self.middle_top_frame_start_local_detect_button.place(relx=0.5, rely=0.45, anchor="center")
+        self.middle_top_frame_stop_local_detect_button = customtkinter.CTkButton(
+            self.middle_top_frame, text="Stop Detection ", fg_color='gray',
+            command=lambda: self._stop_detection(self.nuc_number))
+        self.middle_top_frame_stop_local_detect_button.place(relx=0.5, rely=0.75, anchor="center")
+
+    def _create_middle_bottom_frame_content(self) -> None:
+        self.middle_bottom_frame_label = customtkinter.CTkLabel(
+            self.middle_bottom_frame, text=f"DETECTION PARAMETERS - NUC {self.nuc_number}")
+        self.middle_bottom_frame_label.place(relx=0.5, rely=0.13, anchor="center")
+        self.middle_bottom_marker_size_label = customtkinter.CTkLabel(
+            self.middle_bottom_frame, text="Marker Size: (m)")
+        self.middle_bottom_marker_size_label.place(relx=0.1, rely=0.22)
+        self.middle_bottom_marker_size_entry = customtkinter.CTkEntry(
+            master=self.middle_bottom_frame,
+            placeholder_text="0.025",
+            placeholder_text_color="gray"
+        )
+        self.middle_bottom_marker_size_entry.place(relx=0.62, rely=0.22, relwidth=0.25)
+        self.middle_button_dictionary_label = customtkinter.CTkLabel(
+            self.middle_bottom_frame, text="Dictionary: ")
+        self.middle_button_dictionary_label.place(relx=0.1, rely=0.40)
+        self.middle_button_dictionary_entry = customtkinter.CTkEntry(
+            master=self.middle_bottom_frame,
+            placeholder_text="0",
+            placeholder_text_color="gray"
+        )
+        self.middle_button_dictionary_entry.place(relx=0.62, rely=0.40, relwidth=0.25)
+        self.middle_button_detection_update_button = customtkinter.CTkButton(
+            self.middle_bottom_frame, text="Update",
+            command=self._middle_button_detection_update_button_event)
+        self.middle_button_detection_update_button.place(relx=0.5, rely=0.65,
+                                                         relwidth=0.4, anchor="center")
+        
+    def _middle_button_detection_update_button_event(self):
+        """ routine for updating detection parameters """
+        print('Updating Detection Parameters..')
+        marker_size_entry = self.middle_bottom_marker_size_entry.get()
+        dictionary_entry = self.middle_button_dictionary_entry.get()
+        if not marker_size_entry and not dictionary_entry:
+            print('Nothing updated')
+            print(f'Original marker size: {self.marker_size}')
+            print(f'Original dictionary: {self.dictionary}')
+            rospy.logwarn('Please enter new detection parameters!')
+            return
+        
+        
+    def _start_detection(self, nuc_number, detect_launch, uuid):
+        """ routine for starting dectection  """
+        start_button = self.middle_top_frame_start_local_detect_button
+        stop_button = self.middle_top_frame_stop_local_detect_button
+        try:
+            if not is_node_running(f'nuc{nuc_number}/aruco_detect'):
+                detection_start(nuc_number, detect_launch, uuid)
+                if is_node_running(f'nuc{nuc_number}/aruco_detect'):
+                    start_button.configure(fg_color=themes['red'])
+                    stop_button.configure(fg_color=themes['green'])
+            else:
+                rospy.logwarn(f'NUC {nuc_number} Detection is already running..')
+        except Exception as e:
+            print(f'Error: {e}')
+    def _stop_detection(self, nuc_number):
+        """ routine for stopping dectection """
+        start_button = self.middle_top_frame_start_local_detect_button
+        stop_button = self.middle_top_frame_stop_local_detect_button
+        try:
+            if is_node_running(f'/nuc{nuc_number}/aruco_detect'):
+                print('detection node is running, now trying to stop it.. ')
+                detection_stop(nuc_number)
+                if not is_node_running(f'nuc{nuc_number}/aruco_detect'):
+                    start_button.configure(fg_color=themes[COLOR_SELECT][0])
+                    stop_button.configure(fg_color='gray')
+            else:
+                rospy.logerr(f'NUC {nuc_number} Detection is not running..')
+        except Exception as e:
+            print(f'Error: {e}')
     def check_active_topic(self, topic_name):
         """Checks whether a topic is currently running/active or not.. """
         all_topics = rospy.get_published_topics()
@@ -383,46 +491,6 @@ class ClientGUI(customtkinter.CTk):
         print('Chessboard Parameters Updated!')
 
 
-    def _create_right_frame(self) -> None:
-        """_summary_
-        """
-        self.right_frame = tk.Frame(self, bg=themes[COLOR_SELECT][1])
-        self.right_frame.place(relx=0.25, rely=0, relwidth=0.75, relheight=1)
-        self._create_right_top_frame()
-        self._create_right_bottom_frame()
-    def _create_right_top_frame(self) -> None:
-        """_summary_
-        """
-        self.right_top_frame = tk.Frame(self.right_frame, bg=themes[COLOR_SELECT][0])
-        self.right_top_frame.place(relx=0.01, rely=.03, relwidth=.94, relheight=0.08)
-        self._create_right_top_frame_content()
-    def _create_right_top_frame_content(self) -> None:
-        """_summary_
-        """
-        self.right_top_frame_system_label = customtkinter.CTkLabel(
-            self.right_top_frame, text=" System:  ")
-        self.right_top_frame_system_label.place(relx=0.05, rely=0.5, anchor="center")
-        self.right_top_frame_label = customtkinter.CTkLabel(
-            self.right_top_frame, text=f"  NUC {self.nuc_number}  ", text_color="yellow",
-            bg_color=themes[COLOR_SELECT][1])
-        self.right_top_frame_label.place(relx=0.12, rely=0.5, anchor="center")
-        self.right_top_frame_ros_status_label = customtkinter.CTkLabel(
-            self.right_top_frame, text="ROS System Status: ")
-        self.right_top_frame_ros_status_label.place(relx=0.3, rely=0.5, anchor="center")
-        self.right_top_frame_ros_status_result_label = customtkinter.CTkLabel(
-            self.right_top_frame, text="Running", text_color="white")
-        self.right_top_frame_ros_status_result_label.place(relx=0.42, rely=0.5, anchor="center")
-        self.right_top_frame_camera_label = customtkinter.CTkLabel(
-            self.right_top_frame, text="Active Camera: ")
-        self.right_top_frame_camera_label.place(relx=0.6, rely=0.5, anchor="center")
-        self.right_top_frame_camera_result_label = customtkinter.CTkLabel(
-            self.right_top_frame, text=f'Camera {self.nuc_number}', text_color="white")
-        self.right_top_frame_camera_result_label.place(relx=0.72, rely=0.5, anchor="center")
-    def _create_right_bottom_frame(self) -> None:
-        """_summary_
-        """
-        self.right_bottom_frame = tk.Frame(self.right_frame, bg=themes[COLOR_SELECT][0])
-        self.right_bottom_frame.place(relx=.01, rely=0.14, relwidth=.94, relheight=0.79)
 
 if __name__ == "__main__":
     root = ClientGUI()
