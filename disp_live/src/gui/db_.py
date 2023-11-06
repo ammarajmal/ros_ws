@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import influxdb_client, os, time
 from influxdb_client import InfluxDBClient, Point, WritePrecision
 from influxdb_client.client.write_api import SYNCHRONOUS
@@ -7,10 +8,6 @@ org = "Chung-Ang University"
 url = "http://localhost:8086"
 
 write_client = influxdb_client.InfluxDBClient(url=url, token=token, org=org)
-
-
-bucket="SITL"
-write_api = write_client.write_api(write_options=SYNCHRONOUS)
 
    
 bucket="SITL"

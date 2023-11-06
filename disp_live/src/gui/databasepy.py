@@ -9,7 +9,7 @@ from influxdb_client.client.write_api import SYNCHRONOUS
 from fiducial_msgs.msg import FiducialTransformArray
 
 # InfluxDB 2.0 setup
-token = 'W7Chq8_KRs3zVQCD5KV1W6bTbAs3f4xoNjiUTU4JcRcv7i3uyeovQcCzIwRiyRIFLITxFlHUe_S4rQruWD6I8A=='
+token = os.environ.get("INFLUXDB_TOKEN")
 org = "Chung-Ang University"
 url = "http://localhost:8086"
 write_client = InfluxDBClient(url=url, token=token, org=org)
@@ -17,6 +17,9 @@ write_api = write_client.write_api(write_options=SYNCHRONOUS)
 
 def callback_nuc1(data):
     process_data(data, 'nuc1')
+
+def callback_nuc2(data):
+    process_data(data, 'nuc2')
 
 def callback_nuc3(data):
     process_data(data, 'nuc3')
@@ -43,6 +46,7 @@ def save_to_influxdb(nuc_name, translation, rotation):
 if __name__ == '__main__':
     rospy.init_node('data_processor', anonymous=True)
     rospy.Subscriber("/nuc1/fiducial_transforms", FiducialTransformArray, callback_nuc1)
+    rospy.Subscriber("/nuc2/fiducial_transforms", FiducialTransformArray, callback_nuc2)
     rospy.Subscriber("/nuc3/fiducial_transforms", FiducialTransformArray, callback_nuc3)
     try:
         rospy.spin()
