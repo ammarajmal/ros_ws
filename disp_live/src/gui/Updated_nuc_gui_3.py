@@ -145,24 +145,24 @@ class ClientGUI(customtkinter.CTk):
         self._create_middle_bottom_frame_content()
     def _create_right_top_frame(self) -> None:
         """ SYSTEM IDENTIFICATION FRAME """
-        self.right_top_frame = tk.Frame(self.right_frame, bg=themes[COLOR_SELECT][0])
-        self.right_top_frame.place(relx=0.01, rely=.03, relwidth=.94, relheight=0.08)
+        self.right_top_frame = customtkinter.CTkFrame(self.right_frame, fg_color=themes[COLOR_SELECT][0])
+        self.right_top_frame.place(relx=0.0, rely=.06, relwidth=.92, relheight=0.08)
         self._create_right_top_frame_content()
     def _create_right_bottom_frame(self) -> None:
         """ System Data Logging Frame """
-        self.right_bottom_frame = tk.Frame(self.right_frame, bg=themes[COLOR_SELECT][0])
-        self.right_bottom_frame.place(relx=.01, rely=0.14, relwidth=.94, relheight=0.79)
+        self.right_bottom_frame = customtkinter.CTkFrame(self.right_frame, fg_color=themes[COLOR_SELECT][0])
+        self.right_bottom_frame.place(relx=.0, rely=0.2, relwidth=.92, relheight=0.72)
         self._create_right_bottom_frame_content()
 
     def _create_right_top_frame_content(self) -> None:
         """System Identification Frame Contents"""
         self.right_top_frame_system_label = customtkinter.CTkLabel(
-            self.right_top_frame, text=" System:  ")
+            self.right_top_frame, text=" Dashboard System:  ")
         self.right_top_frame_system_label.place(relx=0.40, rely=0.5, anchor="center")
         self.right_top_frame_label = customtkinter.CTkLabel(
             self.right_top_frame, text=f"  NUC {self.nuc_number}  ", text_color="yellow",
             bg_color=themes[COLOR_SELECT][1])
-        self.right_top_frame_label.place(relx=0.55, rely=0.5, anchor="center")
+        self.right_top_frame_label.place(relx=0.65, rely=0.5, anchor="center")
     def _create_right_bottom_frame_content(self) -> None:
         """ System Data Logging Frame Contents """
         self.right_bottom_frame_ros_status_label = customtkinter.CTkLabel(
