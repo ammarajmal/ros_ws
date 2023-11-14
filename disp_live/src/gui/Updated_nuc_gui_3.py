@@ -54,8 +54,10 @@ class ClientGUI(customtkinter.CTk):
         # self.nuc1_camera = False
         # self.nuc2_camera = False
         # self.nuc3_camera = False
-        self.board_size = "9x8"
-        self.square_size = "0.025"  # in meters
+        self.board_size = "7x9" # dimensions for calibration
+        self.square_size = "0.020"  # in meters for calibration
+        self.marker_dim =  "0.0200"  # in meters for ARUCO marker
+        self.marker_dict = "00" # (DICT_4X4_50)
         self.var_dictionary = tk.StringVar(self, "0")  # dict 5x5 (1000)
         self.running_processes = {}
         self.left_frame = None
@@ -296,7 +298,7 @@ class ClientGUI(customtkinter.CTk):
         self.middle_bottom_marker_size_label.place(relx=0.1, rely=0.22)
         self.middle_bottom_marker_size_entry = customtkinter.CTkEntry(
             master=self.middle_bottom_frame,
-            placeholder_text="0.025",
+            placeholder_text=self.marker_dim,
             placeholder_text_color="gray"
         )
         self.middle_bottom_marker_size_entry.place(relx=0.62, rely=0.22, relwidth=0.25)
@@ -305,7 +307,7 @@ class ClientGUI(customtkinter.CTk):
         self.middle_button_dictionary_label.place(relx=0.1, rely=0.40)
         self.middle_button_dictionary_entry = customtkinter.CTkEntry(
             master=self.middle_bottom_frame,
-            placeholder_text="0",
+            placeholder_text=self.marker_dict,
             placeholder_text_color="gray"
         )
         self.middle_button_dictionary_entry.place(relx=0.62, rely=0.40, relwidth=0.25)
@@ -315,26 +317,44 @@ class ClientGUI(customtkinter.CTk):
         self.middle_button_detection_update_button.place(relx=0.5, rely=0.65,
                                                          relwidth=0.4, anchor="center")
         
+
     def _middle_button_detection_update_button_event(self):
         """ routine for updating detection parameters """
-        print('Updating Detection Parameters..')
-        marker_size_entry = self.middle_bottom_marker_size_entry.get()
-        dictionary_entry = self.middle_button_dictionary_entry.get()
-        if not marker_size_entry and not dictionary_entry:
-            print('Nothing updated')
-            print(f'Original marker size: {self.marker_size}')
-            print(f'Original dictionary: {self.dictionary}')
+        marker_size_entry_var = self.middle_bottom_marker_size_entry.get()
+        marker_dict_entry_var = self.middle_button_dictionary_entry.get()
+
+        if not marker_size_entry_var and not marker_dict_entry_var:
+            print('Noting Updated')
+            print(f'Original marker size: {self.marker_dim}')
+            print(f'Original Dictionary: {self.marker_dict}')
             rospy.logwarn('Please enter new detection parameters!')
             return
+        if marker_size_entry_var:
+            self.marker_dim = marker_size_entry_var
+            print(f'New marker size: {self.marker_dim}')
+        else:
+            print(f'Original marker size: {self.marker_dim}')
+        if marker_dict_entry_var:
+            self.marker_dict = marker_dict_entry_var
+            print(f'New Dictionary: {self.marker_dict}')
+        else:
+            print(f'Original Dictionary: {self.marker_dict}')
         
+        rospy.loginfo('Detection parameters updated!')
+        # self.middle_button_frame_detect_update_label.configure(text="☑", fg_color='yellow')
+        print('Detection parameters updated!')
         
     def _start_detection(self, nuc_number, detect_launch, uuid):
         """ routine for starting dectection  """
+        print('** Starting Detection **')
+        print(f'Marker Size: {self.marker_dim}')
+        print(f'Dictionary: {self.marker_dict}')
+        
         start_button = self.middle_top_frame_start_local_detect_button
         stop_button = self.middle_top_frame_stop_local_detect_button
         try:
             if not is_node_running(f'nuc{nuc_number}/aruco_detect'):
-                detection_start(nuc_number, detect_launch, uuid)
+                detection_start(nuc_number, detect_launch, uuid, self.marker_dim, self.marker_dict)
                 if is_node_running(f'nuc{nuc_number}/aruco_detect'):
                     start_button.configure(fg_color=themes['red'])
                     stop_button.configure(fg_color=themes['green'])

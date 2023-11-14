@@ -48,6 +48,8 @@
 #include <dynamic_reconfigure/server.h>
 #include <std_srvs/SetBool.h>
 #include <std_msgs/String.h>
+// #include <iostream>
+// using namespace std;
 
 #include "fiducial_msgs/Fiducial.h"
 #include "fiducial_msgs/FiducialArray.h"
@@ -645,8 +647,8 @@ FiducialsNode::FiducialsNode() : nh(), pnh("~"), it(nh)
     detectorParams = new aruco::DetectorParameters();
 
     pnh.param<bool>("publish_images", publish_images, false);
-    pnh.param<double>("fiducial_len", fiducial_len, 0.025);
-    pnh.param<int>("dictionary", dicno, 0);
+    pnh.param<double>("fiducial_len", fiducial_len, 0.099);
+    pnh.param<int>("dictionary", dicno, 9);
     pnh.param<bool>("do_pose_estimation", doPoseEstimation, true);
     pnh.param<bool>("publish_fiducial_tf", publishFiducialTf, false);
     pnh.param<bool>("vis_msgs", vis_msgs, false);
@@ -707,6 +709,9 @@ FiducialsNode::FiducialsNode() : nh(), pnh("~"), it(nh)
         pose_pub = nh.advertise<fiducial_msgs::FiducialTransformArray>("fiducial_transforms", 1);
 
     dictionary = aruco::getPredefinedDictionary(dicno);
+    // cout<<"dictionary"<<dicno<<endl;
+    // cout<<"fiducial len"<<fiducial_len<<endl;
+    
 
     img_sub = it.subscribe("camera", 1,
                         &FiducialsNode::imageCallback, this);

@@ -46,14 +46,16 @@ def kill_ros_node(node_name):
     except subprocess.CalledProcessError:
         # Handle any errors that occur when running the command
         print(f"Failed to kill node {node_name}")
-
-def detection_start(machine_number, launch_file, ros_uuid):
+# def detection_start(nuc_number, detect_launch, uuid, self.marker_dim, self.marker_dict)
+def detection_start(machine_number, launch_file, ros_uuid, marker_dimension, maker_dictionary):
     """ Starts the detection node on the given machine """
     try:
         if is_node_running(f"/nuc{machine_number}"):
             print(f" Starting Detection at NUC {machine_number}!")
             detection_launch_args = [f"{launch_file}",
-                                     f'launch_nuc:=nuc{machine_number}']
+                                     f'launch_nuc:=nuc{machine_number}',
+                                     f'fiducial_len:={marker_dimension}',
+                                     f'dictionary:={maker_dictionary}']
             roslaunch_file = [(roslaunch.rlutil.resolve_launch_arguments(detection_launch_args)[0],
                                detection_launch_args[1:])]
             nuc_detect_driver = roslaunch.parent.ROSLaunchParent(ros_uuid, roslaunch_file)
