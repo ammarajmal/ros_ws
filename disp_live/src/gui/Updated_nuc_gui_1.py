@@ -57,7 +57,7 @@ class ClientGUI(customtkinter.CTk):
         self.board_size = "7x9" # dimensions for calibration
         self.square_size = "0.020"  # in meters for calibration
         self.marker_dim =  "0.0200"  # in meters for ARUCO marker
-        self.marker_dict = "00" # (DICT_4X4_50)
+        self.marker_dict = "0" # (DICT_4X4_50)
         self.var_dictionary = tk.StringVar(self, "0")  # dict 5x5 (1000)
         self.running_processes = {}
         self.left_frame = None
