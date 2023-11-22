@@ -1,0 +1,8 @@
+grafana token: "glc_eyJvIjoiOTgxNjk5IiwibiI6InN0YWNrLTc4MDcxOS1pbnRlZ3JhdGlvbi1ncmFmYW5hdG9rZW4iLCJrIjoiN0gyNE1IOWFqaHFLMjdZM2RYREs3NUcwIiwibSI6eyJyIjoicHJvZC11cy1lYXN0LTAifX0="
+to install and run granafan client: 
+ARCH="amd64" GCLOUD_HOSTED_METRICS_URL="https://prometheus-prod-13-prod-us-east-0.grafana.net/api/prom/push" GCLOUD_HOSTED_METRICS_ID="1269339" GCLOUD_SCRAPE_INTERVAL="60s" GCLOUD_HOSTED_LOGS_URL="https://logs-prod-006.grafana.net/loki/api/v1/push" GCLOUD_HOSTED_LOGS_ID="733715" GCLOUD_RW_API_KEY="glc_eyJvIjoiOTgxNjk5IiwibiI6InN0YWNrLTc4MDcxOS1pbnRlZ3JhdGlvbi1ncmFmYW5hdG9rZW4iLCJrIjoiN0gyNE1IOWFqaHFLMjdZM2RYREs3NUcwIiwibSI6eyJyIjoicHJvZC11cy1lYXN0LTAifX0=" /bin/sh -c "$(curl -fsSL https://storage.googleapis.com/cloud-onboarding/agent/scripts/grafanacloud-install.sh)"
+
+
+
+default-token:
+glc_eyJvIjoiOTgxNjk5IiwibiI6ImRlZmF1bHQtdG9rZW4tbmFtZS1kZWZhdWx0LXRva2VuIiwiayI6IjYyNHdXZjgyaGRSMFVGZ1Q1Y3dEMzgwdiIsIm0iOnsiciI6InByb2QtdXMtZWFzdC0wIn19
