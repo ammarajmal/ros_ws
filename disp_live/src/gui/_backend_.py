@@ -2,6 +2,8 @@
 import rospy
 import roslaunch
 import subprocess
+import socket
+
 MACHINE_NAME = 'Main Computer'
 themes = {'blue': ("#3B8ED0", "#1F6AA5"),
           'green': ("#2CC985", "#2FA572"),
@@ -179,6 +181,21 @@ def remote_detect_start(machine_num, remote_detect_launch_file, ros_uuid, start_
 def return_nuc_status():
     """ return the status of the nuc """
     return is_node_running("/nuc1"), is_node_running("/nuc2"), is_node_running("/nuc3")
+def get_lan_ip():
+    """ Get the local IP address of the machine """
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    try:
+        # doesn't even have to be reachable
+        s.connect(('8.8.8.8', 1))
+        ip_addr = s.getsockname()[0]
+    except socket.error:
+        ip_addr = '127.0.0.1'
+    finally:
+        s.close()
+    return ip_addr
+
+
+
 if __name__ == "__main__":
     try:
         print(check_active_topic(2))
@@ -188,9 +205,11 @@ if __name__ == "__main__":
             print("Node is not running.")
     except ConnectionRefusedError:
         # Handle the connection error here
-        print("ROS Master not running")
+        print("ROS Master @NUC1 not running")
         # You can log the error or perform other error-handling actions
     else:
         # Code to execute if no exception is raised
         print("Connected successfully to the server")
 
+    lan_ip = get_lan_ip()
+    print("LAN IP Address:", lan_ip)
