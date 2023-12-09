@@ -7,6 +7,7 @@
     <group if="$(eval launch_nuc == 'nuc1')">
         <include file="$(find gige_cam_driver)/launch/cam_basic.launch">
             <arg name="nuc_name" value="$(arg launch_nuc)" />
+            <arg name="device_id" value="0" />
             <arg name="calib_file" value="$(arg launch_nuc)" />
         </include>
     </group>
@@ -15,6 +16,7 @@
     <group if="$(eval launch_nuc == 'nuc2')">
         <include file="$(find gige_cam_driver)/launch/cam_basic.launch">
             <arg name="nuc_name" value="$(arg launch_nuc)" />
+            <arg name="device_id" value="1" />
             <arg name="calib_file" value="$(arg launch_nuc)" />
         </include>
     </group>
@@ -23,6 +25,7 @@
     <group if="$(eval launch_nuc == 'nuc3')">
         <include file="$(find gige_cam_driver)/launch/cam_basic.launch">
             <arg name="nuc_name" value="$(arg launch_nuc)" />
+            <arg name="device_id" value="2" />
             <arg name="calib_file" value="$(arg launch_nuc)" />
         </include>
     </group>

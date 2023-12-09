@@ -1,0 +1,17 @@
+[Desktop Entry]
+Type=Application
+Name=GUI
+Exec=gnome-terminal -- /bin/bash -c "source /opt/ros/noetic/setup.bash && source /home/sitl1/ros_ws/devel/setup.bash && cd /home/sitl1/ros_ws/disp_live/src/gui && python3 Updated_nuc_gui_1.py; exec /bin/bash"
+Icon=/home/sitl1/ros_ws/bashfiles/main.png
+Terminal=false
+Categories=Utility; Application;
+
+
+
+[Desktop Entry]
+Type=Application
+Name=GUI
+Exec=gnome-terminal -- /bin/bash -c "export ROS_MASTER_URI=http://NUC1:11311 && export ROS_IP=192.168.0.13 && source /opt/ros/noetic/setup.bash && source /home/sitl3/ros_ws/devel/setup.bash && cd /home/sitl3/ros_ws/disp_live/src/gui && python3 Updated_nuc_gui_3.py; exec /bin/bash"
+Icon=/home/sitl3/ros_ws/bashfiles/main.png
+Terminal=true
+Categories=Utility; Application;
