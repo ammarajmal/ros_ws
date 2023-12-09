@@ -3,6 +3,14 @@
 # import subprocess
 import tkinter as tk
 import customtkinter
+
+import os
+import time
+from influxdb_client import InfluxDBClient, Point, WritePrecision
+from influxdb_client.client.write_api import SYNCHRONOUS
+from fiducial_msgs.msg import FiducialTransformArray
+from multiprocessing import Process, Event  # Import multiprocessing
+
 import rospy
 import rospkg
 import roslaunch
@@ -23,72 +31,36 @@ class ClientGUI(customtkinter.CTk):
         """initialization function for the client gui
         """
         super().__init__()
-        rospy.init_node("main_gui", anonymous=False)
-        
-        self.package = 'gige_cam_driver'
+        rospy.init_node('data_recording', anonymous=True)
+        self.is_recording = False  # Flag to control data processing
+        # InfluxDB 2.0 setup
+        token = os.environ.get("INFLUXDB_TOKEN")
+        org = "Chung-Ang University"
+        url = "http://localhost:8086"
+        self.write_client = InfluxDBClient(url=url, token=token, org=org)
+        self.write_api = self.write_client.write_api(write_options=SYNCHRONOUS)
 
-        # ********************************************************************************
-        # Path management for Launch files
-        # ********************************************************************************
-        self.launch_path = rospkg.RosPack().get_path('gige_cam_driver') + '/launch/'
-        self.csv_folder_path = rospkg.RosPack().get_path('gige_cam_driver') + '/csvfiles/'
-        self.detect_launch_path = rospkg.RosPack().get_path('aruco_detect') + '/launch/'
-        self.bagfile_path = self.launch_path.replace("launch/", "bagfiles/")
+        # Initialize variables to store the first data point for each nuc
+        self.first_translation_x_nuc1 = None
+        self.first_translation_y_nuc1 = None
+        self.first_translation_z_nuc1 = None
 
-        self.uuid = roslaunch.rlutil.get_or_generate_uuid(None, False)
-        # roslaunch.configure_logging(self.uuid)
-        self.cam_launch = f"{self.launch_path}cam.launch"
-        self.nuc1_launch = f"{self.launch_path}nuc1_remote_cam.launch"
-        self.nuc2_launch = f"{self.launch_path}nuc2_remote_cam.launch"
-        self.nuc3_launch = f"{self.launch_path}nuc3_remote_cam.launch"
-        self.view_launch = f"{self.launch_path}viewcam.launch"
-        self.calib_launch = f"{self.launch_path}calib.launch"
+        self.first_translation_x_nuc2 = None
+        self.first_translation_y_nuc2 = None
+        self.first_translation_z_nuc2 = None
 
+        self.first_translation_x_nuc3 = None
+        self.first_translation_y_nuc3 = None
+        self.first_translation_z_nuc3 = None
 
-        
-        
         self.title("Main Dashboard")
         self.geometry("1000x600")
         self.resizable(False, False)
         self.protocol("WM_DELETE_WINDOW", self.destroy_routine)
 
         # Create a BooleanVar to use as the variable for the checkbox
-        self.view_camera = tk.BooleanVar()
-        self.view_camera.set(False)  # Set the initial value to False
-        
         self._create_widgets()
-        self.camera_1_active = False
-        self.camera_2_active = False
-        self.camera_3_active = False
-        self.running_processes = {}
-        self.left_frame = None
-        self.left_top_frame = None
 
-        self.left_top_frame_label = None
-        self.left_top_frame_button = None
-        self.left_bottom_frame = None
-        self.left_bottom_frame_label = None
-        self.left_bottom_frame_calib1_button = None
-        self.left_bottom_frame_calib2_button = None
-        self.left_bottom_frame_calib3_button = None
-        self.left_bottom_frame_sq_size_label = None
-        self.left_bottom_frame_sq_size_entry = None
-        self.right_top_frame_label = None
-        self.left_top_frame_view_cam_checkbox = None
-        # self.left_top_frame_cam1_button = customtkinter.CTkButton(self.left_top_frame)
-        self.right_top_frame_system_label = None
-        
-        
-        self.left_bottom_frame_chessboard_label = None
-        self.left_bottom_frame_chessboard_entry = None
-        self.left_button_frame_calib_update_button = None
-        self.right_frame = None
-        self.right_top_frame = None
-        self.right_top_frame_ros_status_label = None
-        self.right_top_frame_ros_status_result_label = None
-        self.right_top_frame_camera_label = None
-        self.right_top_frame_camera_result_label = None
-        self.right_bottom_frame = None
         
 
     def destroy_routine(self) -> None:
@@ -118,27 +90,27 @@ class ClientGUI(customtkinter.CTk):
         """_summary_
         """
         self.left_top_frame_label = customtkinter.CTkLabel(
-            self.left_top_frame, text="START REMOTE CAMERA")
+            self.left_top_frame, text="Start Data Recording")
         self.left_top_frame_label.place(relx=0.5, rely=0.15, anchor="center")
 
-        self.left_top_frame_cam1_button = customtkinter.CTkButton(
-            self.left_top_frame, text="Start Camera - NUC 1",
+        self.left_top_frame_start_rec_button = customtkinter.CTkButton(
+            self.left_top_frame, text="Start Record",
             fg_color=themes[COLOR_SELECT][1],
-            command=lambda: self._start_nuc_cam_button_event(1, True, False))
-        self.left_top_frame_cam1_button.place(relx=0.5, rely=0.35, anchor="center")
+            command=self._start_record_button_event)
+        self.left_top_frame_start_rec_button.place(relx=0.5, rely=0.45, anchor="center")
         
-        self.left_top_frame_cam2_button = customtkinter.CTkButton(
-            self.left_top_frame, text="Start Camera - NUC 2",
+        
+        self.left_top_frame_stop_rec_button = customtkinter.CTkButton(
+            self.left_top_frame, text="Stop Record",
             fg_color=themes[COLOR_SELECT][1],
-            command=lambda: self._start_nuc_cam_button_event(2, True, False))
-        self.left_top_frame_cam2_button.place(relx=0.5, rely=0.57, anchor="center")
+            command=self._stop_record_button_event)
+        self.left_top_frame_stop_rec_button.place(relx=0.5, rely=0.7, anchor="center")
 
-        self.left_top_frame_cam3_button = customtkinter.CTkButton(
-            self.left_top_frame, text="Start Camera - NUC 3",
-            fg_color=themes[COLOR_SELECT][1],
-            command=lambda: self._start_nuc_cam_button_event(3, True, False))
-        self.left_top_frame_cam3_button.place(relx=0.5, rely=0.80, anchor="center")
-    
+
+
+
+
+
     def _start_nuc_cam_button_event(self, camera_number, show_camera, calibrate_camera) -> None:
         """This function is used to start the camera node"""
         pass
@@ -253,6 +225,75 @@ class ClientGUI(customtkinter.CTk):
         """
         self.right_bottom_frame = tk.Frame(self.right_frame, bg=themes[COLOR_SELECT][0])
         self.right_bottom_frame.place(relx=.01, rely=0.26, relwidth=.94, relheight=0.62)
+    def callback_nuc1(self, data):
+        self.process_data(data, 'nuc1')
+
+    def callback_nuc2(self, data):
+        self.process_data(data, 'nuc2')
+
+    def callback_nuc3(self, data):
+        self.process_data(data, 'nuc3')
+
+    def process_data(self, data, nuc_name):
+        # self.first_translation_x_nuc1, self.first_translation_y_nuc1, self.first_translation_z_nuc1
+        # self.first_translation_x_nuc2, self.first_translation_y_nuc2, self.first_translation_z_nuc2
+        # self.first_translation_x_nuc3, self.first_translation_y_nuc3, self.first_translation_z_nuc3
+
+        for transform in data.transforms:
+            translation = transform.transform.translation
+            rotation = transform.transform.rotation
+
+            if nuc_name == 'nuc1':
+                # Process data for nuc1
+                if self.first_translation_x_nuc1 is None:
+                    self.first_translation_x_nuc1 = translation.x
+                    self.first_translation_y_nuc1 = translation.y
+                    self.first_translation_z_nuc1 = translation.z
+
+                # Subtract the first data point for nuc1
+                normalized_translation_x = translation.x - self.first_translation_x_nuc1
+                normalized_translation_y = translation.y - self.first_translation_y_nuc1
+                normalized_translation_z = translation.z - self.first_translation_z_nuc1
+
+            elif nuc_name == 'nuc2':
+                # Process data for nuc2
+                if self.first_translation_x_nuc2 is None:
+                    self.first_translation_x_nuc2 = translation.x
+                    self.first_translation_y_nuc2 = translation.y
+                    self.first_translation_z_nuc2 = translation.z
+
+                # Subtract the first data point for nuc2
+                normalized_translation_x = translation.x - self.first_translation_x_nuc2
+                normalized_translation_y = translation.y - self.first_translation_y_nuc2
+                normalized_translation_z = translation.z - self.first_translation_z_nuc2
+
+            elif nuc_name == 'nuc3':
+                # Process data for nuc3
+                if self.first_translation_x_nuc3 is None:
+                    self.first_translation_x_nuc3 = translation.x
+                    self.first_translation_y_nuc3 = translation.y
+                    self.first_translation_z_nuc3 = translation.z
+
+                # Subtract the first data point for nuc3
+                normalized_translation_x = translation.x - self.first_translation_x_nuc3
+                normalized_translation_y = translation.y - self.first_translation_y_nuc3
+                normalized_translation_z = translation.z - self.first_translation_z_nuc3
+
+            # Save normalized data to InfluxDB
+            self.save_to_influxdb(nuc_name, normalized_translation_x, normalized_translation_y, normalized_translation_z, rotation)
+
+    def save_to_influxdb(self, nuc_name, translation_x, translation_y, translation_z, rotation):
+        point = Point("fiducial_transforms") \
+            .tag("nuc", nuc_name) \
+            .field("translation_x", translation_x) \
+            .field("translation_y", translation_y) \
+            .field("translation_z", translation_z) \
+            .field("rotation_x", rotation.x) \
+            .field("rotation_y", rotation.y) \
+            .field("rotation_z", rotation.z) \
+            .field("rotation_w", rotation.w) \
+            .time(time.time_ns(), WritePrecision.NS)
+        self.write_api.write(bucket="SITL", record=point)
 if __name__ == "__main__":
     root = ClientGUI()
     root.mainloop()
