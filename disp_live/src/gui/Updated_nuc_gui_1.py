@@ -7,7 +7,7 @@ import customtkinter
 import rospy
 import rospkg
 import roslaunch
-from _backend_ import is_node_running, kill_ros_node, detection_start, detection_stop
+from _backend_ import is_node_running, kill_ros_node, detection_start, detection_stop, get_ros_topic_frequency
 
 themes = {'blue': ("#3B8ED0", "#1F6AA5"),
           'green': ("#2CC985", "#2FA572"),
@@ -109,19 +109,19 @@ class ClientGUI(customtkinter.CTk):
     def _create_left_frame(self) -> None:
         """ Camera Settings Frame """
         self.left_frame = tk.Frame(self, bg=themes[COLOR_SELECT][1])
-        self.left_frame.place(relx=0, rely=0, relwidth=0.3, relheight=1)
+        self.left_frame.place(relx=0, rely=0, relwidth=0.33, relheight=1)
         self._create_left_top_frame()
         self._create_left_bottom_frame()
     def _create_middle_frame(self) -> None:
         """ Detection Settings Frame """
         self.middle_frame = tk.Frame(self, bg=themes[COLOR_SELECT][1])
-        self.middle_frame.place(relx=0.3, rely=0, relwidth=0.3, relheight=1)
+        self.middle_frame.place(relx=0.33, rely=0, relwidth=0.33, relheight=1)
         self._create_middle_top_frame()
         self._create_middle_bottom_frame()
     def _create_right_frame(self) -> None:
         """ System Status Frame """
         self.right_frame = tk.Frame(self, bg=themes[COLOR_SELECT][1])
-        self.right_frame.place(relx=0.6, rely=0, relwidth=0.4, relheight=1)
+        self.right_frame.place(relx=0.66, rely=0, relwidth=0.34, relheight=1)
         self._create_right_top_frame()
         self._create_right_bottom_frame()
 
@@ -164,33 +164,39 @@ class ClientGUI(customtkinter.CTk):
         self.right_top_frame_label = customtkinter.CTkLabel(
             self.right_top_frame, text=f"  NUC {self.nuc_number}  ", text_color="yellow",
             bg_color=themes[COLOR_SELECT][1])
-        self.right_top_frame_label.place(relx=0.65, rely=0.5, anchor="center")
+        self.right_top_frame_label.place(relx=0.7, rely=0.5, anchor="center")
     def _create_right_bottom_frame_content(self) -> None:
         """ System Data Logging Frame Contents """
         self.right_bottom_frame_cam_status_label = customtkinter.CTkButton(
             self.right_bottom_frame, text="Check Camera Status", border_width=1, border_color='white', command=lambda: self._check_camera_event(self.nuc_number))
-        self.right_bottom_frame_cam_status_label.place(relx=0.05, rely=0.07)
+        self.right_bottom_frame_cam_status_label.place(relx=0.175, rely=0.08)
         self.right_bottom_frame_cam_status_result_label = customtkinter.CTkLabel(
             self.right_bottom_frame, text="Idle", text_color="white")
-        self.right_bottom_frame_cam_status_result_label.place(relx=0.55, rely=0.07)
+        self.right_bottom_frame_cam_status_result_label.place(relx=0.75, rely=0.08)
+        self.right_bottom_frame_cam_fps_button = customtkinter.CTkButton(
+            self.right_bottom_frame, text="Check Camera FPS", border_width=1, border_color='white', command=lambda: self._check_camera_fps_event(self.nuc_number))
+        self.right_bottom_frame_cam_fps_button.place(relx=0.175, rely=0.2)
+        self.right_bottom_frame_cam_fps_result_label = customtkinter.CTkLabel(
+            self.right_bottom_frame, text="Null", text_color="white")
+        self.right_bottom_frame_cam_fps_result_label.place(relx=0.75, rely=0.2)
+        
+        
         self.right_bottom_frame_detect_status_label = customtkinter.CTkButton(
             self.right_bottom_frame, text="Check Detection Status", border_width=1, border_color='white', command=lambda: self._check_detection_event(self.nuc_number))
-        self.right_bottom_frame_detect_status_label.place(relx=0.05, rely=0.2)
+        self.right_bottom_frame_detect_status_label.place(relx=0.175, rely=0.34)
         self.right_bottom_frame_detect_result_label = customtkinter.CTkLabel(
             self.right_bottom_frame, text="Idle", text_color="white")
-        self.right_bottom_frame_detect_result_label.place(relx=0.55, rely=0.2)
-        self.right_bottom_frame_calibration_label = customtkinter.CTkLabel(
-            self.right_bottom_frame, text="Calibration Status: ", text_color="white")
-        self.right_bottom_frame_calibration_label.place(relx=0.05, rely=0.35)
-        self.right_bottom_frame_calibration_result_label = customtkinter.CTkLabel(
-            self.right_bottom_frame, text="Completed", text_color="yellow")
-        self.right_bottom_frame_calibration_result_label.place(relx=0.35, rely=0.35)
-        self.right_bottom_frame_logging_label = customtkinter.CTkLabel(
-            self.right_bottom_frame, text="Logging Status: ", text_color="white")
-        self.right_bottom_frame_logging_label.place(relx=0.05, rely=0.45)
-        self.right_bottom_frame_logging_result_label = customtkinter.CTkLabel(
-            self.right_bottom_frame, text="Running", text_color="yellow")
-        self.right_bottom_frame_logging_result_label.place(relx=0.35, rely=0.45)
+        self.right_bottom_frame_detect_result_label.place(relx=0.75, rely=0.34)
+        self.right_bottom_frame_detect_rate_button = customtkinter.CTkButton(
+            self.right_bottom_frame, text="Check Detection Rate", border_width=1, border_color='white', command=lambda: self._check_detection_rate_event(self.nuc_number))
+        self.right_bottom_frame_detect_rate_button.place(relx=0.175, rely=0.46)
+        self.right_bottom_frame_detect_rate_result_label = customtkinter.CTkLabel(
+            self.right_bottom_frame, text="Null", text_color="white")
+        self.right_bottom_frame_detect_rate_result_label.place(relx=0.75, rely=0.46)
+        
+        
+        
+
             
     def _check_camera_event(self, nuc_number) -> None:
         """ routine to check the status of the camera """
@@ -201,6 +207,23 @@ class ClientGUI(customtkinter.CTk):
         else:
             self.right_bottom_frame_cam_status_result_label.configure(text="Running", text_color="yellow")
             rospy.loginfo(f"Camera at NUC {nuc_number} is running..")
+        
+    def _check_camera_fps_event(self, nuc_number) -> None:
+        """ routine to check the fps of the camera """
+        camera_topic_name = f"/nuc{nuc_number}/image_raw"
+        if not self.check_active_topic(camera_topic_name):
+            self.right_bottom_frame_cam_fps_result_label.configure(text="Null", text_color="white")
+            rospy.logerr(f"Camera at NUC {nuc_number} is not running..")
+        else:
+            self.right_bottom_frame_cam_fps_result_label.configure(text="Running", text_color="yellow")
+            rospy.loginfo(f"Camera at NUC {nuc_number} is running..")
+            frequency = get_ros_topic_frequency(camera_topic_name)
+            if frequency is not None:
+                self.right_bottom_frame_cam_fps_result_label.configure(text=f"{frequency} Hz", text_color="yellow")
+                rospy.loginfo(f"Frequency of {camera_topic_name}: {frequency} Hz")
+            else:
+                self.right_bottom_frame_cam_fps_result_label.configure(text="Null", text_color="white")
+                rospy.logerr("Unable to determine the frequency.")
             
     def _check_detection_event(self, nuc_number) -> None:
         """routine to check the status of the detection """
@@ -211,8 +234,22 @@ class ClientGUI(customtkinter.CTk):
         else:
             self.right_bottom_frame_detect_result_label.configure(text="Running", text_color="yellow")
             rospy.loginfo(f"Detection at NUC {nuc_number} is running..")
-            
-
+    def _check_detection_rate_event(self, nuc_number) -> None:
+        """ routine to check the rate of the detection """
+        detection_topic_name = f"/nuc{nuc_number}/fiducial_transforms"
+        if not self.check_active_topic(detection_topic_name):
+            self.right_bottom_frame_detect_rate_result_label.configure(text="Null", text_color="white")
+            rospy.logerr(f"Detection at NUC {nuc_number} is not running..")
+        else:
+            self.right_bottom_frame_detect_rate_result_label.configure(text="Running", text_color="yellow")
+            rospy.loginfo(f"Detection at NUC {nuc_number} is running..")
+            frequency = get_ros_topic_frequency(detection_topic_name)
+            if frequency is not None:
+                self.right_bottom_frame_detect_rate_result_label.configure(text=f"{frequency} Hz", text_color="yellow")
+                rospy.loginfo(f"Frequency of {detection_topic_name}: {frequency} Hz")
+            else:
+                self.right_bottom_frame_detect_rate_result_label.configure(text="Null", text_color="white")
+                rospy.logerr("Unable to determine the frequency.")
 
 
 
@@ -368,7 +405,9 @@ class ClientGUI(customtkinter.CTk):
         try:
             if not is_node_running(f'nuc{nuc_number}/aruco_detect'):
                 detection_start(nuc_number, detect_launch, uuid, self.marker_dim, self.marker_dict)
-                self.right_bottom_frame_detect_result_label.configure(text="Running", text_color="yellow")
+                self._check_detection_event(nuc_number)
+                self._check_detection_rate_event(nuc_number)
+                # self.right_bottom_frame_detect_result_label.configure(text="Running", text_color="yellow")
                 if is_node_running(f'nuc{nuc_number}/aruco_detect'):
                     start_button.configure(fg_color=themes['red'])
                     stop_button.configure(fg_color=themes['green'])
@@ -385,7 +424,9 @@ class ClientGUI(customtkinter.CTk):
                 print('detection node is running, now trying to stop it.. ')
                 detection_stop(nuc_number)
                 if not is_node_running(f'nuc{nuc_number}/aruco_detect'):
-                    self.right_bottom_frame_detect_result_label.configure(text="Idle", text_color="white")
+                    self._check_detection_event(nuc_number)
+                    self._check_detection_rate_event(nuc_number)
+                    # self.right_bottom_frame_detect_result_label.configure(text="Idle", text_color="white")
                     start_button.configure(fg_color=themes[COLOR_SELECT][0])
                     stop_button.configure(fg_color='gray')
             else:
@@ -437,7 +478,10 @@ class ClientGUI(customtkinter.CTk):
             nuc_cam_driver = roslaunch.parent.ROSLaunchParent(self.uuid, roslaunch_file)
             nuc_cam_driver.start()
             self.running_processes[f'nuc{nuc_machine}_driver'] = nuc_cam_driver
-            self.right_bottom_frame_cam_status_result_label.configure(text="Running", text_color="yellow")
+            rospy.sleep(1)
+            self._check_camera_event(nuc_machine)
+            self._check_camera_fps_event(nuc_machine)
+
             # Update button text to indicate that the camera can be stopped
             rospy.loginfo(f'NUC {nuc_machine} Camera started successfully!')
             if show_camera:
@@ -476,7 +520,8 @@ class ClientGUI(customtkinter.CTk):
             try:
                 self.running_processes[f'nuc{nuc_machine}_driver'].shutdown()
                 self.running_processes.pop(f'nuc{nuc_machine}_driver', None)
-                self.right_bottom_frame_cam_status_result_label.configure(text="Idle", text_color="white")
+                self._check_camera_event(nuc_machine)
+                self._check_camera_fps_event(nuc_machine)
                 rospy.loginfo(f'NUC {nuc_machine} Camera stopped successfully!')
             except roslaunch.RLException as excep_camera:
                 rospy.logerr(

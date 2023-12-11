@@ -3,6 +3,7 @@ import rospy
 import roslaunch
 import subprocess
 import socket
+import re
 
 MACHINE_NAME = 'Main Computer'
 themes = {'blue': ("#3B8ED0", "#1F6AA5"),
@@ -12,6 +13,30 @@ themes = {'blue': ("#3B8ED0", "#1F6AA5"),
           }
 # select value of COLOR_SELECT from (0: blue, 1: green, 2: dark-blue)
 COLOR_SELECT = list(themes.keys())[2]
+def get_ros_topic_frequency(topic):
+    # Start the rostopic hz command
+    process = subprocess.Popen(['rostopic', 'hz', topic], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+
+    # Wait a bit to get some output
+    rospy.sleep(0.9)
+
+    # Terminate the process
+    process.terminate()
+
+    # Read the output
+    try:
+        output, _ = process.communicate(timeout=2)
+        output = output.decode('utf-8')
+    except subprocess.TimeoutExpired:
+        process.kill()
+        output, _ = process.communicate()
+
+    # Extract frequency from the output using regular expression
+    match = re.search(r'average rate: ([\d\.]+)', output)
+    if match:
+        return float(match.group(1))
+    else:
+        return None
 def _check_ros_status_function(status_btn):
     active_systems = str()
     nuc1 = check_active_topic(1)
