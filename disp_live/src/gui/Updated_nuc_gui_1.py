@@ -167,24 +167,18 @@ class ClientGUI(customtkinter.CTk):
         self.right_top_frame_label.place(relx=0.65, rely=0.5, anchor="center")
     def _create_right_bottom_frame_content(self) -> None:
         """ System Data Logging Frame Contents """
-        self.right_bottom_frame_ros_status_label = customtkinter.CTkLabel(
-            self.right_bottom_frame, text="ROS Status: ", text_color="white")
-        self.right_bottom_frame_ros_status_label.place(relx=0.05, rely=0.05)
-        self.right_bottom_frame_ros_status_result_label = customtkinter.CTkLabel(
-            self.right_bottom_frame, text="Running", text_color="yellow")
-        self.right_bottom_frame_ros_status_result_label.place(relx=0.35, rely=0.05)
-        self.right_bottom_frame_camera_label = customtkinter.CTkLabel(
-            self.right_bottom_frame, text="Camera Status: ", text_color="white")
-        self.right_bottom_frame_camera_label.place(relx=0.05, rely=0.15)
-        self.right_bottom_frame_camera_result_label = customtkinter.CTkLabel(
-            self.right_bottom_frame, text="Running", text_color="yellow")
-        self.right_bottom_frame_camera_result_label.place(relx=0.35, rely=0.15)
-        self.right_bottom_frame_detection_label = customtkinter.CTkLabel(
-            self.right_bottom_frame, text="Detection Status: ", text_color="white")
-        self.right_bottom_frame_detection_label.place(relx=0.05, rely=0.25)
-        self.right_bottom_frame_detection_result_label = customtkinter.CTkLabel(
-            self.right_bottom_frame, text="Idle", text_color=themes['red'][1])
-        self.right_bottom_frame_detection_result_label.place(relx=0.35, rely=0.25)
+        self.right_bottom_frame_cam_status_label = customtkinter.CTkButton(
+            self.right_bottom_frame, text="Check Camera Status", border_width=1, border_color='white', command=lambda: self._check_camera_event(self.nuc_number))
+        self.right_bottom_frame_cam_status_label.place(relx=0.05, rely=0.07)
+        self.right_bottom_frame_cam_status_result_label = customtkinter.CTkLabel(
+            self.right_bottom_frame, text="Idle", text_color="white")
+        self.right_bottom_frame_cam_status_result_label.place(relx=0.55, rely=0.07)
+        self.right_bottom_frame_detect_status_label = customtkinter.CTkButton(
+            self.right_bottom_frame, text="Check Detection Status", border_width=1, border_color='white')
+        self.right_bottom_frame_detect_status_label.place(relx=0.05, rely=0.2)
+        self.right_bottom_frame_detect_result_label = customtkinter.CTkLabel(
+            self.right_bottom_frame, text="Idle", text_color="white")
+        self.right_bottom_frame_detect_result_label.place(relx=0.55, rely=0.2)
         self.right_bottom_frame_calibration_label = customtkinter.CTkLabel(
             self.right_bottom_frame, text="Calibration Status: ", text_color="white")
         self.right_bottom_frame_calibration_label.place(relx=0.05, rely=0.35)
@@ -198,7 +192,15 @@ class ClientGUI(customtkinter.CTk):
             self.right_bottom_frame, text="Running", text_color="yellow")
         self.right_bottom_frame_logging_result_label.place(relx=0.35, rely=0.45)
             
-
+    def _check_camera_event(self, nuc_number) -> None:
+        """ routine to check the status of the camera """
+        camera_topic_name = f"/nuc{nuc_number}/image_raw"
+        if not self.check_active_topic(camera_topic_name):
+            self.right_bottom_frame_cam_status_result_label.configure(text="Idle", text_color="white")
+            rospy.logerr(f"Camera at NUC {nuc_number} is not running..")
+        else:
+            self.right_bottom_frame_cam_status_result_label.configure(text="Running", text_color="yellow")
+            rospy.loginfo(f"Camera at NUC {nuc_number} is running..")
 
 
 
@@ -422,6 +424,7 @@ class ClientGUI(customtkinter.CTk):
             nuc_cam_driver = roslaunch.parent.ROSLaunchParent(self.uuid, roslaunch_file)
             nuc_cam_driver.start()
             self.running_processes[f'nuc{nuc_machine}_driver'] = nuc_cam_driver
+            self.right_bottom_frame_cam_status_result_label.configure(text="Running", text_color="yellow")
             # Update button text to indicate that the camera can be stopped
             rospy.loginfo(f'NUC {nuc_machine} Camera started successfully!')
             if show_camera:
@@ -443,7 +446,6 @@ class ClientGUI(customtkinter.CTk):
                                                                          fg_color=themes["red"])
                 self.left_top_frame_view_only_nuc_local_cam_button.configure(state='normal',
                                                                         fg_color=themes['green'])
-
         # If camera is running, stop it
         else:
             if show_camera:
@@ -461,6 +463,7 @@ class ClientGUI(customtkinter.CTk):
             try:
                 self.running_processes[f'nuc{nuc_machine}_driver'].shutdown()
                 self.running_processes.pop(f'nuc{nuc_machine}_driver', None)
+                self.right_bottom_frame_cam_status_result_label.configure(text="Idle", text_color="white")
                 rospy.loginfo(f'NUC {nuc_machine} Camera stopped successfully!')
             except roslaunch.RLException as excep_camera:
                 rospy.logerr(
