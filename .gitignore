@@ -10,3 +10,6 @@ ___pycache__/
 build
 *.mvdat
 *.pyc
+disp_live/src/gui/__pycache__/_backend_.cpython-38.pyc
+src/gige_cam_driver/src/gige_cam_driver/__pycache__/mvsdk.cpython-38.pyc
+src/gige_cam_driver/src/gige_cam_driver/__pycache__/mvsdk.cpython-38.pyc
