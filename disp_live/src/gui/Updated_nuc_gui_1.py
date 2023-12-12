@@ -8,7 +8,6 @@ import rospy
 import rospkg
 import roslaunch
 from _backend_ import is_node_running, kill_ros_node, detection_start, detection_stop, get_ros_topic_frequency
-
 themes = {'blue': ("#3B8ED0", "#1F6AA5"),
           'green': ("#2CC985", "#2FA572"),
           'dark-blue': ("#3a7ebf", "#1f538d"),
@@ -184,9 +183,9 @@ class ClientGUI(customtkinter.CTk):
         self.right_bottom_frame_detect_status_label = customtkinter.CTkButton(
             self.right_bottom_frame, text="Check Detection Status", border_width=1, border_color='white', command=lambda: self._check_detection_event(self.nuc_number))
         self.right_bottom_frame_detect_status_label.place(relx=0.175, rely=0.34)
-        self.right_bottom_frame_detect_result_label = customtkinter.CTkLabel(
+        self.right_bottom_frame_detect_status_label = customtkinter.CTkLabel(
             self.right_bottom_frame, text="Idle", text_color="white")
-        self.right_bottom_frame_detect_result_label.place(relx=0.75, rely=0.34)
+        self.right_bottom_frame_detect_status_label.place(relx=0.75, rely=0.34)
         self.right_bottom_frame_detect_rate_button = customtkinter.CTkButton(
             self.right_bottom_frame, text="Check Detection Rate", border_width=1, border_color='white', command=lambda: self._check_detection_rate_event(self.nuc_number))
         self.right_bottom_frame_detect_rate_button.place(relx=0.175, rely=0.46)
@@ -194,6 +193,12 @@ class ClientGUI(customtkinter.CTk):
             self.right_bottom_frame, text="Null", text_color="white")
         self.right_bottom_frame_detect_rate_result_label.place(relx=0.75, rely=0.46)
         
+        self.right_bottom_frame_detect_result_label = customtkinter.CTkButton(
+            self.right_bottom_frame, text="Check Detection Result", border_width=1, border_color='white', command=lambda: self._check_detection_result_event(self.nuc_number))
+        self.right_bottom_frame_detect_result_label.place(relx=0.175, rely=0.58)
+        self.right_bottom_frame_detect_result_ans_label = customtkinter.CTkLabel(
+            self.right_bottom_frame, text="Null", text_color="white")
+        self.right_bottom_frame_detect_result_ans_label.place(relx=0.75, rely=0.58)
         
         
 
@@ -229,10 +234,10 @@ class ClientGUI(customtkinter.CTk):
         """routine to check the status of the detection """
         detection_topic_name = f"/nuc{nuc_number}/fiducial_transforms"
         if not self.check_active_topic(detection_topic_name):
-            self.right_bottom_frame_detect_result_label.configure(text="Idle", text_color="white")
+            self.right_bottom_frame_detect_status_label.configure(text="Idle", text_color="white")
             rospy.logerr(f"Detection at NUC {nuc_number} is not running..")
         else:
-            self.right_bottom_frame_detect_result_label.configure(text="Running", text_color="yellow")
+            self.right_bottom_frame_detect_status_label.configure(text="Running", text_color="yellow")
             rospy.loginfo(f"Detection at NUC {nuc_number} is running..")
     def _check_detection_rate_event(self, nuc_number) -> None:
         """ routine to check the rate of the detection """
@@ -407,7 +412,7 @@ class ClientGUI(customtkinter.CTk):
                 detection_start(nuc_number, detect_launch, uuid, self.marker_dim, self.marker_dict)
                 self._check_detection_event(nuc_number)
                 self._check_detection_rate_event(nuc_number)
-                # self.right_bottom_frame_detect_result_label.configure(text="Running", text_color="yellow")
+                # self.right_bottom_frame_detect_status_label.configure(text="Running", text_color="yellow")
                 if is_node_running(f'nuc{nuc_number}/aruco_detect'):
                     start_button.configure(fg_color=themes['red'])
                     stop_button.configure(fg_color=themes['green'])
@@ -426,7 +431,7 @@ class ClientGUI(customtkinter.CTk):
                 if not is_node_running(f'nuc{nuc_number}/aruco_detect'):
                     self._check_detection_event(nuc_number)
                     self._check_detection_rate_event(nuc_number)
-                    # self.right_bottom_frame_detect_result_label.configure(text="Idle", text_color="white")
+                    # self.right_bottom_frame_detect_status_label.configure(text="Idle", text_color="white")
                     start_button.configure(fg_color=themes[COLOR_SELECT][0])
                     stop_button.configure(fg_color='gray')
             else:

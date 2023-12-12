@@ -1,37 +1,21 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-import subprocess
+#!/usr/bin/env python
 import rospy
-import re
+from fiducial_msgs.msg import FiducialTransformArray
 
-def get_ros_topic_frequency(topic):
-    # Start the rostopic hz command
-    process = subprocess.Popen(['rostopic', 'hz', topic], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+def fiducial_transforms_callback(data):
+    for transform in data.transforms:
+        fiducial_id = transform.fiducial_id
+        if fiducial_id is not None:
+            print(f"Fiducial ID Detected: {fiducial_id}")
+        else:
+            print("Fiducial ID Not Detected")
 
-    # Wait a bit to get some output
-    rospy.sleep(0.9)
+def listener():
+    rospy.init_node('fiducial_transforms_listener', anonymous=True)
+    rospy.Subscriber('/nuc1/fiducial_transforms', FiducialTransformArray, fiducial_transforms_callback)
+    rospy.spin()
 
-    # Terminate the process
-    process.terminate()
-
-    # Read the output
-    try:
-        output, _ = process.communicate(timeout=2)
-        output = output.decode('utf-8')
-    except subprocess.TimeoutExpired:
-        process.kill()
-        output, _ = process.communicate()
-
-    # Extract frequency from the output using regular expression
-    match = re.search(r'average rate: ([\d\.]+)', output)
-    if match:
-        return float(match.group(1))
-    else:
-        return None
-
-# Example usage
-frequency = get_ros_topic_frequency('/nuc2/image_raw')
-if frequency is not None:
-    print(f"Frequency of /nuc2/image_raw: {frequency} Hz")
-else:
-    print("Unable to determine the frequency.")
+if __name__ == '__main__':
+    listener()
