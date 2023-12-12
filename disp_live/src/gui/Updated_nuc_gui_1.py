@@ -7,6 +7,9 @@ import customtkinter
 import rospy
 import rospkg
 import roslaunch
+import threading
+from fiducial_msgs.msg import FiducialTransformArray
+
 from _backend_ import is_node_running, kill_ros_node, detection_start, detection_stop, get_ros_topic_frequency
 themes = {'blue': ("#3B8ED0", "#1F6AA5"),
           'green': ("#2CC985", "#2FA572"),
@@ -29,7 +32,12 @@ class ClientGUI(customtkinter.CTk):
         """
         super().__init__()
         self.nuc_number = '1'
+        
         rospy.init_node(f"nuc{self.nuc_number}_gui", anonymous=False)
+        
+        self.message_timeout = 0.5  # 0.5 second
+        self.timeout_timer = None
+        self.start_ros_thread()
         self.package = 'gige_cam_driver'
         # ********************************************************************************
         # Path management for Launch files
@@ -84,6 +92,8 @@ class ClientGUI(customtkinter.CTk):
         self.right_top_frame_camera_label = None
         self.right_top_frame_camera_result_label = None
         self.right_bottom_frame = None
+        self.right_bottom_frame_detect_result_ans_label =  tk.Label(self, text="Initializing...")
+        self.right_bottom_frame_detect_result_ans_label.pack()
         self.middle_top_frame = customtkinter.CTkFrame(self.left_frame)
         self.middle_top_frame_label = customtkinter.CTkLabel(self.middle_top_frame)
         self.left_button_frame_calib_update_label = customtkinter.CTkLabel(self.left_bottom_frame)
@@ -94,6 +104,31 @@ class ClientGUI(customtkinter.CTk):
         self.middle_top_frame_start_nuc3_cam_button = customtkinter.CTkButton(
             self.middle_top_frame)
         self._create_widgets()
+
+    def start_ros_thread(self) -> None:
+        threading.Thread(target=self.fiducial_transforms_listener, daemon=True).start()
+    def fiducial_transforms_listener(self):
+        rospy.Subscriber(f"/nuc{self.nuc_number}/fiducial_transforms", FiducialTransformArray, self.fiducial_transforms_callback)
+        rospy.spin()
+    def fiducial_transforms_callback(self, data):
+        # Reset the timer whenever a message is received
+        if self.timeout_timer:
+            self.timeout_timer.cancel()
+        self.timeout_timer = threading.Timer(self.message_timeout, self.no_message_received)
+        self.timeout_timer.start()
+
+        detected = any(transform.fiducial_id is not None for transform in data.transforms)
+        self.right_bottom_frame_detect_result_ans_label.after(0, lambda: self.update_label(detected))
+
+    def no_message_received(self):
+        # Function to call when no messages are received within the timeout
+        self.right_bottom_frame_detect_result_ans_label.after(0, lambda: self.update_label(False))
+
+    def update_label(self, detected):
+        if detected:
+            self.right_bottom_frame_detect_result_ans_label.configure(text="Detected", text_color=themes['green'][0])
+        else:
+            self.right_bottom_frame_detect_result_ans_label.configure(text="Not Detected", text_color="white")
 
     def destroy_routine(self) -> None:
         """_summary_"""
@@ -167,38 +202,38 @@ class ClientGUI(customtkinter.CTk):
     def _create_right_bottom_frame_content(self) -> None:
         """ System Data Logging Frame Contents """
         self.right_bottom_frame_cam_status_label = customtkinter.CTkButton(
-            self.right_bottom_frame, text="Check Camera Status", border_width=1, border_color='white', command=lambda: self._check_camera_event(self.nuc_number))
+            self.right_bottom_frame, text="Camera Status", border_width=1, border_color='white', command=lambda: self._check_camera_event(self.nuc_number))
         self.right_bottom_frame_cam_status_label.place(relx=0.175, rely=0.08)
         self.right_bottom_frame_cam_status_result_label = customtkinter.CTkLabel(
             self.right_bottom_frame, text="Idle", text_color="white")
-        self.right_bottom_frame_cam_status_result_label.place(relx=0.75, rely=0.08)
+        self.right_bottom_frame_cam_status_result_label.place(relx=0.7, rely=0.08)
         self.right_bottom_frame_cam_fps_button = customtkinter.CTkButton(
-            self.right_bottom_frame, text="Check Camera FPS", border_width=1, border_color='white', command=lambda: self._check_camera_fps_event(self.nuc_number))
+            self.right_bottom_frame, text="Camera FPS", border_width=1, border_color='white', command=lambda: self._check_camera_fps_event(self.nuc_number))
         self.right_bottom_frame_cam_fps_button.place(relx=0.175, rely=0.2)
         self.right_bottom_frame_cam_fps_result_label = customtkinter.CTkLabel(
             self.right_bottom_frame, text="Null", text_color="white")
-        self.right_bottom_frame_cam_fps_result_label.place(relx=0.75, rely=0.2)
+        self.right_bottom_frame_cam_fps_result_label.place(relx=0.7, rely=0.2)
         
         
         self.right_bottom_frame_detect_status_label = customtkinter.CTkButton(
-            self.right_bottom_frame, text="Check Detection Status", border_width=1, border_color='white', command=lambda: self._check_detection_event(self.nuc_number))
+            self.right_bottom_frame, text="Detection Status", border_width=1, border_color='white', command=lambda: self._check_detection_event(self.nuc_number))
         self.right_bottom_frame_detect_status_label.place(relx=0.175, rely=0.34)
         self.right_bottom_frame_detect_status_label = customtkinter.CTkLabel(
             self.right_bottom_frame, text="Idle", text_color="white")
-        self.right_bottom_frame_detect_status_label.place(relx=0.75, rely=0.34)
+        self.right_bottom_frame_detect_status_label.place(relx=0.7, rely=0.34)
         self.right_bottom_frame_detect_rate_button = customtkinter.CTkButton(
-            self.right_bottom_frame, text="Check Detection Rate", border_width=1, border_color='white', command=lambda: self._check_detection_rate_event(self.nuc_number))
+            self.right_bottom_frame, text="Detection Rate", border_width=1, border_color='white', command=lambda: self._check_detection_rate_event(self.nuc_number))
         self.right_bottom_frame_detect_rate_button.place(relx=0.175, rely=0.46)
         self.right_bottom_frame_detect_rate_result_label = customtkinter.CTkLabel(
             self.right_bottom_frame, text="Null", text_color="white")
-        self.right_bottom_frame_detect_rate_result_label.place(relx=0.75, rely=0.46)
+        self.right_bottom_frame_detect_rate_result_label.place(relx=0.7, rely=0.46)
         
         self.right_bottom_frame_detect_result_label = customtkinter.CTkButton(
-            self.right_bottom_frame, text="Check Detection Result", border_width=1, border_color='white', command=lambda: self._check_detection_result_event(self.nuc_number))
+            self.right_bottom_frame, text="Detection Result", border_width=1, border_color='white', command=lambda: self._check_detection_result_event(self.nuc_number))
         self.right_bottom_frame_detect_result_label.place(relx=0.175, rely=0.58)
         self.right_bottom_frame_detect_result_ans_label = customtkinter.CTkLabel(
             self.right_bottom_frame, text="Null", text_color="white")
-        self.right_bottom_frame_detect_result_ans_label.place(relx=0.75, rely=0.58)
+        self.right_bottom_frame_detect_result_ans_label.place(relx=0.7, rely=0.58)
         
         
 
