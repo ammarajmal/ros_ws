@@ -106,7 +106,7 @@ def main():
     rospy.init_node('camera_node', anonymous=True)
     
     # Setup CameraInfoManager
-    camera_info
+    
     
     image_pub = rospy.Publisher("/camera/image_raw", Image, queue_size=10)
     bridge = CvBridge()
