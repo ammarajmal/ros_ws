@@ -1,14 +1,13 @@
 #!/usr/bin/env python3
 import rospy
 import numpy as np
-from camera_info_manager import CameraInfoManager
 from gige_cam_driver import  (CameraInit, CameraException, CameraGetCapability, CameraImageProcess,
 						      CAMERA_MEDIA_TYPE_MONO8, CameraSetIspOutFormat, CameraReleaseImageBuffer,
 							  CAMERA_MEDIA_TYPE_BGR8, CameraAlignMalloc, CameraGetImageBuffer, c_ubyte,
 							  CameraSetTriggerMode, CameraSetAeState, CameraAlignFree, CAMERA_STATUS_TIME_OUT,
 							  CameraSetExposureTime, CameraPlay, CameraUnInit, CameraEnumerateDevice)
 from sensor_msgs.msg import Image, CameraInfo
-
+from camera_info_manager import CameraInfoManager
 from cv_bridge import CvBridge
 import cv2
 
