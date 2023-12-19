@@ -1,0 +1,55 @@
+camera_matrix:
+  cols: 3
+  data:
+  - 4907.629108870394
+  - 0.0
+  - 319.5
+  - 0.0
+  - 4907.629108870394
+  - 239.5
+  - 0.0
+  - 0.0
+  - 1.0
+  rows: 3
+camera_name: nuc3
+distortion_coefficients:
+  cols: 5
+  data:
+  - -0.7752545318151418
+  - -271.6436400939419
+  - -0.01362392039105626
+  - 0.01508825418766288
+  - 0.0
+  rows: 1
+distortion_model: plumb_bob
+image_height: 480
+image_width: 640
+projection_matrix:
+  cols: 4
+  data:
+  - 4858.5771484375
+  - 0.0
+  - 319.9728025857912
+  - 0.0
+  - 0.0
+  - 4880.47314453125
+  - 238.5090364763928
+  - 0.0
+  - 0.0
+  - 0.0
+  - 1.0
+  - 0.0
+  rows: 3
+rectification_matrix:
+  cols: 3
+  data:
+  - 1.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 1.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 1.0
+  rows: 3

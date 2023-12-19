@@ -1,0 +1,51 @@
+camera_matrix:
+  cols: 3
+  data:
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  rows: 3
+camera_name: nuc1
+distortion_coefficients:
+  cols: 1
+  data:
+  - 0.0
+  rows: 1
+distortion_model: ''
+image_height: 0
+image_width: 0
+projection_matrix:
+  cols: 4
+  data:
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  rows: 3
+rectification_matrix:
+  cols: 3
+  data:
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  rows: 3

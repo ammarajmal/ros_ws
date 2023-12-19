@@ -4,15 +4,26 @@ import rospy
 import cv2
 import mvsdk
 import numpy as np
-from sensor_msgs.msg import Image
+from sensor_msgs.msg import Image, CameraInfo
 from cv_bridge import CvBridge
-
+from camera_info_manager import CameraInfoManager
 class CameraNode:
     def __init__(self):
-        rospy.init_node('fast_camera_node', anonymous=True)
-        self.image_pub = rospy.Publisher("/camera/image_raw", Image, queue_size=10)
+        rospy.init_node('fast_camera_node', anonymous=False)
+        self.image_pub = rospy.Publisher("~image_raw", Image, queue_size=10)
+        self.camera_info_publisher = rospy.Publisher("~camera_info", CameraInfo, queue_size=10)
+        self.device_id = rospy.get_param("~device_id", 0)
+        self.calibration_file = rospy.get_param("~calibration_file", "")
+        self.camera_manager = rospy.get_param("~camera_manager", "opencv")
+        
         self.bridge = CvBridge()
         self.rate = rospy.Rate(125)
+        self.fast_camera = None
+        self.frame_buffer = None
+        # print('##############################################################################################', self.calibration_file, '##############################################################################################')
+        print(f'CONTENTS OF THE CAMERA_INFO MANAGER {self.calibration_file}')
+        self.camera_info_manager = CameraInfoManager(cname=self.camera_manager,url=f'file://{self.calibration_file}' ,namespace=self.camera_manager)
+        self.camera_info_manager.loadCameraInfo()
         self.initialize_camera()
 
     def initialize_camera(self):
@@ -31,7 +42,7 @@ class CameraNode:
         print(f'Camera Port Details: {device_info.acPortType.decode("utf-8")}')
         print(f'Camera Instance: {device_info.uInstance}')
         print('------------------')
-        rospy.loginfo(device_info)
+        # rospy.loginfo(device_info)
         self.setup_camera(device_info)
 
     def setup_camera(self, device_info):
@@ -59,6 +70,8 @@ class CameraNode:
             if frame is not None:
                 self.publish_frame(frame)
             self.rate.sleep()
+            if rospy.is_shutdown():
+                self.cleanup()
 
     def capture_frame(self):
         try:
@@ -73,13 +86,22 @@ class CameraNode:
             return None
 
     def publish_frame(self, frame):
+        camera_info = self.camera_info_manager.getCameraInfo()
+        camera_info.header.stamp = rospy.Time.now()
+        camera_info.header.frame_id = self.camera_manager
         ros_image = self.bridge.cv2_to_imgmsg(frame, "bgr8")
+        ros_image.header.stamp = rospy.Time.now()
+        ros_image.header.frame_id = self.camera_manager
+
+        self.camera_info_publisher.publish(camera_info)
         self.image_pub.publish(ros_image)
 
     def cleanup(self):
         if self.fast_camera:
             mvsdk.CameraUnInit(self.fast_camera)
+            self.fast_camera = None
             mvsdk.CameraAlignFree(self.frame_buffer)
+            self.frame_buffer = None
         cv2.destroyAllWindows()
 
 if __name__ == '__main__':
