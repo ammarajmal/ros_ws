@@ -4,11 +4,11 @@
     <arg name="calib_file" default="" />
     
         <node   name="$(arg camera_name)"
-                pkg="fast_cam"
+                pkg="fcam"
                 type="fast_camera_node.py"
                 output="screen">
             <param name="device_id" value="$(arg device_id)" />
             <param name="camera_manager" value="$(arg camera_name)" />
-            <param name="calibration_file" value="$(find fast_cam)/config/camera_info_$(arg calib_file).yaml"/>
+            <param name="calibration_file" value="$(find fcam)/config/camera_info_$(arg calib_file).yaml"/>
     </node>
 </launch>

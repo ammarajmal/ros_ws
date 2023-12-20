@@ -31,9 +31,22 @@ class CameraNode:
         if not device_list:
             rospy.loginfo("No camera was found!")
             return
-
-        device_info = device_list[0]
-        
+        if self.device_id >= len(device_list) and self.device_id < 0:
+            rospy.loginfo(f"Invalid device id: {self.device_id}")
+            return
+        if len(device_list) == 1:
+            rospy.loginfo("Only one camera was found!")
+        if len(device_list) ==2:
+            rospy.loginfo("Only Two cameras were found!")
+        if len(device_list) ==3:
+            rospy.loginfo("Only three cameras were found!")
+        if len(device_list) > 0:
+            rospy.loginfo(f"Found {len(device_list)} cameras, Opening Camera with device {self.device_id} id.")
+        print('------------------')
+        rospy.logdebug(f"Device list: {device_list}")
+        rospy.logdebug(f"Device info: {device_list[self.device_id]}")
+        print('------------------')
+        device_info = device_list[self.device_id]
         print('------------------')
         print(f'Camera Series: {device_info.acProductSeries.decode("utf-8")}')
         print(f'Camera Name: {device_info.acProductName.decode("utf-8")}')
@@ -41,8 +54,10 @@ class CameraNode:
         print(f'Camera Link Name: {device_info.acLinkName.decode("utf-8")}')
         print(f'Camera Port Details: {device_info.acPortType.decode("utf-8")}')
         print(f'Camera Instance: {device_info.uInstance}')
-        print('------------------')
+        print(f'Camera Serial Number: {device_info.acSn.decode("utf-8")}')
         # rospy.loginfo(device_info)
+        print('------------------')
+        
         self.setup_camera(device_info)
 
     def setup_camera(self, device_info):
