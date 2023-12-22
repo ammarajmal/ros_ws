@@ -1,16 +1,8 @@
 **/*.bag
 .catkin_tools/
-**/devel_manifest.txt
-#devel_collisions.*
-*.txt
 vscode/
 ___pycache__/
 *.mvdat
-
-
-
-# Created by https://www.toptal.com/developers/gitignore/api/ros,python,c,c++,cmake
-# Edit at https://www.toptal.com/developers/gitignore?templates=ros,python,c,c++,cmake
 
 ### C ###
 # Prerequisites
@@ -57,46 +49,9 @@ ___pycache__/
 *.idb
 *.pdb
 
-# Kernel Module Compile Results
-*.mod*
-*.cmd
-.tmp_versions/
-modules.order
-Module.symvers
-Mkfile.old
-dkms.conf
-
-### C++ ###
-# Prerequisites
-
-# Compiled Object files
-*.slo
-
-# Precompiled Headers
-
-# Compiled Dynamic libraries
-
-# Fortran module files
-*.mod
-*.smod
-
-# Compiled Static libraries
-*.lai
-
-# Executables
 
 ### CMake ###
-CMakeLists.txt.user
 CMakeCache.txt
-CMakeFiles
-CMakeScripts
-Testing
-Makefile
-cmake_install.cmake
-install_manifest.txt
-compile_commands.json
-CTestTestfile.cmake
-_deps
 
 ### CMake Patch ###
 # External projects
@@ -140,138 +95,9 @@ MANIFEST
 pip-log.txt
 pip-delete-this-directory.txt
 
-# Unit test / coverage reports
-htmlcov/
-.tox/
-.nox/
-.coverage
-.coverage.*
-.cache
-nosetests.xml
-coverage.xml
-*.cover
-*.py,cover
-.hypothesis/
-.pytest_cache/
-cover/
-
-# Translations
-*.mo
-*.pot
-
-# Django stuff:
-*.log
-local_settings.py
-db.sqlite3
-db.sqlite3-journal
-
-# Flask stuff:
-instance/
-.webassets-cache
-
-# Scrapy stuff:
-.scrapy
-
-# Sphinx documentation
-docs/_build/
-
-# PyBuilder
-.pybuilder/
-target/
-
-# Jupyter Notebook
-.ipynb_checkpoints
-
-# IPython
-profile_default/
-ipython_config.py
-
-# pyenv
-#   For a library or package, you might want to ignore these files since the code is
-#   intended to run in multiple environments; otherwise, check them in:
-# .python-version
-
-# pipenv
-#   According to pypa/pipenv#598, it is recommended to include Pipfile.lock in version control.
-#   However, in case of collaboration, if having platform-specific dependencies or dependencies
-#   having no cross-platform support, pipenv may install dependencies that don't work, or not
-#   install all needed dependencies.
-#Pipfile.lock
-
-# poetry
-#   Similar to Pipfile.lock, it is generally recommended to include poetry.lock in version control.
-#   This is especially recommended for binary packages to ensure reproducibility, and is more
-#   commonly ignored for libraries.
-#   https://python-poetry.org/docs/basic-usage/#commit-your-poetrylock-file-to-version-control
-#poetry.lock
-
-# pdm
-#   Similar to Pipfile.lock, it is generally recommended to include pdm.lock in version control.
-#pdm.lock
-#   pdm stores project-wide configurations in .pdm.toml, but it is recommended to not include it
-#   in version control.
-#   https://pdm.fming.dev/#use-with-ide
-.pdm.toml
-
 # PEP 582; used by e.g. github.com/David-OConnor/pyflow and github.com/pdm-project/pdm
 __pypackages__/
 
-# Celery stuff
-celerybeat-schedule
-celerybeat.pid
-
-# SageMath parsed files
-*.sage.py
-
-# Environments
-.env
-.venv
-env/
-venv/
-ENV/
-env.bak/
-venv.bak/
-
-# Spyder project settings
-.spyderproject
-.spyproject
-
-# Rope project settings
-.ropeproject
-
-# mkdocs documentation
-/site
-
-# mypy
-.mypy_cache/
-.dmypy.json
-dmypy.json
-
-# Pyre type checker
-.pyre/
-
-# pytype static type analyzer
-.pytype/
-
-# Cython debug symbols
-cython_debug/
-
-# PyCharm
-#  JetBrains specific template is maintained in a separate JetBrains.gitignore that can
-#  be found at https://github.com/github/gitignore/blob/main/Global/JetBrains.gitignore
-#  and can be added to the global gitignore or merged into this file.  For a more nuclear
-#  option (not recommended) you can uncomment the following to ignore the entire idea folder.
-#.idea/
-
-### Python Patch ###
-# Poetry local configuration file - https://python-poetry.org/docs/configuration/#local-configuration
-poetry.toml
-
-# ruff
-.ruff_cache/
-
-# LSP config files
-pyrightconfig.json
 
 ### ROS ###
 devel/
@@ -279,14 +105,6 @@ logs/
 bin/
 msg_gen/
 srv_gen/
-msg/*Action.msg
-msg/*ActionFeedback.msg
-msg/*ActionGoal.msg
-msg/*ActionResult.msg
-msg/*Feedback.msg
-msg/*Goal.msg
-msg/*Result.msg
-msg/_*.py
 build_isolated/
 devel_isolated/
 
@@ -299,48 +117,14 @@ devel_isolated/
 *.dox
 *.wikidoc
 
-# eclipse stuff
-.project
-.cproject
-
-# qcreator stuff
-
-srv/_*.py
-*.pcd
-*.pyc
-qtcreator-*
-*.user
-
-/planning/cfg
-/planning/docs
-/planning/src
-
-*~
-
-# Emacs
-.#*
 
 # Catkin custom files
 CATKIN_IGNORE
 
-# End of https://www.toptal.com/developers/gitignore/api/ros,python,c,c++,cmake
-
-.catkin_tools/profiles/default/packages/aruco_detect/devel_manifest.txt
-.catkin_tools/profiles/default/packages/camera_calibration/devel_manifest.txt
-.catkin_tools/profiles/default/packages/camera_info_manager_py/devel_manifest.txt
-.catkin_tools/profiles/default/packages/cpp_ex/devel_manifest.txt
-.catkin_tools/profiles/default/packages/depth_image_proc/devel_manifest.txt
-.catkin_tools/profiles/default/packages/fiducial_msgs/devel_manifest.txt
-.catkin_tools/profiles/default/packages/gige_cam_driver/devel_manifest.txt
-.catkin_tools/profiles/default/packages/image_pipeline/devel_manifest.txt
-.catkin_tools/profiles/default/packages/image_proc/devel_manifest.txt
-.catkin_tools/profiles/default/packages/image_publisher/devel_manifest.txt
-.catkin_tools/profiles/default/packages/image_rotate/devel_manifest.txt
-.catkin_tools/profiles/default/packages/image_view/devel_manifest.txt
-.catkin_tools/profiles/default/packages/python_ex/devel_manifest.txt
-.catkin_tools/profiles/default/packages/stereo_image_proc/devel_manifest.txt
-.catkin_tools/profiles/default/packages/sync/devel_manifest.txt
-.catkin_tools/profiles/default/packages/tesol/devel_manifest.txt
-.catkin_tools/profiles/default/packages/test_pkg/devel_manifest.txt
-.catkin_tools/profiles/default/packages/usb_cam/devel_manifest.txt
-.catkin_tools/profiles/default/packages/vision_msgs/devel_manifest.txt
+devel_manifest.txt
+__pycache__
+_backend_.cpython-38.pyc
+c_cpp_properties.json
+.vscode/
+mvsdk.cpython-38.pyc
+.cpython-38.pyc
