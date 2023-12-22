@@ -123,4 +123,22 @@ CATKIN_IGNORE
 
 # End of https://www.toptal.com/developers/gitignore/api/ros,python,c,c++,cmake
 
-
+.catkin_tools/profiles/default/packages/aruco_detect/devel_manifest.txt
+.catkin_tools/profiles/default/packages/camera_calibration/devel_manifest.txt
+.catkin_tools/profiles/default/packages/camera_info_manager_py/devel_manifest.txt
+.catkin_tools/profiles/default/packages/cpp_ex/devel_manifest.txt
+.catkin_tools/profiles/default/packages/depth_image_proc/devel_manifest.txt
+.catkin_tools/profiles/default/packages/fiducial_msgs/devel_manifest.txt
+.catkin_tools/profiles/default/packages/gige_cam_driver/devel_manifest.txt
+.catkin_tools/profiles/default/packages/image_pipeline/devel_manifest.txt
+.catkin_tools/profiles/default/packages/image_proc/devel_manifest.txt
+.catkin_tools/profiles/default/packages/image_publisher/devel_manifest.txt
+.catkin_tools/profiles/default/packages/image_rotate/devel_manifest.txt
+.catkin_tools/profiles/default/packages/image_view/devel_manifest.txt
+.catkin_tools/profiles/default/packages/python_ex/devel_manifest.txt
+.catkin_tools/profiles/default/packages/stereo_image_proc/devel_manifest.txt
+.catkin_tools/profiles/default/packages/sync/devel_manifest.txt
+.catkin_tools/profiles/default/packages/tesol/devel_manifest.txt
+.catkin_tools/profiles/default/packages/test_pkg/devel_manifest.txt
+.catkin_tools/profiles/default/packages/usb_cam/devel_manifest.txt
+.catkin_tools/profiles/default/packages/vision_msgs/devel_manifest.txt
