@@ -13,38 +13,76 @@ class CameraNode:
         self.image_pub = rospy.Publisher("~image_raw", Image, queue_size=10)
         self.camera_info_publisher = rospy.Publisher("~camera_info", CameraInfo, queue_size=10)
         self.device_id = rospy.get_param("~device_id", 0)
+        self.device_ip = rospy.get_param("~device_ip", "192.168.1.101")
         self.calibration_file = rospy.get_param("~calibration_file", "")
         self.camera_manager = rospy.get_param("~camera_manager", "opencv")
         
+        
+        
+        self.missed_frames = 0
         self.bridge = CvBridge()
         self.rate = rospy.Rate(125)
         self.fast_camera = None
         self.frame_buffer = None
-        # print('##############################################################################################', self.calibration_file, '##############################################################################################')
-        print(f'CONTENTS OF THE CAMERA_INFO MANAGER {self.calibration_file}')
         self.camera_info_manager = CameraInfoManager(cname=self.camera_manager,url=f'file://{self.calibration_file}' ,namespace=self.camera_manager)
         self.camera_info_manager.loadCameraInfo()
         self.initialize_camera()
+        self.set_snapshot_resolution(640, 480)
+        rospy.sleep(1)
+        self.get_snapshot_resolution()
+        
+    def set_snapshot_resolution(self, width, height):
+        resolution = mvsdk.tSdkImageResolution()  # Create a resolution structure
+        resolution.iWidth = width
+        resolution.iHeight = height
+        mvsdk.CameraSetResolutionForSnap(self.fast_camera, resolution)
+
+
+    def get_snapshot_resolution(self):
+        if self.fast_camera is not None:
+            try:
+                resolution = mvsdk.CameraGetResolutionForSnap(self.fast_camera)
+                if resolution.iWidth > 0 and resolution.iHeight > 0:
+                    rospy.loginfo(f"Current snapshot resolution: Width: {resolution.iWidth}, Height: {resolution.iHeight}")
+                else:
+                    rospy.logwarn("Snapshot resolution is not set or camera is not responding.!!!")
+            except Exception as e:
+                rospy.logerr(f"Error getting snapshot resolution: {e}")
+        else:
+            rospy.logwarn("Camera is not initialized.")
+
+
+
 
     def initialize_camera(self):
         device_list = mvsdk.CameraEnumerateDevice()
         if not device_list:
             rospy.loginfo("No camera was found!")
             return
+        rospy.loginfo(f"Found {len(device_list)} cameras.")
+        rospy.loginfo(f"Using camera {self.device_id + 1}/2.")
+        
+        
 
         device_info = device_list[0]
+        # device_info.
         
         print('------------------')
         print(f'Camera Series: {device_info.acProductSeries.decode("utf-8")}')
         print(f'Camera Name: {device_info.acProductName.decode("utf-8")}')
         print(f'Camera Model: {device_info.acFriendlyName.decode("utf-8")}')
         print(f'Camera Link Name: {device_info.acLinkName.decode("utf-8")}')
+        print(f'Camera IP Address: {device_info.acPortType.decode("utf-8").split("-")[0]}')
         print(f'Camera Port Details: {device_info.acPortType.decode("utf-8")}')
+        print(f'Camera Serial: {device_info.acSn.decode("utf-8")}')
         print(f'Camera Instance: {device_info.uInstance}')
+        camera_ip = device_info.GetPortType()
+        rospy.loginfo(camera_ip.split("-")[0])
+        rospy.loginfo(f'Camera IP Address: {self.device_ip}')
         print('------------------')
-        # rospy.loginfo(device_info)
         self.setup_camera(device_info)
-
+        # print(f'Resolution: {self.get_snapshot_resolution()}')
+Curren
     def setup_camera(self, device_info):
         try:
             self.fast_camera = mvsdk.CameraInit(device_info, -1, -1)
@@ -56,6 +94,8 @@ class CameraNode:
             mvsdk.CameraSetExposureTime(self.fast_camera, 8000)  # 8ms
             mvsdk.CameraPlay(self.fast_camera)
             self.allocate_frame_buffer(cap)
+            rospy.loginfo(f'Width: {cap.sResolutionRange.iWidthMax} x Height {cap.sResolutionRange.iHeightMax}')
+            
         except mvsdk.CameraException as e:
             rospy.logerr(f"Camera setup failed: {e}")
             rospy.signal_shutdown("Camera setup failed.")
@@ -69,8 +109,13 @@ class CameraNode:
             frame = self.capture_frame()
             if frame is not None:
                 self.publish_frame(frame)
+            else:
+                self.missed_frames += 1
+                rospy.logerr("Frame capture failed.")
             self.rate.sleep()
             if rospy.is_shutdown():
+                rospy.loginfo(f"Missed {self.missed_frames} frames.")
+                rospy.loginfo("Shutting down...")
                 self.cleanup()
 
     def capture_frame(self):

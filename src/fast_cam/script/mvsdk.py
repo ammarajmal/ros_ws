@@ -377,19 +377,18 @@ class MvStructure(Structure):
         memmove(byref(obj), byref(self), sizeof(self))
         return obj
 # Camera device information, read-only information, do not modify
-# 相机的设备信息，只读信息，请勿修改
 
 
 class tSdkCameraDevInfo(MvStructure):
-    _fields_ = [("acProductSeries", c_char * 32),  # 产品系列
-                ("acProductName", c_char * 32),  # 产品名称
-                ("acFriendlyName", c_char * 32),  # 产品昵称
-                ("acLinkName", c_char * 32),  # 内核符号连接名，内部使用
-                ("acDriverVersion", c_char * 32),  # 驱动版本
-                ("acSensorType", c_char * 32),  # sensor类型
-                ("acPortType", c_char * 32),  # 接口类型
-                ("acSn", c_char * 32),  # 产品唯一序列号
-                ("uInstance", c_uint)]  # 该型号相机在该电脑上的实例索引号，用于区分同型号多相机
+    _fields_ = [("acProductSeries", c_char * 32), # Product series
+                ("acProductName", c_char * 32), # product name
+                ("acFriendlyName", c_char * 32), # Product nickname
+                ("acLinkName", c_char * 32), # Kernel symbolic link name, used internally
+                ("acDriverVersion", c_char * 32), # Driver version
+                ("acSensorType", c_char * 32), # sensor type
+                ("acPortType", c_char * 32), #Interface type
+                ("acSn", c_char * 32), # Product unique serial number
+                ("uInstance", c_uint)] # The instance index number of this model of camera on this computer, used to distinguish multiple cameras of the same model
 
     def GetProductSeries(self):
         return _string_buffer_to_str(self.acProductSeries)
@@ -415,292 +414,271 @@ class tSdkCameraDevInfo(MvStructure):
     def GetSn(self):
         return _string_buffer_to_str(self.acSn)
 
-# 相机的分辨率设定范围
+# Camera resolution setting range
 
 
 class tSdkResolutionRange(MvStructure):
-    _fields_ = [("iHeightMax", c_int),  # 图像最大高度
-                ("iHeightMin", c_int),  # 图像最小高度
-                ("iWidthMax", c_int),  # 图像最大宽度
-                ("iWidthMin", c_int),  # 图像最小宽度
-                # SKIP模式掩码，为0，表示不支持SKIP 。bit0为1,表示支持SKIP 2x2 bit1为1，表示支持SKIP
+    _fields_ = [("iHeightMax", c_int), # Maximum image height
+                ("iHeightMin", c_int), # Minimum height of image
+                ("iWidthMax", c_int), # Maximum image width
+                ("iWidthMin", c_int), # Minimum image width
+                # SKIP mode mask, if it is 0, it means SKIP is not supported. Bit0 is 1, indicating support for SKIP 2x2 Bit1 is 1, indicating support for SKIP
                 # 3x3....
                 ("uSkipModeMask", c_uint),
-                # BIN(求和)模式掩码，为0，表示不支持BIN 。bit0为1,表示支持BIN 2x2 bit1为1，表示支持BIN
+                # BIN (summation) mode mask, if it is 0, it means BIN is not supported. Bit0 is 1, which means BIN 2x2 is supported. Bit1 is 1, which means BIN is supported.
                 # 3x3....
                 ("uBinSumModeMask", c_uint),
-                # BIN(求均值)模式掩码，为0，表示不支持BIN 。bit0为1,表示支持BIN 2x2 bit1为1，表示支持BIN
+                # BIN (average) mode mask, if it is 0, it means BIN is not supported. Bit0 is 1, which means BIN 2x2 is supported. Bit1 is 1, which means BIN is supported.
                 # 3x3....
                 ("uBinAverageModeMask", c_uint),
-                ("uResampleMask", c_uint)]  # 硬件重采样的掩码
+                ("uResampleMask", c_uint)] # Hardware resampling mask
 
-# 相机的分辨率描述
+# Camera resolution description
 
 
 class tSdkImageResolution(MvStructure):
     _fields_ = [
-        # 索引号，[0,N]表示预设的分辨率(N 为预设分辨率的最大个数，一般不超过20),OXFF 表示自定义分辨率(ROI)
+        # Index number, [0,N] represents the preset resolution (N is the maximum number of preset resolutions, generally not more than 20), OXFF represents a custom resolution (ROI)
         ("iIndex", c_int),
-        ("acDescription", c_char * 32),   # 该分辨率的描述信息。仅预设分辨率时该信息有效。自定义分辨率可忽略该信息
-        # BIN(求和)的模式,范围不能超过tSdkResolutionRange中uBinSumModeMask
+        ("acDescription", c_char * 32), #Description information of this resolution. This information is only valid for preset resolutions. Custom resolution can ignore this information
+        # BIN (summation) mode, the range cannot exceed uBinSumModeMask in tSdkResolutionRange
         ("uBinSumMode", c_uint),
-        # BIN(求均值)的模式,范围不能超过tSdkResolutionRange中uBinAverageModeMask
+        # BIN (average) mode, the range cannot exceed uBinAverageModeMask in tSdkResolutionRange
         ("uBinAverageMode", c_uint),
-        # 是否SKIP的尺寸，为0表示禁止SKIP模式，范围不能超过tSdkResolutionRange中uSkipModeMask
+        # Whether the size of SKIP, 0 means disabling SKIP mode, the range cannot exceed uSkipModeMask in tSdkResolutionRange
         ("uSkipMode", c_uint),
-        ("uResampleMask", c_uint),        # 硬件重采样的掩码
-        ("iHOffsetFOV", c_int),        # 采集视场相对于Sensor最大视场左上角的垂直偏移
-        ("iVOffsetFOV", c_int),        # 采集视场相对于Sensor最大视场左上角的水平偏移
-        ("iWidthFOV", c_int),          # 采集视场的宽度
-        ("iHeightFOV", c_int),         # 采集视场的高度
-        ("iWidth", c_int),             # 相机最终输出的图像的宽度
-        ("iHeight", c_int),            # 相机最终输出的图像的高度
-        ("iWidthZoomHd", c_int),       # 硬件缩放的宽度,不需要进行此操作的分辨率，此变量设置为0.
-        ("iHeightZoomHd", c_int),      # 硬件缩放的高度,不需要进行此操作的分辨率，此变量设置为0.
-        ("iWidthZoomSw", c_int),       # 软件缩放的宽度,不需要进行此操作的分辨率，此变量设置为0.
-        ("iHeightZoomSw", c_int),      # 软件缩放的高度,不需要进行此操作的分辨率，此变量设置为0.
-    ]
+        ("uResampleMask", c_uint), # Hardware resampling mask
+        ("iHOffsetFOV", c_int), # Collect the vertical offset of the field of view relative to the upper left corner of the sensor's maximum field of view
+        ("iVOffsetFOV", c_int), # Collect the horizontal offset of the field of view relative to the upper left corner of the sensor's maximum field of view
+        ("iWidthFOV", c_int), # The width of the acquisition field of view
+        ("iHeightFOV", c_int), # Collect the height of the field of view
+        ("iWidth", c_int), # The width of the final image output by the camera
+        ("iHeight", c_int), # Height of the final image output by the camera
+        ("iWidthZoomHd", c_int), # The width of hardware scaling, the resolution for which this operation is not required, this variable is set to 0.
+        ("iHeightZoomHd", c_int), # The height of hardware scaling, the resolution for which this operation is not required, this variable is set to 0.
+        ("iWidthZoomSw", c_int), # The width of the software zoom, the resolution is not required for this operation, this variable is set to 0.
+        ("iHeightZoomSw", c_int), # The height of the software zoom, the resolution is not required for this operation, this variable is set to 0.
+]
 
     def GetDescription(self):
         return _string_buffer_to_str(self.acDescription)
 
-# 相机白平衡模式描述信息
+# Camera white balance mode description information
 
 
 class tSdkColorTemperatureDes(MvStructure):
     _fields_ = [
-        ("iIndex", c_int),				# 模式索引号
-        ("acDescription", c_char * 32),  # 描述信息
+        ("iIndex", c_int), # Pattern index number
+        ("acDescription", c_char * 32), #Description information
     ]
 
     def GetDescription(self):
         return _string_buffer_to_str(self.acDescription)
 
-# 相机帧率描述信息
+#Camera frame rate description information
 
 
 class tSdkFrameSpeed(MvStructure):
     _fields_ = [
-        ("iIndex", c_int),				# 帧率索引号，一般0对应于低速模式，1对应于普通模式，2对应于高速模式
-        ("acDescription", c_char * 32),  # 描述信息
+        ("iIndex", c_int), # Frame rate index number, generally 0 corresponds to low-speed mode, 1 corresponds to normal mode, and 2 corresponds to high-speed mode
+        ("acDescription", c_char * 32), #Description information
     ]
 
     def GetDescription(self):
         return _string_buffer_to_str(self.acDescription)
 
-# 相机曝光功能范围定义
+# Camera exposure function range definition
 
 
 class tSdkExpose(MvStructure):
     _fields_ = [
-        ("uiTargetMin", c_uint),  # 自动曝光亮度目标最小值
-        ("uiTargetMax", c_uint),  # 自动曝光亮度目标最大值
-        ("uiAnalogGainMin", c_uint),  # 模拟增益的最小值，单位为fAnalogGainStep中定义
-        ("uiAnalogGainMax", c_uint),  # 模拟增益的最大值，单位为fAnalogGainStep中定义
-        # 模拟增益每增加1，对应的增加的放大倍数。例如，uiAnalogGainMin一般为16，fAnalogGainStep一般为0.125，那么最小放大倍数就是16*0.125
-        # = 2倍
+        ("uiTargetMin", c_uint),         # Minimum target value for auto exposure
+        ("uiTargetMax", c_uint),         # Maximum target value for auto exposure
+        ("uiAnalogGainMin", c_uint),     # Minimum value of analog gain, as defined in fAnalogGainStep
+        ("uiAnalogGainMax", c_uint),     # Maximum value of analog gain, as defined in fAnalogGainStep
+        # For each increment of 1 in analog gain, the corresponding multiplication factor increases. For example, if uiAnalogGainMin is generally 16, and fAnalogGainStep is generally 0.125, then the minimum magnification is 16*0.125 = 2 times
         ("fAnalogGainStep", c_float),
-        # 手动模式下，曝光时间的最小值，单位:行。根据CameraGetExposureLineTime可以获得一行对应的时间(微秒),从而得到整帧的曝光时间
+        # In manual mode, the minimum exposure time, in lines. The time corresponding to one line can be obtained from CameraGetExposureLineTime, thereby calculating the total exposure time of a frame
         ("uiExposeTimeMin", c_uint),
-        ("uiExposeTimeMax", c_uint),  # 手动模式下，曝光时间的最大值，单位:行
+        ("uiExposeTimeMax", c_uint),     # In manual mode, the maximum exposure time, in lines
     ]
 
-# 触发模式描述
-
-
+# Trigger mode description
 class tSdkTrigger(MvStructure):
     _fields_ = [
-        ("iIndex", c_int),				# 模式索引号
-        ("acDescription", c_char * 32),  # 描述信息
+        ("iIndex", c_int),               # Mode index number
+        ("acDescription", c_char * 32),  # Description information
     ]
 
     def GetDescription(self):
         return _string_buffer_to_str(self.acDescription)
 
-# 传输分包大小描述(主要是针对网络相机有效)
-
-
+# Transmission packet size description (mainly for network cameras)
 class tSdkPackLength(MvStructure):
     _fields_ = [
-        ("iIndex", c_int),				# 模式索引号
-        ("acDescription", c_char * 32),  # 描述信息
+        ("iIndex", c_int),               # Mode index number
+        ("acDescription", c_char * 32),  # Description information
         ("iPackSize", c_uint),
     ]
 
     def GetDescription(self):
         return _string_buffer_to_str(self.acDescription)
 
-# 预设的LUT表描述
-
-
+# Description of preset LUT (Look-Up Table)
 class tSdkPresetLut(MvStructure):
     _fields_ = [
-        ("iIndex", c_int),				# 编号
-        ("acDescription", c_char * 32),  # 描述信息
+        ("iIndex", c_int),               # Index number
+        ("acDescription", c_char * 32),  # Description information
     ]
 
     def GetDescription(self):
         return _string_buffer_to_str(self.acDescription)
 
-# AE算法描述
-
-
+# AE (Auto Exposure) algorithm description
 class tSdkAeAlgorithm(MvStructure):
     _fields_ = [
-        ("iIndex", c_int),				# 编号
-        ("acDescription", c_char * 32),  # 描述信息
+        ("iIndex", c_int),               # Index number
+        ("acDescription", c_char * 32),  # Description information
     ]
 
     def GetDescription(self):
         return _string_buffer_to_str(self.acDescription)
 
-# RAW转RGB算法描述
-
-
+# RAW to RGB algorithm description
 class tSdkBayerDecodeAlgorithm(MvStructure):
     _fields_ = [
-        ("iIndex", c_int),				# 编号
-        ("acDescription", c_char * 32),  # 描述信息
+        ("iIndex", c_int),               # Index number
+        ("acDescription", c_char * 32),  # Description information
     ]
 
     def GetDescription(self):
         return _string_buffer_to_str(self.acDescription)
 
-# 帧率统计信息
-
-
+# Frame rate statistics information
 class tSdkFrameStatistic(MvStructure):
     _fields_ = [
-        ("iTotal", c_int),  # 当前采集的总帧数（包括错误帧）
-        ("iCapture", c_int),  # 当前采集的有效帧的数量
-        ("iLost", c_int),  # 当前丢帧的数量
+        ("iTotal", c_int),   # Total number of frames captured (including error frames)
+        ("iCapture", c_int), # Number of valid frames captured
+        ("iLost", c_int),    # Number of frames lost
     ]
 
-# 相机输出的图像数据格式
+# Camera's output image data format
+
 
 
 class tSdkMediaType(MvStructure):
     _fields_ = [
-        ("iIndex", c_int),				# 格式种类编号
-        ("acDescription", c_char * 32),  # 描述信息
-        ("iMediaType", c_uint),			# 对应的图像格式编码，如CAMERA_MEDIA_TYPE_BAYGR8。
+        ("iIndex", c_int),               # Format category index number
+        ("acDescription", c_char * 32),  # Description information
+        ("iMediaType", c_uint),          # Corresponding image format code, such as CAMERA_MEDIA_TYPE_BAYGR8.
     ]
 
     def GetDescription(self):
         return _string_buffer_to_str(self.acDescription)
 
-# 伽马的设定范围
 
-
+# Gamma range settings
 class tGammaRange(MvStructure):
     _fields_ = [
-        ("iMin", c_int),  # 最小值
-        ("iMax", c_int),  # 最大值
+        ("iMin", c_int),  # Minimum value
+        ("iMax", c_int),  # Maximum value
     ]
 
-# 对比度的设定范围
-
-
+# Contrast range settings
 class tContrastRange(MvStructure):
     _fields_ = [
-        ("iMin", c_int),  # 最小值
-        ("iMax", c_int),  # 最大值
+        ("iMin", c_int),  # Minimum value
+        ("iMax", c_int),  # Maximum value
     ]
 
-# RGB三通道数字增益的设定范围
-
-
+# Range settings for RGB channel digital gains
 class tRgbGainRange(MvStructure):
     _fields_ = [
-        ("iRGainMin", c_int),  # 红色增益的最小值
-        ("iRGainMax", c_int),  # 红色增益的最大值
-        ("iGGainMin", c_int),  # 绿色增益的最小值
-        ("iGGainMax", c_int),  # 绿色增益的最大值
-        ("iBGainMin", c_int),  # 蓝色增益的最小值
-        ("iBGainMax", c_int),  # 蓝色增益的最大值
+        ("iRGainMin", c_int),  # Minimum value for red gain
+        ("iRGainMax", c_int),  # Maximum value for red gain
+        ("iGGainMin", c_int),  # Minimum value for green gain
+        ("iGGainMax", c_int),  # Maximum value for green gain
+        ("iBGainMin", c_int),  # Minimum value for blue gain
+        ("iBGainMax", c_int),  # Maximum value for blue gain
     ]
 
-# 饱和度设定的范围
-
-
+# Saturation range settings
 class tSaturationRange(MvStructure):
     _fields_ = [
-        ("iMin", c_int),  # 最小值
-        ("iMax", c_int),  # 最大值
+        ("iMin", c_int),  # Minimum value
+        ("iMax", c_int),  # Maximum value
     ]
 
-# 锐化的设定范围
-
-
+# Sharpness range settings
 class tSharpnessRange(MvStructure):
     _fields_ = [
-        ("iMin", c_int),  # 最小值
-        ("iMax", c_int),  # 最大值
+        ("iMin", c_int),  # Minimum value
+        ("iMax", c_int),  # Maximum value
     ]
 
-# ISP模块的使能信息
+# Enable information for the ISP (Image Signal Processor) module
+
 
 
 class tSdkIspCapacity(MvStructure):
     _fields_ = [
-        ("bMonoSensor", c_int),  # 表示该型号相机是否为黑白相机,如果是黑白相机，则颜色相关的功能都无法调节
-        ("bWbOnce", c_int),  # 表示该型号相机是否支持手动白平衡功能
-        ("bAutoWb", c_int),  # 表示该型号相机是否支持自动白平衡功能
-        ("bAutoExposure", c_int),  # 表示该型号相机是否支持自动曝光功能
-        ("bManualExposure", c_int),  # 表示该型号相机是否支持手动曝光功能
-        ("bAntiFlick", c_int),  # 表示该型号相机是否支持抗频闪功能
-        ("bDeviceIsp", c_int),  # 表示该型号相机是否支持硬件ISP功能
-        # bDeviceIsp和bForceUseDeviceIsp同时为TRUE时，表示强制只用硬件ISP，不可取消。
+        ("bMonoSensor", c_int),         # Indicates if this model of camera is a monochrome camera. If it is, color-related functions cannot be adjusted.
+        ("bWbOnce", c_int),             # Indicates if this model of camera supports manual white balance.
+        ("bAutoWb", c_int),             # Indicates if this model of camera supports automatic white balance.
+        ("bAutoExposure", c_int),       # Indicates if this model of camera supports automatic exposure.
+        ("bManualExposure", c_int),     # Indicates if this model of camera supports manual exposure.
+        ("bAntiFlick", c_int),          # Indicates if this model of camera supports anti-flicker function.
+        ("bDeviceIsp", c_int),          # Indicates if this model of camera supports hardware ISP (Image Signal Processing).
+        # When both bDeviceIsp and bForceUseDeviceIsp are TRUE, it indicates that only hardware ISP is to be used, and this cannot be disabled.
         ("bForceUseDeviceIsp", c_int),
-        ("bZoomHD", c_int),  # 相机硬件是否支持图像缩放输出(只能是缩小)。
+        ("bZoomHD", c_int),             # Indicates whether the camera hardware supports image zoom output (only reduction is possible).
     ]
 
-# 定义整合的设备描述信息，这些信息可以用于动态构建UI
 
+# 定义整合的设备描述信息，这些信息可以用于动态构建UI
 
 class tSdkCameraCapbility(MvStructure):
     _fields_ = [
         ("pTriggerDesc", POINTER(tSdkTrigger)),
-        ("iTriggerDesc", c_int),  # 触发模式的个数，即pTriggerDesc数组的大小
+        ("iTriggerDesc", c_int),  # Number of trigger modes, i.e., size of the pTriggerDesc array
         ("pImageSizeDesc", POINTER(tSdkImageResolution)),
-        ("iImageSizeDesc", c_int),  # 预设分辨率的个数，即pImageSizeDesc数组的大小
+        ("iImageSizeDesc", c_int),  # Number of preset resolutions, i.e., size of the pImageSizeDesc array
         ("pClrTempDesc", POINTER(tSdkColorTemperatureDes)),
-        ("iClrTempDesc", c_int),  # 预设色温个数
+        ("iClrTempDesc", c_int),  # Number of preset color temperatures
         ("pMediaTypeDesc", POINTER(tSdkMediaType)),
-        ("iMediaTypeDesc", c_int),  # 相机输出图像格式的种类个数，即pMediaTypeDesc数组的大小。
-        # 可调节帧速类型，对应界面上普通 高速 和超级三种速度设置
+        ("iMediaTypeDesc", c_int),  # Number of types of camera output image formats, i.e., size of the pMediaTypeDesc array
+        # Adjustable frame speed types, corresponding to normal, high speed, and super speed settings on the interface
         ("pFrameSpeedDesc", POINTER(tSdkFrameSpeed)),
-        ("iFrameSpeedDesc", c_int),  # 可调节帧速类型的个数，即pFrameSpeedDesc数组的大小。
-        ("pPackLenDesc", POINTER(tSdkPackLength)),  # 传输包长度，一般用于网络设备
-        ("iPackLenDesc", c_int),  # 可供选择的传输分包长度的个数，即pPackLenDesc数组的大小。
-        ("iOutputIoCounts", c_int),  # 可编程输出IO的个数
-        ("iInputIoCounts", c_int),  # 可编程输入IO的个数
-        ("pPresetLutDesc", POINTER(tSdkPresetLut)),  # 相机预设的LUT表
-        ("iPresetLut", c_int),  # 相机预设的LUT表的个数，即pPresetLutDesc数组的大小
-        ("iUserDataMaxLen", c_int),  # 指示该相机中用于保存用户数据区的最大长度。为0表示无。
-        ("bParamInDevice", c_int),  # 指示该设备是否支持从设备中读写参数组。1为支持，0不支持。
-        ("pAeAlmSwDesc", POINTER(tSdkAeAlgorithm)),  # 软件自动曝光算法描述
-        ("iAeAlmSwDesc", c_int),  # 软件自动曝光算法个数
-        # 硬件自动曝光算法描述，为NULL表示不支持硬件自动曝光
+        ("iFrameSpeedDesc", c_int),  # Number of adjustable frame speed types, i.e., size of the pFrameSpeedDesc array
+        ("pPackLenDesc", POINTER(tSdkPackLength)),  # Packet length for transmission, typically used for network devices
+        ("iPackLenDesc", c_int),  # Number of selectable packet sizes for transmission, i.e., size of the pPackLenDesc array
+        ("iOutputIoCounts", c_int),  # Number of programmable output IOs
+        ("iInputIoCounts", c_int),  # Number of programmable input IOs
+        ("pPresetLutDesc", POINTER(tSdkPresetLut)),  # Preset LUT tables of the camera
+        ("iPresetLut", c_int),  # Number of preset LUT tables, i.e., size of the pPresetLutDesc array
+        ("iUserDataMaxLen", c_int),  # Indicates the maximum length of the user data area in the camera. 0 means none.
+        ("bParamInDevice", c_int),  # Indicates whether the device supports reading and writing parameter groups from the device. 1 for support, 0 for no support.
+        ("pAeAlmSwDesc", POINTER(tSdkAeAlgorithm)),  # Description of software auto-exposure algorithms
+        ("iAeAlmSwDesc", c_int),  # Number of software auto-exposure algorithms
+        # Description of hardware auto-exposure algorithms, NULL means no support for hardware auto-exposure
         ("pAeAlmHdDesc", POINTER(tSdkAeAlgorithm)),
-        ("iAeAlmHdDesc", c_int),  # 硬件自动曝光算法个数，为0表示不支持硬件自动曝光
-        ("pBayerDecAlmSwDesc",
-         POINTER(tSdkBayerDecodeAlgorithm)),
-        # 软件Bayer转换为RGB数据的算法描述
-        ("iBayerDecAlmSwDesc", c_int),  # 软件Bayer转换为RGB数据的算法个数
-        # 硬件Bayer转换为RGB数据的算法描述，为NULL表示不支持
+        ("iAeAlmHdDesc", c_int),  # Number of hardware auto-exposure algorithms, 0 means no support for hardware auto-exposure
+        ("pBayerDecAlmSwDesc", POINTER(tSdkBayerDecodeAlgorithm)),
+        # Description of software algorithms for converting Bayer to RGB data
+        ("iBayerDecAlmSwDesc", c_int),  # Number of software algorithms for converting Bayer to RGB data
+        # Description of hardware algorithms for converting Bayer to RGB data, NULL means no support
         ("pBayerDecAlmHdDesc", POINTER(tSdkBayerDecodeAlgorithm)),
-        ("iBayerDecAlmHdDesc", c_int),  # 硬件Bayer转换为RGB数据的算法个数，为0表示不支持
+        ("iBayerDecAlmHdDesc", c_int),  # Number of hardware algorithms for converting Bayer to RGB data, 0 means no support
 
-        # 图像参数的调节范围定义,用于动态构建UI
-        ("sExposeDesc", tSdkExpose),  # 曝光的范围值
-        ("sResolutionRange", tSdkResolutionRange),  # 分辨率范围描述
-        ("sRgbGainRange", tRgbGainRange),  # 图像数字增益范围描述
-        ("sSaturationRange", tSaturationRange),  # 饱和度范围描述
-        ("sGammaRange", tGammaRange),  # 伽马范围描述
-        ("sContrastRange", tContrastRange),  # 对比度范围描述
-        ("sSharpnessRange", tSharpnessRange),  # 锐化范围描述
-        ("sIspCapacity", tSdkIspCapacity),  # ISP能力描述
+        # Definitions of the range of image parameters, used for dynamically building UI
+        ("sExposeDesc", tSdkExpose),  # Range of exposure values
+        ("sResolutionRange", tSdkResolutionRange),  # Description of resolution range
+        ("sRgbGainRange", tRgbGainRange),  # Description of the range of digital gain for images
+        ("sSaturationRange", tSaturationRange),  # Description of saturation range
+        ("sGammaRange", tGammaRange),  # Description of gamma range
+        ("sContrastRange", tContrastRange),  # Description of contrast range
+        ("sSharpnessRange", tSharpnessRange),  # Description of sharpness range
+        ("sIspCapacity", tSdkIspCapacity),  # Description of ISP (Image Signal Processing) capabilities
     ]
 
 # 图像帧头信息
@@ -708,38 +686,40 @@ class tSdkCameraCapbility(MvStructure):
 
 class tSdkFrameHead(MvStructure):
     _fields_ = [
-        ("uiMediaType", c_uint),      # 图像格式,Image Format
-        ("uBytes", c_uint),           # 图像数据字节数,Total bytes
-        ("iWidth", c_int),            # 宽度 Image height
-        ("iHeight", c_int),           # 高度 Image width
-        ("iWidthZoomSw", c_int),      # 软件缩放的宽度,不需要进行软件裁剪的图像，此变量设置为0.
-        ("iHeightZoomSw", c_int),     # 软件缩放的高度,不需要进行软件裁剪的图像，此变量设置为0.
-        ("bIsTrigger", c_int),        # 指示是否为触发帧 is trigger
-        ("uiTimeStamp", c_uint),      # 该帧的采集时间，单位0.1毫秒
-        ("uiExpTime", c_uint),        # 当前图像的曝光值，单位为微秒us
-        ("fAnalogGain", c_float),     # 当前图像的模拟增益倍数
-        ("iGamma", c_int),            # 该帧图像的伽马设定值，仅当LUT模式为动态参数生成时有效，其余模式下为-1
-        ("iContrast", c_int),         # 该帧图像的对比度设定值，仅当LUT模式为动态参数生成时有效，其余模式下为-1
-        ("iSaturation", c_int),       # 该帧图像的饱和度设定值，对于黑白相机无意义，为0
-        ("fRgain", c_float),          # 该帧图像处理的红色数字增益倍数，对于黑白相机无意义，为1
-        ("fGgain", c_float),          # 该帧图像处理的绿色数字增益倍数，对于黑白相机无意义，为1
-        ("fBgain", c_float),          # 该帧图像处理的蓝色数字增益倍数，对于黑白相机无意义，为1
+        ("uiMediaType", c_uint),      # Image format
+        ("uBytes", c_uint),           # Total number of bytes of image data
+        ("iWidth", c_int),            # Image width
+        ("iHeight", c_int),           # Image height
+        ("iWidthZoomSw", c_int),      # Width for software zoom, set to 0 for images that don't need software cropping
+        ("iHeightZoomSw", c_int),     # Height for software zoom, set to 0 for images that don't need software cropping
+        ("bIsTrigger", c_int),        # Indicates if it is a trigger frame
+        ("uiTimeStamp", c_uint),      # Capture time of the frame, in units of 0.1 milliseconds
+        ("uiExpTime", c_uint),        # Exposure value of the current image, in microseconds (us)
+        ("fAnalogGain", c_float),     # Analog gain multiplier of the current image
+        ("iGamma", c_int),            # Gamma setting of the frame, valid only when LUT mode is dynamic parameter generation, otherwise -1
+        ("iContrast", c_int),         # Contrast setting of the frame, valid only when LUT mode is dynamic parameter generation, otherwise -1
+        ("iSaturation", c_int),       # Saturation setting of the frame, meaningless for monochrome cameras, set to 0
+        ("fRgain", c_float),          # Red digital gain multiplier for image processing, meaningless for monochrome cameras, set to 1
+        ("fGgain", c_float),          # Green digital gain multiplier for image processing, meaningless for monochrome cameras, set to 1
+        ("fBgain", c_float),          # Blue digital gain multiplier for image processing, meaningless for monochrome cameras, set to 1
     ]
+
 
 # Grabber统计信息
 
 
 class tSdkGrabberStat(MvStructure):
     _fields_ = [
-        ("Width", c_int),           # 帧图像大小
-        ("Height", c_int),	        # 帧图像大小
-        ("Disp", c_int),			# 显示帧数量
-        ("Capture", c_int),		    # 采集的有效帧的数量
-        ("Lost", c_int),			# 丢帧的数量
-        ("Error", c_int),			# 错帧的数量
-        ("DispFps", c_float),		# 显示帧率
-        ("CapFps", c_float),		# 捕获帧率
+        ("Width", c_int),           # Frame image size
+        ("Height", c_int),          # Frame image size
+        ("Disp", c_int),            # Number of displayed frames
+        ("Capture", c_int),         # Number of captured valid frames
+        ("Lost", c_int),            # Number of lost frames
+        ("Error", c_int),           # Number of erroneous frames
+        ("DispFps", c_float),       # Display frame rate
+        ("CapFps", c_float),        # Capture frame rate
     ]
+
 
 # 方法回调辅助类
 
@@ -764,32 +744,34 @@ class method(object):
             return r
 
 
-# 图像捕获的回调函数定义
+# Definition of the image capture callback function
 CAMERA_SNAP_PROC = CALLBACK_FUNC_TYPE(
     None, c_int, c_void_p, POINTER(tSdkFrameHead), c_void_p)
 
-# 相机连接状态回调
+# Camera connection status callback
 CAMERA_CONNECTION_STATUS_CALLBACK = CALLBACK_FUNC_TYPE(
     None, c_int, c_uint, c_uint, c_void_p)
 
-# 异步抓图完成回调
+# Asynchronous capture completion callback
 pfnCameraGrabberSaveImageComplete = CALLBACK_FUNC_TYPE(
     None, c_void_p, c_void_p, c_int, c_void_p)
 
-# 帧监听回调
+# Frame listener callback
 pfnCameraGrabberFrameListener = CALLBACK_FUNC_TYPE(
     c_int, c_void_p, c_int, c_void_p, POINTER(tSdkFrameHead), c_void_p)
 
-# 采集器图像捕获的回调
+# Callback for image capture by the grabber
 pfnCameraGrabberFrameCallback = CALLBACK_FUNC_TYPE(
     None, c_void_p, c_void_p, POINTER(tSdkFrameHead), c_void_p)
 
+
 # -----------------------------------函数接口------------------------------------------
 
-# 线程局部存储
+# Thread-local storage
 _tls = local()
 
-# 存储最后一次SDK调用返回的错误码
+# Stores the error code returned by the last SDK call
+
 
 
 def GetLastError():
