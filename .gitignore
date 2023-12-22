@@ -1,5 +1,8 @@
 **/*.bag
 .catkin_tools/
+**/devel_manifest.txt
+#devel_collisions.*
+*.txt
 vscode/
 ___pycache__/
 *.mvdat
