@@ -121,10 +121,6 @@ devel_isolated/
 # Catkin custom files
 CATKIN_IGNORE
 
-devel_manifest.txt
-__pycache__
-_backend_.cpython-38.pyc
-c_cpp_properties.json
-.vscode/
-mvsdk.cpython-38.pyc
-.cpython-38.pyc
+# End of https://www.toptal.com/developers/gitignore/api/ros,python,c,c++,cmake
+
+
