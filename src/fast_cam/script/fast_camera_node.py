@@ -82,7 +82,6 @@ class CameraNode:
         print('------------------')
         self.setup_camera(device_info)
         # print(f'Resolution: {self.get_snapshot_resolution()}')
-Curren
     def setup_camera(self, device_info):
         try:
             self.fast_camera = mvsdk.CameraInit(device_info, -1, -1)
