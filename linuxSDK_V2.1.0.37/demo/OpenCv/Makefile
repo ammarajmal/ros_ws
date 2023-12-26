@@ -1,11 +1,10 @@
 CXX ?= g++
-CFLAGS =`pkg-config --cflags opencv`
-LIBS = `pkg-config --libs opencv`
-INCLUDE= -I../../include
+INCLUDE = -I/usr/include/opencv4 -I../../include
+LIBS = -L/usr/lib/x86_64-linux-gnu -lopencv_core -lopencv_imgproc -lopencv_highgui -lMVSDK
 
 all: main
-main:  
-	$(CXX) $(CFLAGS)  -o main  main.cpp $(LIBS)   $(INCLUDE)   -lMVSDK
+main:
+	$(CXX) $(INCLUDE) -o main main.cpp $(LIBS)
 clean:
 	rm -f *.o 
 	rm -f main 
