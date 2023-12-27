@@ -8,33 +8,38 @@ from sensor_msgs.msg import Image, CameraInfo
 from cv_bridge import CvBridge
 from camera_info_manager import CameraInfoManager
 # from std_srvs.srv import Trigger, TriggerResponse
-import sys
+# import sys
 class CameraNode:
+    """Camera node class"""
     def __init__(self):
         rospy.init_node('camera_node', anonymous=False)
         self.image_pub = rospy.Publisher("~image_raw", Image, queue_size=10)
         self.camera_info_publisher = rospy.Publisher("~camera_info", CameraInfo, queue_size=10)
         
+        self.camera_parameters_file = "/home/ammar/ros_ws/src/fast_cam/config/camera_info_nuc1.yaml"
         self.device_id = rospy.get_param("~device_id", 0)
         self.device_ip = rospy.get_param("~device_ip", "192.168.1.103")
-        self.calibration_file = rospy.get_param("~calibration_file", "")
+        self.calibration_file = rospy.get_param("~calibration_file", self.camera_parameters_file)
+        
         self.camera_manager = rospy.get_param("~camera_manager", "opencv")
-        
         # self.shutdown_service = rospy.Service("~shutdown", Trigger, self.handle_shutdown)
-        
-        self.rate = rospy.Rate(125)
+        self.rate = rospy.Rate(135)
+
         self.camera = None
-        
+        self.camera_info_manager = CameraInfoManager(cname=self.camera_manager,url=f'file://{self.calibration_file}', namespace=self.camera_manager)
+        self.camera_info_manager.loadCameraInfo()
+
         self.initialize_camera()
-        print('somewhere here')
+        
+        
     def initialize_camera(self):
-        # Initialize and configure the camera
+        """Initialize and configure the camera"""
         device_list = mvsdk.CameraEnumerateDevice()
         num_devices = len(device_list)
         if num_devices < 1:
-            rospy.logerr("No camera is connected.")
-            rospy.signal_shutdown("No Camera found.")
-            # return
+            rospy.logerr("Shutting down, No Camera found.")
+            rospy.signal_shutdown("Shutting down, No Camera found.")
+            return
         rospy.loginfo(f"Found {num_devices} connected camera(s).")
         for cur_device in device_list:
             if cur_device.acPortType.decode("utf-8").split("-")[0] == self.device_ip:

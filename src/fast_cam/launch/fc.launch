@@ -6,7 +6,7 @@
     
         <node   name="$(arg camera_name)"
                 pkg="fast_cam"
-                type="fast_camera_node.py"
+                type="camera_.py"
                 output="screen">
             <param name="device_id" value="$(arg device_id)" />
             <param name="device_ip" value="$(arg device_ip)" />
