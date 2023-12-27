@@ -16,7 +16,7 @@ class CameraNode:
         self.camera_info_publisher = rospy.Publisher("~camera_info", CameraInfo, queue_size=10)
         
         self.device_id = rospy.get_param("~device_id", 0)
-        self.device_ip = rospy.get_param("~device_ip", "192.168.1.101")
+        self.device_ip = rospy.get_param("~device_ip", "192.168.1.103")
         self.calibration_file = rospy.get_param("~calibration_file", "")
         self.camera_manager = rospy.get_param("~camera_manager", "opencv")
         
