@@ -9,7 +9,7 @@ import rospkg
 import roslaunch
 import threading
 from fiducial_msgs.msg import FiducialTransformArray
-
+from fast_cam.msg import CameraSpecs
 from _backend_ import is_node_running, kill_ros_node, detection_start, detection_stop, get_ros_topic_frequency
 themes = {'blue': ("#3B8ED0", "#1F6AA5"),
           'green': ("#2CC985", "#2FA572"),
@@ -107,7 +107,38 @@ class ClientGUI(customtkinter.CTk):
         self._create_widgets()
 
     def start_ros_thread(self) -> None:
+        # Existing fiducial transforms listener thread
         threading.Thread(target=self.fiducial_transforms_listener, daemon=True).start()
+
+        # New camera specifications listener thread
+        threading.Thread(target=self.camera_specs_listener, daemon=True).start()
+
+        
+    def camera_specs_listener(self):
+        rospy.Subscriber(f"/camera_{self.nuc_number}/camera_specifications", CameraSpecs, self.camera_specs_callback)
+        rospy.spin()
+    def camera_specs_callback(self, data):
+        """ Update the camera specs """
+        self.right_bottom_frame_cam_name_result_label.configure(text=f"Camera {self.nuc_number}", text_color="white")
+        self.right_bottom_frame_cam_model_result_label.configure(text=data.model, text_color="white")
+        self.right_bottom_frame_cam_serial_result_label.configure(text=data.serial_number, text_color="white")
+        self.right_bottom_frame_cam_ip_result_label.configure(text=data.ip_address, text_color="white")
+        self.right_bottom_frame_cam_reolution_result_label.configure(text=data.resolution, text_color="white")
+        self.right_bottom_frame_cam_exposure_result_label.configure(text=data.gain, text_color="white")
+        
+        if self.camera_specs_timer:
+            self.camera_specs_timer.cancel()
+        self.camera_specs_timer = threading.Timer(self.message_timeout, self.camera_specs_no_data)
+        self.camera_specs_timer.start()
+    def camera_specs_no_data(self):
+        """ Function to call when no messages are received within the timeout """
+        self.right_bottom_frame_cam_name_result_label.configure(text="Idle", text_color="white")
+        self.right_bottom_frame_cam_model_result_label.configure(text="Null", text_color="white")
+        self.right_bottom_frame_cam_serial_result_label.configure(text="Null", text_color="white")
+        self.right_bottom_frame_cam_ip_result_label.configure(text="Null", text_color="white")
+        self.right_bottom_frame_cam_reolution_result_label.configure(text="Null", text_color="white")
+        self.right_bottom_frame_cam_exposure_result_label.configure(text="Null", text_color="white")
+
     def fiducial_transforms_listener(self):
         rospy.Subscriber(f"/camera_{self.nuc_number}/fiducial_transforms", FiducialTransformArray, self.fiducial_transforms_callback)
         rospy.spin()
@@ -280,10 +311,7 @@ class ClientGUI(customtkinter.CTk):
         # self.right_bottom_frame_detect_result_ans_label = customtkinter.CTkLabel(
         #     self.right_bottom_frame, text="Null", text_color="white")
         # self.right_bottom_frame_detect_result_ans_label.place(relx=0.7, rely=0.58)
-        
-        
 
-            
     def _check_camera_event(self, nuc_number) -> None:
         """ routine to check the status of the camera """
         camera_topic_name = f"/camera_{nuc_number}/image_raw"
@@ -293,7 +321,6 @@ class ClientGUI(customtkinter.CTk):
         else:
             self.right_bottom_frame_cam_name_result_label.configure(text="Running", text_color="yellow")
             rospy.loginfo(f"Camera at NUC {nuc_number} is running..")
-        
     def _check_camera_fps_event(self, nuc_number) -> None:
         """ routine to check the fps of the camera """
         camera_topic_name = f"/camera_{nuc_number}/image_raw"
@@ -310,7 +337,6 @@ class ClientGUI(customtkinter.CTk):
             else:
                 self.right_bottom_frame_cam_fps_result_label.configure(text="Null", text_color="white")
                 rospy.logerr("Unable to determine the frequency.")
-            
     def _check_detection_event(self, nuc_number) -> None:
         """routine to check the status of the detection """
         detection_topic_name = f"/camera_{nuc_number}/fiducial_transforms"
@@ -336,9 +362,6 @@ class ClientGUI(customtkinter.CTk):
             else:
                 self.right_bottom_frame_detect_rate_result_label.configure(text="Null", text_color="white")
                 rospy.logerr("Unable to determine the frequency.")
-
-
-
     def _create_left_top_frame_content(self) -> None:
         """The contents of the top frame - Camera Start/Stop"""
         self.left_top_frame_label = customtkinter.CTkLabel(
@@ -410,7 +433,6 @@ class ClientGUI(customtkinter.CTk):
             self.left_bottom_frame,text="Start Calibration",
             command=self._start_camera_calibration)
         self.left_bottom_frame_start_calib_button.place(relx=0.5, rely=0.85, anchor="center")
-        
     def _create_middle_top_frame_content(self) -> None:
         """ The contents of the middle frame - Detection Start/Stop """
         self.middle_top_frame_label = customtkinter.CTkLabel(
@@ -424,7 +446,6 @@ class ClientGUI(customtkinter.CTk):
             self.middle_top_frame, text="Stop Detection ", fg_color='gray',
             command=lambda: self._stop_detection(self.nuc_number))
         self.middle_top_frame_stop_local_detect_button.place(relx=0.5, rely=0.75, anchor="center")
-
     def _create_middle_bottom_frame_content(self) -> None:
         self.middle_bottom_frame_label = customtkinter.CTkLabel(
             self.middle_bottom_frame, text=f"DETECTION PARAMETERS - NUC {self.nuc_number}")
@@ -452,8 +473,6 @@ class ClientGUI(customtkinter.CTk):
             command=self._middle_button_detection_update_button_event)
         self.middle_button_detection_update_button.place(relx=0.5, rely=0.65,
                                                          relwidth=0.4, anchor="center")
-        
-
     def _middle_button_detection_update_button_event(self):
         """ routine for updating detection parameters """
         marker_size_entry_var = self.middle_bottom_marker_size_entry.get()
@@ -479,7 +498,6 @@ class ClientGUI(customtkinter.CTk):
         rospy.loginfo('Detection parameters updated!')
         # self.middle_button_frame_detect_update_label.configure(text="☑", fg_color='yellow')
         print('Detection parameters updated!')
-        
     def _start_detection(self, nuc_number, detect_launch, uuid):
         """ routine for starting dectection  """
         print('** Starting Detection **')
@@ -631,9 +649,7 @@ class ClientGUI(customtkinter.CTk):
         subprocess.call(cmd)
         self._start_nuc_local_cam_button_event(self.nuc_number, show_camera=False)
     def _left_button_frame_calib_update_button_event(self):
-        chessboard_entry = self.left_bottom_frame_chessboard_entry.get()
-        sq_size_entry = self.left_bottom_frame_sq_size_entry.get()
-
+        """ routine for updating calibration parameters """
         if not chessboard_entry and not sq_size_entry:
             print('Nothing updated')
             print(f'Original square size: {self.square_size}')

@@ -7,6 +7,9 @@ import numpy as np
 from sensor_msgs.msg import Image, CameraInfo
 from cv_bridge import CvBridge
 from camera_info_manager import CameraInfoManager
+from fast_cam.msg import CameraSpecs as CameraParameters
+from fast_cam.srv import SetGain, SetGainResponse
+
 # from std_srvs.srv import Trigger, TriggerResponse
 # import sys
 class CameraNode:
@@ -15,6 +18,9 @@ class CameraNode:
         rospy.init_node('camera_node', anonymous=False)
         self.image_publisher = rospy.Publisher("~image_raw", Image, queue_size=10)
         self.camera_info_publisher = rospy.Publisher("~camera_info", CameraInfo, queue_size=10)
+        self.camera_parameters_publisher = rospy.Publisher("~camera_specfications", CameraParameters, queue_size=10)
+        
+        self.set_gain_service = rospy.Service("~set_gain", SetGain, self.handle_set_gain)
         
         self.camera_parameters_file = "/home/ammar/ros_ws/src/fast_cam/config/camera_info_nuc1.yaml"
         self.camera_name = rospy.get_param("~camera_name", "Camera_0")
@@ -32,6 +38,9 @@ class CameraNode:
         self.camera = None
         self.working_camera = 0
         self.camera_info_manager = CameraInfoManager(cname=self.camera_manager,url=f'file://{self.calibration_file}', namespace=self.camera_manager)
+        
+        self.camera_parameters = CameraParameters()
+        
         
 
         self.initialize_camera()
@@ -92,17 +101,24 @@ class CameraNode:
             self.camera = sel_camera
             self.cap = cap
             self.frame_buffer = frame_buffer
-            resolution = mvsdk.tSdkImageResolution()
-            
+
             rospy.loginfo(f'Camera Resolution: {mvsdk.CameraGetImageResolution(sel_camera).acDescription.decode("utf-8")}')
             rospy.loginfo(f'Camera Exposure Time: {mvsdk.CameraGetExposureTime(sel_camera)/1000} ms')
             rospy.loginfo(f'Camera Gain: {mvsdk.CameraGetAnalogGain(sel_camera)}')
-            
-            
-            
-            
+
+            self.camera_parameters.name = self.camera_name
+            self.camera_parameters.model = my_camera.acFriendlyName.decode('utf-8')
+            self.camera_parameters.serial_number = my_camera.acSn.decode('utf-8')
+            self.camera_parameters.ip_address = my_camera.acPortType.decode('utf-8').split('-')[0]
+
+            self.camera_parameters.resolution = mvsdk.CameraGetImageResolution(sel_camera).acDescription.decode("utf-8")
+            # self.camera_parameters.frame_rate = (self.rate)
+            self.camera_parameters.exposure_time = mvsdk.CameraGetExposureTime(sel_camera)/1000
+            self.camera_parameters.gain = str(mvsdk.CameraGetAnalogGain(sel_camera))
+
             self.camera_info_manager.loadCameraInfo()
-            
+
+
 
     def main_loop(self):
         """Main loop"""
@@ -142,6 +158,7 @@ class CameraNode:
         
         self.image_publisher.publish(ros_image)
         self.camera_info_publisher.publish(camera_info)
+        self.camera_parameters_publisher.publish(self.camera_parameters)
         self.rate.sleep()
 
     def cleanup(self):
@@ -161,6 +178,21 @@ class CameraNode:
         print(f"    IP: {camera.acPortType.decode('utf-8').split('-')[0]}")
         # print(f"    Resolution: {self.cap.sResolutionRange.iWidthMax} x {self.cap.sResolutionRange.iHeightMax}")
         # print(f"    Port: {camera.acPortType.decode('utf-8').split('-')[1]}")
+
+    def handle_set_gain(self, request):
+        """Handle set gain service"""
+        try:
+            new_gain = request.gain
+            print(f"Setting gain to {new_gain}")
+            new_gain = int(new_gain)
+            mvsdk.CameraSetAnalogGain(self.camera, new_gain)
+            self.camera_parameters.gain = str(mvsdk.CameraGetAnalogGain(self.camera))
+            rospy.loginfo(f"Gain set to {self.camera_parameters.gain}")
+            self.gain = new_gain
+            return SetGainResponse(True, f"Gain set to {new_gain}")
+        except mvsdk.CameraException as e:
+            rospy.logerr(f"Failed to set gain: {e.message}")
+            return SetGainResponse(False, f"Failed to set gain: {e.message}")
 
 if __name__ == '__main__':
     try:

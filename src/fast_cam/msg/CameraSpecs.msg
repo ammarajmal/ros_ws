@@ -1,0 +1,9 @@
+# CameraSpecs.msg
+string name
+string model
+string serial_number
+string ip_address
+string resolution
+float64 frame_rate
+float64 exposure_time
+string gain

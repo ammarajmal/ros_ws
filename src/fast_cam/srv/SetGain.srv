@@ -1,0 +1,7 @@
+# SetGain.srv
+# Request part
+float64 gain
+---
+# Response part
+bool success
+string message
