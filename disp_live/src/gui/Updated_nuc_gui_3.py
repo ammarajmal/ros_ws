@@ -10,6 +10,7 @@ import roslaunch
 import threading
 from fiducial_msgs.msg import FiducialTransformArray
 from fast_cam.msg import CameraSpecs
+from fast_cam.srv import SetGain
 from _backend_ import is_node_running, kill_ros_node, detection_start, detection_stop, get_ros_topic_frequency
 themes = {'blue': ("#3B8ED0", "#1F6AA5"),
           'green': ("#2CC985", "#2FA572"),
@@ -34,6 +35,8 @@ class ClientGUI(customtkinter.CTk):
         self.nuc_number = '3'
         
         rospy.init_node(f"camera_{self.nuc_number}_gui", anonymous=False)
+        # rospy.wait_for_service(f"/camera_{self.nuc_number}/set_gain")
+        # self.set_gain = rospy.ServiceProxy(f"/camera_{self.nuc_number}/set_gain", SetGain)
         
         self.message_timeout = 0.5  # 0.5 second
         self.timeout_timer = None
@@ -118,8 +121,6 @@ class ClientGUI(customtkinter.CTk):
         rospy.Subscriber(f"/camera_{self.nuc_number}/camera_specifications", CameraSpecs, self.camera_specs_callback)
         rospy.spin()
     def camera_specs_callback(self, data):
-        print(f'Camera {self.nuc_number} specs received')
-        print(f'Camera Model: {data.model}')
         """ Update the camera specs """
         self.right_bottom_frame_cam_name_result_label.configure(text=f"Camera {self.nuc_number}", text_color="white")
         self.right_bottom_frame_cam_model_result_label.configure(text=data.model, text_color="white")
@@ -128,18 +129,18 @@ class ClientGUI(customtkinter.CTk):
         self.right_bottom_frame_cam_reolution_result_label.configure(text=data.resolution, text_color="white")
         # self.right_bottom_frame_cam_exposure_result_label.configure(text=data.gain, text_color="white")
         
-        if self.camera_specs_timer:
+        if hasattr(self, 'camera_specs_timer') and self.camera_specs_timer:
             self.camera_specs_timer.cancel()
         self.camera_specs_timer = threading.Timer(self.message_timeout, self.camera_specs_no_data)
         self.camera_specs_timer.start()
+    
     def camera_specs_no_data(self):
         """ Function to call when no messages are received within the timeout """
-        self.right_bottom_frame_cam_name_result_label.configure(text="Idle", text_color="white")
-        self.right_bottom_frame_cam_model_result_label.configure(text="Null", text_color="white")
-        self.right_bottom_frame_cam_serial_result_label.configure(text="Null", text_color="white")
-        self.right_bottom_frame_cam_ip_result_label.configure(text="Null", text_color="white")
-        self.right_bottom_frame_cam_reolution_result_label.configure(text="Null", text_color="white")
-        self.right_bottom_frame_cam_exposure_result_label.configure(text="Null", text_color="white")
+        # self.right_bottom_frame_cam_name_result_label.configure(text="Null", text_color="white")
+        self.right_bottom_frame_cam_model_result_label.configure(text="-", text_color="white")
+        self.right_bottom_frame_cam_serial_result_label.configure(text="-", text_color="white")
+        self.right_bottom_frame_cam_ip_result_label.configure(text="-", text_color="white")
+        self.right_bottom_frame_cam_reolution_result_label.configure(text="-", text_color="white")
 
     def fiducial_transforms_listener(self):
         rospy.Subscriber(f"/camera_{self.nuc_number}/fiducial_transforms", FiducialTransformArray, self.fiducial_transforms_callback)
@@ -244,22 +245,22 @@ class ClientGUI(customtkinter.CTk):
         self.right_bottom_frame_cam_status_label = customtkinter.CTkButton(
             self.right_bottom_frame, text="Status", border_width=1, border_color='white', command=lambda: self._check_camera_event(self.nuc_number))
         self.right_bottom_frame_cam_status_label.place(relx=0.1, rely=0.12)
-        self.right_bottom_frame_cam_name_result_label = customtkinter.CTkLabel(
-            self.right_bottom_frame, text="Idle", text_color="white")
-        self.right_bottom_frame_cam_name_result_label.place(relx=0.6, rely=0.12)
+        self.right_bottom_frame_cam_status_result_label = customtkinter.CTkLabel(
+            self.right_bottom_frame, text="-", text_color="white")
+        self.right_bottom_frame_cam_status_result_label.place(relx=0.6, rely=0.12)
         
         self.right_bottom_frame_cam_model_label = customtkinter.CTkButton(
             self.right_bottom_frame, text="Model", border_width=1, border_color='white')
         self.right_bottom_frame_cam_model_label.place(relx=0.1, rely=0.21)
         self.right_bottom_frame_cam_model_result_label = customtkinter.CTkLabel(
-            self.right_bottom_frame, text="FLIR Blackfly S BFS-U3-120S7M", text_color="white")
+            self.right_bottom_frame, text="-", text_color="white")
         self.right_bottom_frame_cam_model_result_label.place(relx=0.6, rely=0.21)
         
         self.right_bottom_frame_cam_serial_label = customtkinter.CTkButton(
             self.right_bottom_frame, text="Serial", border_width=1, border_color='white')
         self.right_bottom_frame_cam_serial_label.place(relx=0.1, rely=0.3)
         self.right_bottom_frame_cam_serial_result_label = customtkinter.CTkLabel(
-            self.right_bottom_frame, text="19133592", text_color="white")
+            self.right_bottom_frame, text="-", text_color="white")
         self.right_bottom_frame_cam_serial_result_label.place(relx=0.60, rely=0.3)
         
         
@@ -267,29 +268,30 @@ class ClientGUI(customtkinter.CTk):
             self.right_bottom_frame, text="IP Address", border_width=1, border_color='white')
         self.right_bottom_frame_cam_ip_label.place(relx=0.1, rely=0.39)
         self.right_bottom_frame_cam_ip_result_label = customtkinter.CTkLabel(
-            self.right_bottom_frame, text="192.168.1.103", text_color="white")
+            self.right_bottom_frame, text="-", text_color="white")
         self.right_bottom_frame_cam_ip_result_label.place(relx=0.6, rely=0.39)
         
         self.right_bottom_frame_cam_reolution_label = customtkinter.CTkButton(
             self.right_bottom_frame, text="Resolution", border_width=1, border_color='white')
         self.right_bottom_frame_cam_reolution_label.place(relx=0.1, rely=0.48)
         self.right_bottom_frame_cam_reolution_result_label = customtkinter.CTkLabel(
-            self.right_bottom_frame, text="1280 x 960", text_color="white")
+            self.right_bottom_frame, text="-", text_color="white")
         self.right_bottom_frame_cam_reolution_result_label.place(relx=0.6, rely=0.48)
 
         self.right_bottom_frame_cam_fps_button = customtkinter.CTkButton(
             self.right_bottom_frame, text="Camera FPS", border_width=1, border_color='white', command=lambda: self._check_camera_fps_event(self.nuc_number))
         self.right_bottom_frame_cam_fps_button.place(relx=0.1, rely=0.57)
         self.right_bottom_frame_cam_fps_result_label = customtkinter.CTkLabel(
-            self.right_bottom_frame, text="Null", text_color="white")
+            self.right_bottom_frame, text="-", text_color="white")
         self.right_bottom_frame_cam_fps_result_label.place(relx=0.6, rely=0.57)
         
         self.right_bottom_frame_cam_exposure_label = customtkinter.CTkButton(
             self.right_bottom_frame, text="Exposure", border_width=1, border_color='white')
         self.right_bottom_frame_cam_exposure_label.place(relx=0.1, rely=0.66)
         self.right_bottom_frame_cam_exposure_result_label = customtkinter.CTkSlider(
-            self.right_bottom_frame, from_=0, to=50, command=None, height=10, number_of_steps=3,
-            width=50, fg_color='white',  border_width=1, border_color='white')
+            self.right_bottom_frame, from_=0, to=50, command=self.on_slider_change,
+            height=10, number_of_steps=3, width=50, fg_color='white',border_width=1,
+            border_color='white')
         self.right_bottom_frame_cam_exposure_result_label.place(relx=0.6, rely=0.68)
         
         
@@ -318,11 +320,11 @@ class ClientGUI(customtkinter.CTk):
         """ routine to check the status of the camera """
         camera_topic_name = f"/camera_{nuc_number}/image_raw"
         if not self.check_active_topic(camera_topic_name):
-            self.right_bottom_frame_cam_name_result_label.configure(text="Idle", text_color="white")
-            rospy.logerr(f"Camera at NUC {nuc_number} is not running..")
+            self.right_bottom_frame_cam_status_result_label.configure(text="Idle", text_color="white")
+            # rospy.logerr(f"Camera at NUC {nuc_number} is not running..")
         else:
-            self.right_bottom_frame_cam_name_result_label.configure(text="Running", text_color="yellow")
-            rospy.loginfo(f"Camera at NUC {nuc_number} is running..")
+            self.right_bottom_frame_cam_status_result_label.configure(text="Running", text_color="yellow")
+            # rospy.loginfo(f"Camera at NUC {nuc_number} is running..")
     def _check_camera_fps_event(self, nuc_number) -> None:
         """ routine to check the fps of the camera """
         camera_topic_name = f"/camera_{nuc_number}/image_raw"
@@ -675,7 +677,17 @@ class ClientGUI(customtkinter.CTk):
         self.left_button_frame_calib_update_label.configure(text="☑", fg_color='yellow')
         print('Chessboard Parameters Updated!')
 
-
+    def on_slider_change(self, value):
+        """ Function to change the exposure of the camera """
+        # gain_value = value
+        # try:
+        #     self.set_gain(gain_value)
+        #     print(f'Exposure changed to {gain_value} successfully!')
+        # except Exception as e:
+        #     print(f'Error in the service calll: {e}')
+        # self.right_bottom_frame_cam_exposure_result_label.
+        # self._set_camera_exposure(value)
+        pass
 
 if __name__ == "__main__":
     root = ClientGUI()

@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 # coding=utf-8
+import subprocess
+import re
 import rospy
 import cv2
 import mvsdk
@@ -34,6 +36,7 @@ class CameraNode:
         self.cap = None
         self.rate = rospy.Rate(150)
         self.gain = 50
+        self.camera_frate = 0
 
         self.camera = None
         self.working_camera = 0
@@ -95,13 +98,13 @@ class CameraNode:
             mvsdk.CameraSetTriggerMode(sel_camera, 0)
             mvsdk.CameraSetAeState(sel_camera, 0)
             mvsdk.CameraSetAnalogGain(sel_camera, self.gain) # 0dB
-            mvsdk.CameraSetExposureTime(sel_camera, 2000)  # 2ms
+            mvsdk.CameraSetExposureTime(sel_camera, 6500)  # 2ms
             # mvsdk.CameraSetImageResolution(sel_camera, 640, 480)
             mvsdk.CameraPlay(sel_camera)
             self.camera = sel_camera
             self.cap = cap
             self.frame_buffer = frame_buffer
-
+            
             rospy.loginfo(f'Camera Resolution: {mvsdk.CameraGetImageResolution(sel_camera).acDescription.decode("utf-8")}')
             rospy.loginfo(f'Camera Exposure Time: {mvsdk.CameraGetExposureTime(sel_camera)/1000} ms')
             rospy.loginfo(f'Camera Gain: {mvsdk.CameraGetAnalogGain(sel_camera)}')
@@ -112,12 +115,14 @@ class CameraNode:
             self.camera_parameters.ip_address = my_camera.acPortType.decode('utf-8').split('-')[0]
 
             self.camera_parameters.resolution = mvsdk.CameraGetImageResolution(sel_camera).acDescription.decode("utf-8")
-            # self.camera_parameters.frame_rate = (self.rate)
+            
+            # self.camera_parameters.frame_rate = (self.camera_frate)
             self.camera_parameters.exposure_time = mvsdk.CameraGetExposureTime(sel_camera)/1000
             self.camera_parameters.gain = str(mvsdk.CameraGetAnalogGain(sel_camera))
 
             self.camera_info_manager.loadCameraInfo()
-
+            
+            
 
 
     def main_loop(self):
