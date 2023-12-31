@@ -118,13 +118,15 @@ class ClientGUI(customtkinter.CTk):
         rospy.Subscriber(f"/camera_{self.nuc_number}/camera_specifications", CameraSpecs, self.camera_specs_callback)
         rospy.spin()
     def camera_specs_callback(self, data):
+        print(f'Camera {self.nuc_number} specs received')
+        print(f'Camera Model: {data.model}')
         """ Update the camera specs """
         self.right_bottom_frame_cam_name_result_label.configure(text=f"Camera {self.nuc_number}", text_color="white")
         self.right_bottom_frame_cam_model_result_label.configure(text=data.model, text_color="white")
         self.right_bottom_frame_cam_serial_result_label.configure(text=data.serial_number, text_color="white")
         self.right_bottom_frame_cam_ip_result_label.configure(text=data.ip_address, text_color="white")
         self.right_bottom_frame_cam_reolution_result_label.configure(text=data.resolution, text_color="white")
-        self.right_bottom_frame_cam_exposure_result_label.configure(text=data.gain, text_color="white")
+        # self.right_bottom_frame_cam_exposure_result_label.configure(text=data.gain, text_color="white")
         
         if self.camera_specs_timer:
             self.camera_specs_timer.cancel()

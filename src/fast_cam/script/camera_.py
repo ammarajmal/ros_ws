@@ -18,7 +18,7 @@ class CameraNode:
         rospy.init_node('camera_node', anonymous=False)
         self.image_publisher = rospy.Publisher("~image_raw", Image, queue_size=10)
         self.camera_info_publisher = rospy.Publisher("~camera_info", CameraInfo, queue_size=10)
-        self.camera_parameters_publisher = rospy.Publisher("~camera_specfications", CameraParameters, queue_size=10)
+        self.camera_parameters_publisher = rospy.Publisher("~camera_specifications", CameraParameters, queue_size=10)
         
         self.set_gain_service = rospy.Service("~set_gain", SetGain, self.handle_set_gain)
         
