@@ -56,7 +56,7 @@ class ClientGUI(customtkinter.CTk):
         self.local_nuc_launch = f'{self.launch_path}use.launch'
         self.view_launch = f"{self.prev_cam_path}viewcam.launch"
         self.calib_launch = f"{self.prev_cam_path}calib.launch"
-        self.detect_launch = f"{self.detect_launch_path}local_detect.launch"
+        self.detect_launch = f"{self.detect_launch_path}local_detect_cam.launch"
 
         self.title(f"CAMERA {self.nuc_number} Dashboard")
         self.geometry("960x500")
@@ -617,6 +617,7 @@ class ClientGUI(customtkinter.CTk):
         stop_button = self.left_bottom_frame_stop_local_detect_button
         try:
             if not is_node_running(f'camera_{nuc_number}/aruco_detect'):
+                print('detection node is not running, now trying to start it.. ')
                 detection_start(nuc_number, detect_launch, uuid,
                                 self.marker_dim, self.marker_dict)
                 self._check_detection_event(nuc_number)
