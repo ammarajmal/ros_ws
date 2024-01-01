@@ -378,7 +378,7 @@ class ClientGUI(customtkinter.CTk):
         self.right_bottom_frame_detect_rate_result_label.place(relx=0.6, rely=0.75)
 
         self.right_bottom_frame_detect_result_label = customtkinter.CTkButton(
-            self.right_bottom_frame, text="Detection Result", border_width=1, border_color='white', command=lambda: self._check_detection_result_event(self.nuc_number),
+            self.right_bottom_frame, text="Detection Result", border_width=1, border_color='white', command=None,
             fg_color=themes[COLOR_SELECT][1])
         self.right_bottom_frame_detect_result_label.place(relx=0.1, rely=0.84)
         self.right_bottom_frame_detect_result_ans_label = customtkinter.CTkLabel(
