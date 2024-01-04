@@ -407,13 +407,12 @@ class ClientGUI(customtkinter.CTk):
         else:
             self.right_bottom_frame_cam_fps_result_label.configure(
                 text="Running", text_color="yellow")
-            rospy.loginfo(f"Camera at NUC {nuc_number} is running..")
+            # rospy.loginfo(f"Camera at NUC {nuc_number} is running..")
             frequency = get_ros_topic_frequency(camera_topic_name)
             if frequency is not None:
                 self.right_bottom_frame_cam_fps_result_label.configure(
                     text=f"{frequency} Hz", text_color="yellow")
-                rospy.loginfo(
-                    f"Frequency of {camera_topic_name}: {frequency} Hz")
+                # rospy.loginfo(f"Frequency of {camera_topic_name}: {frequency} Hz")
             else:
                 self.right_bottom_frame_cam_fps_result_label.configure(
                     text="Null", text_color="white")
@@ -441,13 +440,12 @@ class ClientGUI(customtkinter.CTk):
         else:
             self.right_bottom_frame_detect_rate_result_label.configure(
                 text="Running", text_color="yellow")
-            rospy.loginfo(f"Detection at NUC {nuc_number} is running..")
+            # rospy.loginfo(f"Detection at NUC {nuc_number} is running..")
             frequency = get_ros_topic_frequency(detection_topic_name)
             if frequency is not None:
                 self.right_bottom_frame_detect_rate_result_label.configure(
                     text=f"{frequency} Hz", text_color="yellow")
-                rospy.loginfo(
-                    f"Frequency of {detection_topic_name}: {frequency} Hz")
+                # rospy.loginfo(f"Frequency of {detection_topic_name}: {frequency} Hz")
             else:
                 self.right_bottom_frame_detect_rate_result_label.configure(
                     text="Null", text_color="white")

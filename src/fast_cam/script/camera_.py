@@ -27,6 +27,8 @@ class CameraNode:
         # Camera parameters
         self.camera_parameters_file = "/home/ammar/ros_ws/src/fast_cam/config/camera_info_nuc1.yaml"
         self.camera_name = rospy.get_param("~camera_name", "Camera_0")
+        self.default_fps = 150
+        self.rate = rospy.Rate(rospy.get_param('~frame_rate', self.default_fps))
         self.device_id = rospy.get_param("~device_id", -1)
         self.device_ip = rospy.get_param("~device_ip", "192.168.1.200")
         self.calibration_file = rospy.get_param("~calibration_file", self.camera_parameters_file)
@@ -36,7 +38,6 @@ class CameraNode:
         # self.shutdown_service = rospy.Service("~shutdown", Trigger, self.handle_shutdown)
         self.bridge = CvBridge()
         self.cap = None
-        self.rate = rospy.Rate(150)
         self.gain = 50
         self.camera_frate = 0
 
@@ -73,7 +74,7 @@ class CameraNode:
             rospy.signal_shutdown("Camera at specified IP not found.")
         else:
             # Print camera information
-            self.print_camera_info(my_camera)
+            # self.print_camera_info(my_camera)
             try:
                 sel_camera = mvsdk.CameraInit(my_camera, -1, -1)
                 
@@ -93,7 +94,7 @@ class CameraNode:
             # Allocate the RGB buffer
             frame_buffer_size = cap.sResolutionRange.iWidthMax * cap.sResolutionRange.iHeightMax * (1 if mono_camera else 3)
             
-            rospy.loginfo(f"Resolution: {cap.sResolutionRange.iWidthMax} x {cap.sResolutionRange.iHeightMax}")
+            # rospy.loginfo(f"Resolution: {cap.sResolutionRange.iWidthMax} x {cap.sResolutionRange.iHeightMax}")
             frame_buffer = mvsdk.CameraAlignMalloc(frame_buffer_size, 16)
             
             mvsdk.CameraSetTriggerMode(sel_camera, 0)
@@ -106,9 +107,9 @@ class CameraNode:
             self.cap = cap
             self.frame_buffer = frame_buffer
             
-            rospy.loginfo(f'Camera Resolution: {mvsdk.CameraGetImageResolution(sel_camera).acDescription.decode("utf-8")}')
-            rospy.loginfo(f'Camera Exposure Time: {mvsdk.CameraGetExposureTime(sel_camera)/1000} ms')
-            rospy.loginfo(f'Camera Gain: {mvsdk.CameraGetAnalogGain(sel_camera)}')
+            # rospy.loginfo(f'Camera Resolution: {mvsdk.CameraGetImageResolution(sel_camera).acDescription.decode("utf-8")}')
+            # rospy.loginfo(f'Camera Exposure Time: {mvsdk.CameraGetExposureTime(sel_camera)/1000} ms')
+            # rospy.loginfo(f'Camera Gain: {mvsdk.CameraGetAnalogGain(sel_camera)}')
 
             self.camera_parameters.name = self.camera_name
             self.camera_parameters.model = my_camera.acFriendlyName.decode('utf-8')
@@ -122,21 +123,23 @@ class CameraNode:
             self.camera_parameters.gain = str(mvsdk.CameraGetAnalogGain(sel_camera))
 
             self.camera_info_manager.loadCameraInfo()
-            
-            
-
 
     def main_loop(self):
         """Main loop"""
-        while not rospy.is_shutdown():
-            frame = self.capture_frame()
-            if frame is not None:
-                self.publish_frame(frame)
-            else:
-                self.cleanup()
-                rospy.logerr('1. No frame found, leaving the main loop.. ')
-                rospy.signal_shutdown("No frame found.")
-                break
+        try:
+            while not rospy.is_shutdown():
+                frame = self.capture_frame()
+                if frame is not None:
+                    self.publish_frame(frame)
+                else:
+                    self.cleanup()
+                    rospy.logerr('1. No frame found, leaving the main loop.. ')
+                    rospy.signal_shutdown("No frame found.")
+                    break
+        except Exception as e:
+            rospy.logerr(f'2. No frame found, leaving the main loop.. {e}')
+            self.cleanup()
+            raise
 
     def capture_frame(self):
         """Capture a frame from the camera"""
@@ -191,7 +194,11 @@ class CameraNode:
         try:
             new_gain = request.gain
             print(f"Setting gain to {new_gain}")
-            new_gain = int(new_gain)
+            try:
+                new_gain = int(new_gain)
+            except ValueError:
+                rospy.logerr(f"Invalid gain value: {new_gain}")
+                return SetGainResponse(False, f"Invalid gain value: {new_gain}")
             mvsdk.CameraSetAnalogGain(self.camera, new_gain)
             self.camera_parameters.gain = str(mvsdk.CameraGetAnalogGain(self.camera))
             rospy.loginfo(f"Gain set to {self.camera_parameters.gain}")
