@@ -17,20 +17,22 @@ from fast_cam.srv import SetGain, SetGainResponse
 class CameraNode:
     """Camera node class"""
     def __init__(self):
+        """ Initialize the camera node """
         rospy.init_node('camera_node', anonymous=False)
+        # publishers
         self.image_publisher = rospy.Publisher("~image_raw", Image, queue_size=10)
         self.camera_info_publisher = rospy.Publisher("~camera_info", CameraInfo, queue_size=10)
         self.camera_parameters_publisher = rospy.Publisher("~camera_specifications", CameraParameters, queue_size=10)
-        
         self.set_gain_service = rospy.Service("~set_gain", SetGain, self.handle_set_gain)
-        
+        # Camera parameters
         self.camera_parameters_file = "/home/ammar/ros_ws/src/fast_cam/config/camera_info_nuc1.yaml"
         self.camera_name = rospy.get_param("~camera_name", "Camera_0")
         self.device_id = rospy.get_param("~device_id", -1)
         self.device_ip = rospy.get_param("~device_ip", "192.168.1.200")
         self.calibration_file = rospy.get_param("~calibration_file", self.camera_parameters_file)
-        
         self.camera_manager = rospy.get_param("~camera_manager", "opencv")
+        self.camera_info_manager = CameraInfoManager(cname=self.camera_manager,url=f'file://{self.calibration_file}', namespace=self.camera_manager)
+
         # self.shutdown_service = rospy.Service("~shutdown", Trigger, self.handle_shutdown)
         self.bridge = CvBridge()
         self.cap = None
@@ -40,7 +42,6 @@ class CameraNode:
 
         self.camera = None
         self.working_camera = 0
-        self.camera_info_manager = CameraInfoManager(cname=self.camera_manager,url=f'file://{self.calibration_file}', namespace=self.camera_manager)
         
         self.camera_parameters = CameraParameters()
         
@@ -140,15 +141,16 @@ class CameraNode:
     def capture_frame(self):
         """Capture a frame from the camera"""
         try:
-            p_raw_data, frame_head = mvsdk.CameraGetImageBuffer(self.camera, 200)
+            p_raw_data, frame_head = mvsdk.CameraGetImageBuffer(self.camera, 1000)
             mvsdk.CameraImageProcess(self.camera, p_raw_data, self.frame_buffer, frame_head)
-            mvsdk.CameraReleaseImageBuffer(self.camera, p_raw_data)
+            if p_raw_data is not None:
+                mvsdk.CameraReleaseImageBuffer(self.camera, p_raw_data)
             frame_data = (mvsdk.c_ubyte * frame_head.uBytes).from_address(self.frame_buffer)
             frame = np.frombuffer(frame_data, dtype=np.uint8)
             frame = frame.reshape((frame_head.iHeight, frame_head.iWidth, 1 if frame_head.uiMediaType == mvsdk.CAMERA_MEDIA_TYPE_MONO8 else 3))
             return frame
-        except mvsdk.CameraException as e:
-            rospy.logerr(f"Frame capture failed: {e.message}")
+        except Exception as e:
+            rospy.logerr(f"Frame capture failed: {e}")
             return None
 
     def publish_frame(self, frame):
