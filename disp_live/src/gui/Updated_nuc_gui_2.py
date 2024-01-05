@@ -117,15 +117,15 @@ class ClientGUI(customtkinter.CTk):
         self._create_widgets()
 
     def start_ros_thread(self) -> None:
-        # Existing fiducial transforms listener thread
+        """ Existing fiducial transforms listener thread"""
         threading.Thread(
             target=self.fiducial_transforms_listener, daemon=True).start()
-
-        # New camera specifications listener thread
+       # New camera specifications listener thread
         threading.Thread(target=self.camera_specs_listener,
                          daemon=True).start()
 
     def camera_specs_listener(self):
+        """ Subscribe to the camera specifications topic """
         rospy.Subscriber(
             f"/camera_{self.nuc_number}/camera_specifications", CameraSpecs, self.camera_specs_callback)
         rospy.spin()
