@@ -786,6 +786,8 @@ class ClientGUI(customtkinter.CTk):
 
     def _left_button_frame_calib_update_button_event(self):
         """ routine for updating calibration parameters """
+        chessboard_entry = self.middle_center_frame_chessboard_entry.get()
+        sq_size_entry = self.middle_center_frame_sq_size_entry.get()
         if not chessboard_entry and not sq_size_entry:
             print('Nothing updated')
             print(f'Original square size: {self.square_size}')
