@@ -41,6 +41,7 @@ add_message_files(
 add_service_files(
   FILES
   SetGain.srv
+  GetCameraProperties.srv
 )
 
 ## Generate actions in the 'action' folder

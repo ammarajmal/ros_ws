@@ -1,0 +1,9 @@
+---
+string name
+string model
+string serial_number
+string ip_address
+string resolution
+string target_fps
+string exposure_time
+string gain

@@ -120,5 +120,4 @@ import contextlib
 if __name__ == '__main__':
 	with contextlib.suppress(rospy.ROSInterruptException):
 		driver = Camera()
-		driver.run()		
-
+		driver.run()
