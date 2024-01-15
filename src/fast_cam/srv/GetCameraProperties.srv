@@ -1,0 +1,10 @@
+# string set_gain
+---
+string name
+string model
+string serial_number
+string ip_address
+string resolution
+uint8 target_fps
+float32 exposure_time
+string gain

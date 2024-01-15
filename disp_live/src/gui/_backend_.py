@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-import rospy
-import roslaunch
 import subprocess
 import socket
 import re
+import rospy
+import roslaunch
+
 
 MACHINE_NAME = 'Main Computer'
 themes = {'blue': ("#3B8ED0", "#1F6AA5"),
@@ -14,7 +15,7 @@ themes = {'blue': ("#3B8ED0", "#1F6AA5"),
 # select value of COLOR_SELECT from (0: blue, 1: green, 2: dark-blue)
 COLOR_SELECT = list(themes.keys())[2]
 def get_ros_topic_frequency(topic):
-    # Start the rostopic hz command
+    """Start the rostopic hz command"""
     process = subprocess.Popen(['rostopic', 'hz', topic], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 
     # Wait a bit to get some output
@@ -39,9 +40,18 @@ def get_ros_topic_frequency(topic):
         return None
 def _check_ros_status_function(status_btn):
     active_systems = str()
-    camera_1 = check_active_topic(1)
-    camera_2 = check_active_topic(2)
-    camera_3 = check_active_topic(3)
+    my_topic = f"/camera_{nuc_machine}/image_raw"
+    print(_topic_check(my_topic))
+    topic_name = f"/camera_{nuc_machine}/image_raw"
+    
+    camera_1 = _topic_check(f"/camera_1/image_raw")
+    camera_2 = _topic_check(f"/camera_2/image_raw")
+    camera_3 = _topic_check(f"/camera_3/image_raw")
+    
+    
+    # camera_1 = check_active_topic(1)
+    # camera_2 = check_active_topic(2)
+    # camera_3 = check_active_topic(3)
     # Now, check which of the camera_1, camera_2, and nuc3 is True, add to active_systems
     if camera_1 is True:
         active_systems += '     NUC 1'
@@ -55,6 +65,7 @@ def _check_ros_status_function(status_btn):
     status_btn.configure(text=active_systems)
 
 def is_node_running(node_name):
+    """ Checks if a ROS node is running"""
     try:
         # Use the subprocess module to run the 'rosnode list' command
         # and capture its outputis_node_running
@@ -67,6 +78,7 @@ def is_node_running(node_name):
         return False
 
 def kill_ros_node(node_name):
+    """ Kills a ROS node"""
     try:
         # Use the subprocess module to run the 'rosnode kill' command
         subprocess.call(['rosnode', 'kill', node_name])
@@ -117,10 +129,18 @@ def check_active_topic(nuc_machine):
     all_topics = rospy.get_published_topics()
     return topic_name in [topic[0] for topic in all_topics]
 
+
+def _topic_check(this_topic):
+    """Checks whether a given topic is currently running/active or not.. """
+    all_topics = rospy.get_published_topics()
+    return this_topic in [topic[0] for topic in all_topics]
+
+
 def remote_cam_start_updated(machine_num, remote_nuc_launch,ros_uuid, start_btn, stop_btn):
     """Starts a remote camera at given machine and updates button"""
     try:
-        if not check_active_topic(machine_num):
+        if not _topic_check(f"/camera_{machine_num}/image_raw"):
+        # if not check_active_topic(machine_num):
             print(f"Starting Camera {machine_num} from {MACHINE_NAME}...")
             camera_launch_args = [f"{remote_nuc_launch}",
                                     f'launch_nuc:=camera_{machine_num}']
@@ -147,8 +167,8 @@ def remote_cam_start_updated(machine_num, remote_nuc_launch,ros_uuid, start_btn,
 def remote_cam_stop_updated(machine_num, start_btn, stop_btn):
     """Stops a remote camera at given machine and updates button"""
     try:
-        
-        if check_active_topic(machine_num):
+        if _topic_check(f"/camera_{machine_num}/image_raw"):
+        # if check_active_topic(machine_num):
             print(f"Stopping Camera {machine_num} from {MACHINE_NAME}...")
             kill_ros_node(f"/camera_{machine_num}")
             # processes_[f'camera_{machine_num}_remote_cam_driver'].shutdown()
@@ -174,7 +194,8 @@ def remote_detect_stop(machine_num):
     except roslaunch.RLException as e:
         print(e)
 def remote_detect_start(machine_num, remote_detect_launch_file, ros_uuid, start_detect_btn, stop_detect_btn):
-    if check_active_topic(machine_num):
+    if _topic_check(f"/camera_{machine_num}/image_raw"):
+    # if check_active_topic(machine_num):
         print(f"Starting Detection at NUC {machine_num} from {MACHINE_NAME}...")
         try:
             # if not is_node_running(f"/camera_{machine_num}/aruco_detect"): needs to be updated~ 
@@ -223,7 +244,11 @@ def get_lan_ip():
 
 
 if __name__ == "__main__":
+    nuc_machine = 2
+    my_topic = f"/camera_{nuc_machine}/image_raw"
+    print(_topic_check(my_topic))
     try:
+        print(_topic_check(f"/camera_2/image_raw"))
         print(check_active_topic(2))
         if is_node_running("/camera_1"):
             print("Node is running.")

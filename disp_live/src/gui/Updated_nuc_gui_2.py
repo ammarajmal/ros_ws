@@ -11,7 +11,7 @@ import threading
 from fiducial_msgs.msg import FiducialTransformArray
 from fast_cam.msg import CameraSpecs
 from fast_cam.srv import SetGain
-from _backend_ import is_node_running, kill_ros_node, detection_start, detection_stop, get_ros_topic_frequency
+from _backend_ import is_node_running, kill_ros_node, detection_start, detection_stop, get_ros_topic_frequency, _topic_check
 themes = {'blue': ("#3B8ED0", "#1F6AA5"),
           'green': ("#2CC985", "#2FA572"),
           'dark-blue': ("#3a7ebf", "#1f538d"),
@@ -42,7 +42,7 @@ class ClientGUI(customtkinter.CTk):
 
         self.message_timeout = 0.5  # 0.5 second
         self.timeout_timer = None
-        self.start_ros_thread()
+        # self.start_ros_thread()
         self.package = 'fast_cam'
         # ********************************************************************************
         # Path management for Launch files
@@ -116,82 +116,82 @@ class ClientGUI(customtkinter.CTk):
             self.left_bottom_frame)
         self._create_widgets()
 
-    def start_ros_thread(self) -> None:
-        # Existing fiducial transforms listener thread
-        threading.Thread(
-            target=self.fiducial_transforms_listener, daemon=True).start()
+    # def start_ros_thread(self) -> None:
+    #     # Existing fiducial transforms listener thread
+    #     threading.Thread(
+    #         target=self.fiducial_transforms_listener, daemon=True).start()
 
         # New camera specifications listener thread
-        threading.Thread(target=self.camera_specs_listener,
-                         daemon=True).start()
+        # threading.Thread(target=self.camera_specs_listener,
+        #                  daemon=True).start()
 
-    def camera_specs_listener(self):
-        rospy.Subscriber(
-            f"/camera_{self.nuc_number}/camera_specifications", CameraSpecs, self.camera_specs_callback)
-        rospy.spin()
+    # def camera_specs_listener(self):
+    #     rospy.Subscriber(
+    #         f"/camera_{self.nuc_number}/camera_specifications", CameraSpecs, self.camera_specs_callback)
+    #     rospy.spin()
 
-    def camera_specs_callback(self, data):
-        """ Update the camera specs """
-        self.right_bottom_frame_cam_name_result_label.configure(
-            text=f"Camera {self.nuc_number}", text_color="white")
-        self.right_bottom_frame_cam_model_result_label.configure(
-            text=data.model, text_color="white")
-        self.right_bottom_frame_cam_serial_result_label.configure(
-            text=data.serial_number, text_color="white")
-        self.right_bottom_frame_cam_ip_result_label.configure(
-            text=data.ip_address, text_color="white")
-        self.right_bottom_frame_cam_reolution_result_label.configure(
-            text=data.resolution, text_color="white")
-        # self.right_bottom_frame_cam_exposure_result_label.configure(text=data.gain, text_color="white")
+    # def camera_specs_callback(self, data):
+    #     """ Update the camera specs """
+    #     self.right_bottom_frame_cam_name_result_label.configure(
+    #         text=f"Camera {self.nuc_number}", text_color="white")
+    #     self.right_bottom_frame_cam_model_result_label.configure(
+    #         text=data.model, text_color="white")
+    #     self.right_bottom_frame_cam_serial_result_label.configure(
+    #         text=data.serial_number, text_color="white")
+    #     self.right_bottom_frame_cam_ip_result_label.configure(
+    #         text=data.ip_address, text_color="white")
+    #     self.right_bottom_frame_cam_reolution_result_label.configure(
+    #         text=data.resolution, text_color="white")
+    #     # self.right_bottom_frame_cam_exposure_result_label.configure(text=data.gain, text_color="white")
 
-        if hasattr(self, 'camera_specs_timer') and self.camera_specs_timer:
-            self.camera_specs_timer.cancel()
-        self.camera_specs_timer = threading.Timer(
-            self.message_timeout, self.camera_specs_no_data)
-        self.camera_specs_timer.start()
+    #     if hasattr(self, 'camera_specs_timer') and self.camera_specs_timer:
+    #         self.camera_specs_timer.cancel()
+    #     self.camera_specs_timer = threading.Timer(
+    #         self.message_timeout, self.camera_specs_no_data)
+    #     self.camera_specs_timer.start()
 
-    def camera_specs_no_data(self):
-        """ Function to call when no messages are received within the timeout """
-        # self.right_bottom_frame_cam_name_result_label.configure(text="Null", text_color="white")
-        self.right_bottom_frame_cam_model_result_label.configure(
-            text="-", text_color="white")
-        self.right_bottom_frame_cam_serial_result_label.configure(
-            text="-", text_color="white")
-        self.right_bottom_frame_cam_ip_result_label.configure(
-            text="-", text_color="white")
-        self.right_bottom_frame_cam_reolution_result_label.configure(
-            text="-", text_color="white")
+    # def camera_specs_no_data(self):
+    #     """ Function to call when no messages are received within the timeout """
+    #     # self.right_bottom_frame_cam_name_result_label.configure(text="Null", text_color="white")
+    #     self.right_bottom_frame_cam_model_result_label.configure(
+    #         text="-", text_color="white")
+    #     self.right_bottom_frame_cam_serial_result_label.configure(
+    #         text="-", text_color="white")
+    #     self.right_bottom_frame_cam_ip_result_label.configure(
+    #         text="-", text_color="white")
+    #     self.right_bottom_frame_cam_reolution_result_label.configure(
+    #         text="-", text_color="white")
 
-    def fiducial_transforms_listener(self):
-        rospy.Subscriber(f"/camera_{self.nuc_number}/fiducial_transforms",
-                         FiducialTransformArray, self.fiducial_transforms_callback)
-        rospy.spin()
+    # def fiducial_transforms_listener(self):
+    #     rospy.Subscriber(f"/camera_{self.nuc_number}/fiducial_transforms",
+    #                      FiducialTransformArray, self.fiducial_transforms_callback)
+    #     rospy.spin()
 
-    def fiducial_transforms_callback(self, data):
-        # Reset the timer whenever a message is received
-        if self.timeout_timer:
-            self.timeout_timer.cancel()
-        self.timeout_timer = threading.Timer(
-            self.message_timeout, self.no_message_received)
-        self.timeout_timer.start()
+    # def fiducial_transforms_callback(self, data):
+    #     # Reset the timer whenever a message is received
+    #     if self.timeout_timer:
+    #         self.timeout_timer.cancel()
+    #     self.timeout_timer = threading.Timer(
+    #         self.message_timeout, self.no_message_received)
+    #     self.timeout_timer.start()
 
-        detected = any(
-            transform.fiducial_id is not None for transform in data.transforms)
-        self.right_bottom_frame_detect_result_ans_label.after(
-            0, lambda: self.update_label(detected))
+    #     detected = any(
+    #         transform.fiducial_id is not None for transform in data.transforms)
+    #     self.right_bottom_frame_detect_result_ans_label.after(
+    #         0, lambda: self.update_label(detected))
 
-    def no_message_received(self):
-        # Function to call when no messages are received within the timeout
-        self.right_bottom_frame_detect_result_ans_label.after(
-            0, lambda: self.update_label(False))
+    # def no_message_received(self):
+    #     # Function to call when no messages are received within the timeout
+    #     self.right_bottom_frame_detect_result_ans_label.after(
+    #         0, lambda: self.update_label(False))
 
-    def update_label(self, detected):
-        if detected:
-            self.right_bottom_frame_detect_result_ans_label.configure(
-                text="Detected", text_color=themes['green'][0])
-        else:
-            self.right_bottom_frame_detect_result_ans_label.configure(
-                text="Not Detected", text_color="white")
+    # def update_label(self, detected):
+    #     if detected:
+    #         self.right_bottom_frame_detect_result_ans_label.configure(
+    #             text="Detected", text_color=themes['green'][0])
+    #     else:
+    #         self.right_bottom_frame_detect_result_ans_label.configure(
+    #             text="Not Detected", text_color="white")
 
     def destroy_routine(self) -> None:
         """_summary_"""
@@ -302,7 +302,7 @@ class ClientGUI(customtkinter.CTk):
             self.right_bottom_frame, text="Name", border_width=1, border_color='white')
         self.right_bottom_frame_cam_name_label.place(relx=0.10, rely=0.03)
         self.right_bottom_frame_cam_name_result_label = customtkinter.CTkLabel(
-            self.right_bottom_frame, text=f"Camera {self.nuc_number}", text_color="white")
+            self.right_bottom_frame, text=f"-", text_color="white")
         self.right_bottom_frame_cam_name_result_label.place(
             relx=0.6, rely=0.03)
 
@@ -388,40 +388,40 @@ class ClientGUI(customtkinter.CTk):
     def _check_camera_event(self, nuc_number) -> None:
         """ routine to check the status of the camera """
         camera_topic_name = f"/camera_{nuc_number}/image_raw"
-        if not self.check_active_topic(camera_topic_name):
+        if not _topic_check(camera_topic_name):
             self.right_bottom_frame_cam_status_result_label.configure(
                 text="Idle", text_color="white")
             # rospy.logerr(f"Camera at NUC {nuc_number} is not running..")
         else:
+            self.right_bottom_frame_cam_name_result_label.configure(
+                text=f"Camera {self.nuc_number}", text_color="white")
             self.right_bottom_frame_cam_status_result_label.configure(
                 text="Running", text_color="yellow")
+            self.right_bottom_frame_cam_model_result_label.configure(
+                text="Point Grey", text_color="white")
+            self.right_bottom_frame_cam_serial_result_label.configure(
+                text="Null", text_color="white")
+            self.right_bottom_frame_cam_ip_result_label.configure(
+                text="Null", text_color="white")
+            self.right_bottom_frame_cam_reolution_result_label.configure(
+                text="Null", text_color="white")
+            
+            
             # rospy.loginfo(f"Camera at NUC {nuc_number} is running..")
 
     def _check_camera_fps_event(self, nuc_number) -> None:
         """ routine to check the fps of the camera """
         camera_topic_name = f"/camera_{nuc_number}/image_raw"
-        if not self.check_active_topic(camera_topic_name):
-            self.right_bottom_frame_cam_fps_result_label.configure(
-                text="Null", text_color="white")
+        if not _topic_check(camera_topic_name):
             rospy.logerr(f"Camera at NUC {nuc_number} is not running..")
-        else:
-            self.right_bottom_frame_cam_fps_result_label.configure(
-                text="Running", text_color="yellow")
-            # rospy.loginfo(f"Camera at NUC {nuc_number} is running..")
-            frequency = get_ros_topic_frequency(camera_topic_name)
-            if frequency is not None:
-                self.right_bottom_frame_cam_fps_result_label.configure(
-                    text=f"{frequency} Hz", text_color="yellow")
-                # rospy.loginfo(f"Frequency of {camera_topic_name}: {frequency} Hz")
-            else:
-                self.right_bottom_frame_cam_fps_result_label.configure(
-                    text="Null", text_color="white")
-                rospy.logerr("Unable to determine the frequency.")
+            return
+        frequency = get_ros_topic_frequency(camera_topic_name)
+        return frequency if frequency is not None else None
 
     def _check_detection_event(self, nuc_number) -> None:
         """routine to check the status of the detection """
         detection_topic_name = f"/camera_{nuc_number}/fiducial_transforms"
-        if not self.check_active_topic(detection_topic_name):
+        if not _topic_check(detection_topic_name):
             self.right_bottom_frame_detect_status_label.configure(
                 text="Idle", text_color="white")
             rospy.logerr(f"Detection at NUC {nuc_number} is not running..")
@@ -433,7 +433,7 @@ class ClientGUI(customtkinter.CTk):
     def _check_detection_rate_event(self, nuc_number) -> None:
         """ routine to check the rate of the detection """
         detection_topic_name = f"/camera_{nuc_number}/fiducial_transforms"
-        if not self.check_active_topic(detection_topic_name):
+        if not _topic_check(detection_topic_name):
             self.right_bottom_frame_detect_rate_result_label.configure(
                 text="Null", text_color="white")
             rospy.logerr(f"Detection at NUC {nuc_number} is not running..")
@@ -649,13 +649,6 @@ class ClientGUI(customtkinter.CTk):
         except Exception as e:
             print(f'Error: {e}')
 
-    def check_active_topic(self, topic_name):
-        """Checks whether a topic is currently running/active or not.. """
-        all_topics = rospy.get_published_topics()
-        if topic_name in [topic[0] for topic in all_topics]:
-            return True
-        else:
-            return False
 
     def _view_nuc_local_cam_button_event(self, view_nuc_machine) -> None:
         """This function is used to view camera output for a given camera """
@@ -694,7 +687,8 @@ class ClientGUI(customtkinter.CTk):
         """This function is used to start or stop the camera node based on its current state."""
         # If camera is not running, start it
         camera_topic_name = f"/camera_{nuc_machine}/image_raw"
-        if not self.check_active_topic(camera_topic_name):
+        if not _topic_check(camera_topic_name):
+        # if not _topic_check(camera_topic_name):
             camera_launch_args = [
                 f"{self.local_nuc_launch}", f"launch_nuc:=camera_{nuc_machine}"]
             roslaunch_file = [(roslaunch.rlutil.resolve_launch_arguments(camera_launch_args)[0],
@@ -784,6 +778,8 @@ class ClientGUI(customtkinter.CTk):
 
     def _left_button_frame_calib_update_button_event(self):
         """ routine for updating calibration parameters """
+        chessboard_entry = self.middle_center_frame_chessboard_entry.get()
+        sq_size_entry = self.middle_center_frame_sq_size_entry.get()
         if not chessboard_entry and not sq_size_entry:
             print('Nothing updated')
             print(f'Original square size: {self.square_size}')
