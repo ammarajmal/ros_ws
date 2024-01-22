@@ -7,11 +7,10 @@ import customtkinter
 import rospy
 import rospkg
 import roslaunch
-import threading
 from fiducial_msgs.msg import FiducialTransformArray
 from fast_cam.msg import CameraSpecs
-from fast_cam.srv import SetGain
-from _backend_ import is_node_running, kill_ros_node, detection_start, detection_stop, get_ros_topic_frequency, _topic_check
+from fast_cam.srv import SetGain, GetCameraProperties
+from _backend_ import is_node_running, kill_ros_node, detection_start, detection_stop, get_ros_topic_frequency
 themes = {'blue': ("#3B8ED0", "#1F6AA5"),
           'green': ("#2CC985", "#2FA572"),
           'dark-blue': ("#3a7ebf", "#1f538d"),
@@ -42,7 +41,6 @@ class ClientGUI(customtkinter.CTk):
 
         self.message_timeout = 0.5  # 0.5 second
         self.timeout_timer = None
-        # self.start_ros_thread()
         self.package = 'fast_cam'
         # ********************************************************************************
         # Path management for Launch files
@@ -118,12 +116,10 @@ class ClientGUI(customtkinter.CTk):
 
     # def start_ros_thread(self) -> None:
     #     # Existing fiducial transforms listener thread
-    #     threading.Thread(
-    #         target=self.fiducial_transforms_listener, daemon=True).start()
+    #     threading.Thread(target=self.fiducial_transforms_listener, daemon=True).start()
 
         # New camera specifications listener thread
-        # threading.Thread(target=self.camera_specs_listener,
-        #                  daemon=True).start()
+        # threading.Thread(target=self.camera_specs_listener,daemon=True).start()
 
     # def camera_specs_listener(self):
     #     rospy.Subscriber(
@@ -142,7 +138,7 @@ class ClientGUI(customtkinter.CTk):
     #         text=data.ip_address, text_color="white")
     #     self.right_bottom_frame_cam_reolution_result_label.configure(
     #         text=data.resolution, text_color="white")
-    #     # self.right_bottom_frame_cam_exposure_result_label.configure(text=data.gain, text_color="white")
+        # self.right_bottom_frame_cam_exposure_result_label.configure(text=data.gain, text_color="white")
 
     #     if hasattr(self, 'camera_specs_timer') and self.camera_specs_timer:
     #         self.camera_specs_timer.cancel()
@@ -171,8 +167,7 @@ class ClientGUI(customtkinter.CTk):
     #     # Reset the timer whenever a message is received
     #     if self.timeout_timer:
     #         self.timeout_timer.cancel()
-    #     self.timeout_timer = threading.Timer(
-    #         self.message_timeout, self.no_message_received)
+    #     self.timeout_timer = threading.Timer(self.message_timeout, self.no_message_received)
     #     self.timeout_timer.start()
 
     #     detected = any(
@@ -301,13 +296,16 @@ class ClientGUI(customtkinter.CTk):
         self.right_bottom_frame_cam_name_label = customtkinter.CTkButton(
             self.right_bottom_frame, text="Name", border_width=1, border_color='white')
         self.right_bottom_frame_cam_name_label.place(relx=0.10, rely=0.03)
+        # self.right_bottom_frame_cam_name_result_label = customtkinter.CTkLabel(
+        #     self.right_bottom_frame, text=f"Camera {self.nuc_number}", text_color="white")
         self.right_bottom_frame_cam_name_result_label = customtkinter.CTkLabel(
-            self.right_bottom_frame, text=f"-", text_color="white")
+            self.right_bottom_frame, text="-", text_color="white")
+
         self.right_bottom_frame_cam_name_result_label.place(
             relx=0.6, rely=0.03)
 
         self.right_bottom_frame_cam_status_label = customtkinter.CTkButton(
-            self.right_bottom_frame, text="Status", border_width=1, border_color='white', command=lambda: self._check_camera_event(self.nuc_number))
+            self.right_bottom_frame, text="Status", border_width=1, border_color='white', command=lambda: self._update_camera_specs(self.nuc_number))
         self.right_bottom_frame_cam_status_label.place(relx=0.1, rely=0.12)
         self.right_bottom_frame_cam_status_result_label = customtkinter.CTkLabel(
             self.right_bottom_frame, text="-", text_color="white")
@@ -367,14 +365,14 @@ class ClientGUI(customtkinter.CTk):
             fg_color=themes[COLOR_SELECT][1])
         self.right_bottom_frame_detect_status_label.place(relx=0.1, rely=0.66)
         self.right_bottom_frame_detect_status_label = customtkinter.CTkLabel(
-            self.right_bottom_frame, text="Idle", text_color="white")
+            self.right_bottom_frame, text="-", text_color="white")
         self.right_bottom_frame_detect_status_label.place(relx=0.6, rely=0.66)
         self.right_bottom_frame_detect_rate_button = customtkinter.CTkButton(
             self.right_bottom_frame, text="Detection Rate", border_width=1, border_color='white', command=lambda: self._check_detection_rate_event(self.nuc_number),
             fg_color=themes[COLOR_SELECT][1])
         self.right_bottom_frame_detect_rate_button.place(relx=0.1, rely=0.75)
         self.right_bottom_frame_detect_rate_result_label = customtkinter.CTkLabel(
-            self.right_bottom_frame, text="Null", text_color="white")
+            self.right_bottom_frame, text="-", text_color="white")
         self.right_bottom_frame_detect_rate_result_label.place(relx=0.6, rely=0.75)
 
         self.right_bottom_frame_detect_result_label = customtkinter.CTkButton(
@@ -382,46 +380,81 @@ class ClientGUI(customtkinter.CTk):
             fg_color=themes[COLOR_SELECT][1])
         self.right_bottom_frame_detect_result_label.place(relx=0.1, rely=0.84)
         self.right_bottom_frame_detect_result_ans_label = customtkinter.CTkLabel(
-            self.right_bottom_frame, text="Null", text_color="white")
+            self.right_bottom_frame, text="-", text_color="white")
         self.right_bottom_frame_detect_result_ans_label.place(relx=0.6, rely=0.84)
 
-    def _check_camera_event(self, nuc_number) -> None:
-        """ routine to check the status of the camera """
+    def _update_camera_specs(self, nuc_number) -> None:
+        """ method to check the status of the camera """
         camera_topic_name = f"/camera_{nuc_number}/image_raw"
-        if not _topic_check(camera_topic_name):
-            self.right_bottom_frame_cam_status_result_label.configure(
-                text="Idle", text_color="white")
-            # rospy.logerr(f"Camera at NUC {nuc_number} is not running..")
+        if not self.check_active_topic(camera_topic_name):
+            # If the camera topic is not active, reset the camera properties
+            self.reset_camera_properties_in_gui(nuc_number)
+            rospy.logerr(f"Camera at NUC {nuc_number} is not running..")
         else:
-            self.right_bottom_frame_cam_name_result_label.configure(
-                text=f"Camera {self.nuc_number}", text_color="white")
-            self.right_bottom_frame_cam_status_result_label.configure(
-                text="Running", text_color="yellow")
-            self.right_bottom_frame_cam_model_result_label.configure(
-                text="Point Grey", text_color="white")
-            self.right_bottom_frame_cam_serial_result_label.configure(
-                text="Null", text_color="white")
-            self.right_bottom_frame_cam_ip_result_label.configure(
-                text="Null", text_color="white")
-            self.right_bottom_frame_cam_reolution_result_label.configure(
-                text="Null", text_color="white")
-            
-            
-            # rospy.loginfo(f"Camera at NUC {nuc_number} is running..")
+            try:
+                response = rospy.ServiceProxy(
+                    f"/camera_{nuc_number}/get_camera_properties", GetCameraProperties)()
+                self.right_bottom_frame_cam_name_result_label.configure(
+                    text=f"Camera {nuc_number}", text_color="white")
+                self.right_bottom_frame_cam_status_result_label.configure(
+                    text="Running", text_color="yellow")
+                self.right_bottom_frame_cam_model_result_label.configure(
+                    text=response.model, text_color="white")
+                self.right_bottom_frame_cam_serial_result_label.configure(
+                    text=response.serial_number, text_color="white")
+                self.right_bottom_frame_cam_ip_result_label.configure(
+                    text=response.ip_address, text_color="white")
+                self.right_bottom_frame_cam_reolution_result_label.configure(
+                    text=response.resolution, text_color="white")
+                # self.right_bottom_frame_cam_exposure_result_label.configure(text=response.gain, text_color="white")
+            except rospy.ServiceException as e:
+                # Resets the camera properties if the service call fails
+                rospy.logerr(f"Service call failed: {e}")
+                self.reset_camera_properties_in_gui(nuc_number)
+                
+
+
+    def reset_camera_properties_in_gui(self, nuc_number) -> None:
+        """ method to reset the camera properties """
+        self.right_bottom_frame_cam_name_result_label.configure(
+            text="-", text_color="white")
+        self.right_bottom_frame_cam_status_result_label.configure(
+            text="-", text_color="white")
+        self.right_bottom_frame_cam_model_result_label.configure(
+            text="-", text_color="white")
+        self.right_bottom_frame_cam_serial_result_label.configure(
+            text="-", text_color="white")
+        self.right_bottom_frame_cam_ip_result_label.configure(
+            text="-", text_color="white")
+        self.right_bottom_frame_cam_reolution_result_label.configure(
+            text="-", text_color="white")
+        # self.right_bottom_frame_cam_exposure_result_label.configure(text="-", text_color="white")
+        
 
     def _check_camera_fps_event(self, nuc_number) -> None:
         """ routine to check the fps of the camera """
         camera_topic_name = f"/camera_{nuc_number}/image_raw"
-        if not _topic_check(camera_topic_name):
+        if not self.check_active_topic(camera_topic_name):
+            self.right_bottom_frame_cam_fps_result_label.configure(
+                text="-", text_color="white")
             rospy.logerr(f"Camera at NUC {nuc_number} is not running..")
-            return
-        frequency = get_ros_topic_frequency(camera_topic_name)
-        return frequency if frequency is not None else None
+        else:
+            rospy.loginfo(f"Camera at NUC {nuc_number} is running..")
+            frequency = get_ros_topic_frequency(camera_topic_name)
+            if frequency is not None:
+                self.right_bottom_frame_cam_fps_result_label.configure(
+                    text=f"{frequency} Hz", text_color="yellow")
+                rospy.loginfo(
+                    f"Frequency of {camera_topic_name}: {frequency} Hz")
+            else:
+                self.right_bottom_frame_cam_fps_result_label.configure(
+                    text="-", text_color="red")
+                rospy.logerr("Unable to determine the frequency.")
 
     def _check_detection_event(self, nuc_number) -> None:
         """routine to check the status of the detection """
         detection_topic_name = f"/camera_{nuc_number}/fiducial_transforms"
-        if not _topic_check(detection_topic_name):
+        if not self.check_active_topic(detection_topic_name):
             self.right_bottom_frame_detect_status_label.configure(
                 text="Idle", text_color="white")
             rospy.logerr(f"Detection at NUC {nuc_number} is not running..")
@@ -433,19 +466,20 @@ class ClientGUI(customtkinter.CTk):
     def _check_detection_rate_event(self, nuc_number) -> None:
         """ routine to check the rate of the detection """
         detection_topic_name = f"/camera_{nuc_number}/fiducial_transforms"
-        if not _topic_check(detection_topic_name):
+        if not self.check_active_topic(detection_topic_name):
             self.right_bottom_frame_detect_rate_result_label.configure(
                 text="Null", text_color="white")
             rospy.logerr(f"Detection at NUC {nuc_number} is not running..")
         else:
             self.right_bottom_frame_detect_rate_result_label.configure(
                 text="Running", text_color="yellow")
-            # rospy.loginfo(f"Detection at NUC {nuc_number} is running..")
+            rospy.loginfo(f"Detection at NUC {nuc_number} is running..")
             frequency = get_ros_topic_frequency(detection_topic_name)
             if frequency is not None:
                 self.right_bottom_frame_detect_rate_result_label.configure(
                     text=f"{frequency} Hz", text_color="yellow")
-                # rospy.loginfo(f"Frequency of {detection_topic_name}: {frequency} Hz")
+                rospy.loginfo(
+                    f"Frequency of {detection_topic_name}: {frequency} Hz")
             else:
                 self.right_bottom_frame_detect_rate_result_label.configure(
                     text="Null", text_color="white")
@@ -649,6 +683,13 @@ class ClientGUI(customtkinter.CTk):
         except Exception as e:
             print(f'Error: {e}')
 
+    def check_active_topic(self, topic_name):
+        """Checks whether a topic is currently running/active or not.. """
+        all_topics = rospy.get_published_topics()
+        if topic_name in [topic[0] for topic in all_topics]:
+            return True
+        else:
+            return False
 
     def _view_nuc_local_cam_button_event(self, view_nuc_machine) -> None:
         """This function is used to view camera output for a given camera """
@@ -687,8 +728,7 @@ class ClientGUI(customtkinter.CTk):
         """This function is used to start or stop the camera node based on its current state."""
         # If camera is not running, start it
         camera_topic_name = f"/camera_{nuc_machine}/image_raw"
-        if not _topic_check(camera_topic_name):
-        # if not _topic_check(camera_topic_name):
+        if not self.check_active_topic(camera_topic_name):
             camera_launch_args = [
                 f"{self.local_nuc_launch}", f"launch_nuc:=camera_{nuc_machine}"]
             roslaunch_file = [(roslaunch.rlutil.resolve_launch_arguments(camera_launch_args)[0],
@@ -698,7 +738,7 @@ class ClientGUI(customtkinter.CTk):
             nuc_cam_driver.start()
             self.running_processes[f'camera_{nuc_machine}_driver'] = nuc_cam_driver
             rospy.sleep(1)
-            self._check_camera_event(nuc_machine)
+            self._update_camera_specs(nuc_machine)
             self._check_camera_fps_event(nuc_machine)
 
             # Update button text to indicate that the camera can be stopped
@@ -746,7 +786,7 @@ class ClientGUI(customtkinter.CTk):
                 )
                 self.running_processes.pop(
                     f'camera_{nuc_machine}_driver', None)
-                self._check_camera_event(nuc_machine)
+                self._update_camera_specs(nuc_machine)
                 self._check_camera_fps_event(nuc_machine)
                 rospy.loginfo(
                     f'NUC {nuc_machine} Camera stopped successfully!')
