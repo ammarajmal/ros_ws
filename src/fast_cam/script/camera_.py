@@ -28,6 +28,8 @@ class CameraNode:
             "~camera_specifications", CameraParameters, queue_size=10)
         self.set_gain_service = rospy.Service(
             "~set_gain", SetGain, self.handle_set_gain)
+        self.get_camera_properties_service = rospy.Service(
+            "~get_camera_properties", GetCameraProperties, self.handle_get_camera_properties)
         # Camera parameters
         self.camera_parameters_file = "/home/ammar/ros_ws/src/fast_cam/config/camera_info_nuc1.yaml"
         self.camera_name = rospy.get_param("~camera_name", "Camera_0")
@@ -225,6 +227,23 @@ class CameraNode:
         except mvsdk.CameraException as e:
             rospy.logerr(f"Failed to set gain: {e.message}")
             return SetGainResponse(False, f"Failed to set gain: {e.message}")
+    
+    def handle_get_camera_properties(self, request):
+        """Handle get camera properties service"""
+        try:
+            response = GetCameraPropertiesResponse()
+            response.name = self.camera_parameters.name
+            response.model = self.camera_parameters.model
+            response.serial_number = self.camera_parameters.serial_number
+            response.ip_address = self.camera_parameters.ip_address
+            response.resolution = self.camera_parameters.resolution
+            # response.target_fps = self.target_frame_rate
+            # response.exposure_time = self.camera_parameters.exposure_time
+            # response.gain = self.camera_parameters.gain
+            return response
+        except mvsdk.CameraException as e:
+            rospy.logerr(f"Failed to get camera properties: {e.message}")
+            return GetCameraPropertiesResponse(False, f"Failed to get camera properties: {e.message}")
 
 if __name__ == '__main__':
     try:
