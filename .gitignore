@@ -4,7 +4,8 @@
 #devel_collisions.*
 *.txt
 vscode/
-___pycache__/
+__pycache__/
+
 *.mvdat
 
 ### C ###
