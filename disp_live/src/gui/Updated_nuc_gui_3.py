@@ -42,7 +42,7 @@ class ClientGUI(customtkinter.CTk):
 
         self.message_timeout = 0.5  # 0.5 second
         self.timeout_timer = None
-        self.start_ros_thread()
+        # self.start_ros_thread()
         self.package = 'fast_cam'
         # ********************************************************************************
         # Path management for Launch files
@@ -116,82 +116,79 @@ class ClientGUI(customtkinter.CTk):
             self.left_bottom_frame)
         self._create_widgets()
 
-    def start_ros_thread(self) -> None:
-        # Existing fiducial transforms listener thread
-        threading.Thread(
-            target=self.fiducial_transforms_listener, daemon=True).start()
+    # def start_ros_thread(self) -> None:
+    #     # Existing fiducial transforms listener thread
+    #     threading.Thread(target=self.fiducial_transforms_listener, daemon=True).start()
 
         # New camera specifications listener thread
-        threading.Thread(target=self.camera_specs_listener,
-                         daemon=True).start()
+        # threading.Thread(target=self.camera_specs_listener,daemon=True).start()
 
-    def camera_specs_listener(self):
-        rospy.Subscriber(
-            f"/camera_{self.nuc_number}/camera_specifications", CameraSpecs, self.camera_specs_callback)
-        rospy.spin()
+    # def camera_specs_listener(self):
+    #     rospy.Subscriber(
+    #         f"/camera_{self.nuc_number}/camera_specifications", CameraSpecs, self.camera_specs_callback)
+    #     rospy.spin()
 
-    def camera_specs_callback(self, data):
-        """ Update the camera specs """
-        self.right_bottom_frame_cam_name_result_label.configure(
-            text=f"Camera {self.nuc_number}", text_color="white")
-        self.right_bottom_frame_cam_model_result_label.configure(
-            text=data.model, text_color="white")
-        self.right_bottom_frame_cam_serial_result_label.configure(
-            text=data.serial_number, text_color="white")
-        self.right_bottom_frame_cam_ip_result_label.configure(
-            text=data.ip_address, text_color="white")
-        self.right_bottom_frame_cam_reolution_result_label.configure(
-            text=data.resolution, text_color="white")
+    # def camera_specs_callback(self, data):
+    #     """ Update the camera specs """
+    #     self.right_bottom_frame_cam_name_result_label.configure(
+    #         text=f"Camera {self.nuc_number}", text_color="white")
+    #     self.right_bottom_frame_cam_model_result_label.configure(
+    #         text=data.model, text_color="white")
+    #     self.right_bottom_frame_cam_serial_result_label.configure(
+    #         text=data.serial_number, text_color="white")
+    #     self.right_bottom_frame_cam_ip_result_label.configure(
+    #         text=data.ip_address, text_color="white")
+    #     self.right_bottom_frame_cam_reolution_result_label.configure(
+    #         text=data.resolution, text_color="white")
         # self.right_bottom_frame_cam_exposure_result_label.configure(text=data.gain, text_color="white")
 
-        if hasattr(self, 'camera_specs_timer') and self.camera_specs_timer:
-            self.camera_specs_timer.cancel()
-        self.camera_specs_timer = threading.Timer(
-            self.message_timeout, self.camera_specs_no_data)
-        self.camera_specs_timer.start()
+    #     if hasattr(self, 'camera_specs_timer') and self.camera_specs_timer:
+    #         self.camera_specs_timer.cancel()
+    #     self.camera_specs_timer = threading.Timer(
+    #         self.message_timeout, self.camera_specs_no_data)
+    #     self.camera_specs_timer.start()
 
-    def camera_specs_no_data(self):
-        """ Function to call when no messages are received within the timeout """
-        # self.right_bottom_frame_cam_name_result_label.configure(text="Null", text_color="white")
-        self.right_bottom_frame_cam_model_result_label.configure(
-            text="-", text_color="white")
-        self.right_bottom_frame_cam_serial_result_label.configure(
-            text="-", text_color="white")
-        self.right_bottom_frame_cam_ip_result_label.configure(
-            text="-", text_color="white")
-        self.right_bottom_frame_cam_reolution_result_label.configure(
-            text="-", text_color="white")
+    # def camera_specs_no_data(self):
+    #     """ Function to call when no messages are received within the timeout """
+    #     # self.right_bottom_frame_cam_name_result_label.configure(text="Null", text_color="white")
+    #     self.right_bottom_frame_cam_model_result_label.configure(
+    #         text="-", text_color="white")
+    #     self.right_bottom_frame_cam_serial_result_label.configure(
+    #         text="-", text_color="white")
+    #     self.right_bottom_frame_cam_ip_result_label.configure(
+    #         text="-", text_color="white")
+    #     self.right_bottom_frame_cam_reolution_result_label.configure(
+    #         text="-", text_color="white")
 
-    def fiducial_transforms_listener(self):
-        rospy.Subscriber(f"/camera_{self.nuc_number}/fiducial_transforms",
-                         FiducialTransformArray, self.fiducial_transforms_callback)
-        rospy.spin()
+    # def fiducial_transforms_listener(self):
+    #     rospy.Subscriber(f"/camera_{self.nuc_number}/fiducial_transforms",
+    #                      FiducialTransformArray, self.fiducial_transforms_callback)
+    #     rospy.spin()
 
-    def fiducial_transforms_callback(self, data):
-        # Reset the timer whenever a message is received
-        if self.timeout_timer:
-            self.timeout_timer.cancel()
-        self.timeout_timer = threading.Timer(
-            self.message_timeout, self.no_message_received)
-        self.timeout_timer.start()
+    # def fiducial_transforms_callback(self, data):
+    #     # Reset the timer whenever a message is received
+    #     if self.timeout_timer:
+    #         self.timeout_timer.cancel()
+    #     self.timeout_timer = threading.Timer(self.message_timeout, self.no_message_received)
+    #     self.timeout_timer.start()
 
-        detected = any(
-            transform.fiducial_id is not None for transform in data.transforms)
-        self.right_bottom_frame_detect_result_ans_label.after(
-            0, lambda: self.update_label(detected))
+    #     detected = any(
+    #         transform.fiducial_id is not None for transform in data.transforms)
+    #     self.right_bottom_frame_detect_result_ans_label.after(
+    #         0, lambda: self.update_label(detected))
 
-    def no_message_received(self):
-        # Function to call when no messages are received within the timeout
-        self.right_bottom_frame_detect_result_ans_label.after(
-            0, lambda: self.update_label(False))
+    # def no_message_received(self):
+    #     # Function to call when no messages are received within the timeout
+    #     self.right_bottom_frame_detect_result_ans_label.after(
+    #         0, lambda: self.update_label(False))
 
-    def update_label(self, detected):
-        if detected:
-            self.right_bottom_frame_detect_result_ans_label.configure(
-                text="Detected", text_color=themes['green'][0])
-        else:
-            self.right_bottom_frame_detect_result_ans_label.configure(
-                text="Not Detected", text_color="white")
+    # def update_label(self, detected):
+    #     if detected:
+    #         self.right_bottom_frame_detect_result_ans_label.configure(
+    #             text="Detected", text_color=themes['green'][0])
+    #     else:
+    #         self.right_bottom_frame_detect_result_ans_label.configure(
+    #             text="Not Detected", text_color="white")
 
     def destroy_routine(self) -> None:
         """_summary_"""
@@ -301,13 +298,16 @@ class ClientGUI(customtkinter.CTk):
         self.right_bottom_frame_cam_name_label = customtkinter.CTkButton(
             self.right_bottom_frame, text="Name", border_width=1, border_color='white')
         self.right_bottom_frame_cam_name_label.place(relx=0.10, rely=0.03)
+        # self.right_bottom_frame_cam_name_result_label = customtkinter.CTkLabel(
+        #     self.right_bottom_frame, text=f"Camera {self.nuc_number}", text_color="white")
         self.right_bottom_frame_cam_name_result_label = customtkinter.CTkLabel(
-            self.right_bottom_frame, text=f"Camera {self.nuc_number}", text_color="white")
+            self.right_bottom_frame, text="-", text_color="white")
+
         self.right_bottom_frame_cam_name_result_label.place(
             relx=0.6, rely=0.03)
 
         self.right_bottom_frame_cam_status_label = customtkinter.CTkButton(
-            self.right_bottom_frame, text="Status", border_width=1, border_color='white', command=lambda: self._check_camera_event(self.nuc_number))
+            self.right_bottom_frame, text="Status", border_width=1, border_color='white', command=lambda: self._update_camera_specs(self.nuc_number))
         self.right_bottom_frame_cam_status_label.place(relx=0.1, rely=0.12)
         self.right_bottom_frame_cam_status_result_label = customtkinter.CTkLabel(
             self.right_bottom_frame, text="-", text_color="white")
@@ -367,14 +367,14 @@ class ClientGUI(customtkinter.CTk):
             fg_color=themes[COLOR_SELECT][1])
         self.right_bottom_frame_detect_status_label.place(relx=0.1, rely=0.66)
         self.right_bottom_frame_detect_status_label = customtkinter.CTkLabel(
-            self.right_bottom_frame, text="Idle", text_color="white")
+            self.right_bottom_frame, text="-", text_color="white")
         self.right_bottom_frame_detect_status_label.place(relx=0.6, rely=0.66)
         self.right_bottom_frame_detect_rate_button = customtkinter.CTkButton(
             self.right_bottom_frame, text="Detection Rate", border_width=1, border_color='white', command=lambda: self._check_detection_rate_event(self.nuc_number),
             fg_color=themes[COLOR_SELECT][1])
         self.right_bottom_frame_detect_rate_button.place(relx=0.1, rely=0.75)
         self.right_bottom_frame_detect_rate_result_label = customtkinter.CTkLabel(
-            self.right_bottom_frame, text="Null", text_color="white")
+            self.right_bottom_frame, text="-", text_color="white")
         self.right_bottom_frame_detect_rate_result_label.place(relx=0.6, rely=0.75)
 
         self.right_bottom_frame_detect_result_label = customtkinter.CTkButton(
@@ -382,19 +382,28 @@ class ClientGUI(customtkinter.CTk):
             fg_color=themes[COLOR_SELECT][1])
         self.right_bottom_frame_detect_result_label.place(relx=0.1, rely=0.84)
         self.right_bottom_frame_detect_result_ans_label = customtkinter.CTkLabel(
-            self.right_bottom_frame, text="Null", text_color="white")
+            self.right_bottom_frame, text="-", text_color="white")
         self.right_bottom_frame_detect_result_ans_label.place(relx=0.6, rely=0.84)
 
-    def _check_camera_event(self, nuc_number) -> None:
+    def _update_camera_specs(self, nuc_number) -> None:
         """ routine to check the status of the camera """
         camera_topic_name = f"/camera_{nuc_number}/image_raw"
         if not self.check_active_topic(camera_topic_name):
+            self.right_bottom_frame_cam_name_result_label.configure(
+                text=f"-", text_color="white")
             self.right_bottom_frame_cam_status_result_label.configure(
-                text="Idle", text_color="white")
-            # rospy.logerr(f"Camera at NUC {nuc_number} is not running..")
+                text="-", text_color="yellow")
+            self.right_bottom_frame_cam_model_result_label.configure(
+                text="-", text_color="white")
+            
+            rospy.logerr(f"Camera at NUC {nuc_number} is not running..")
         else:
+            self.right_bottom_frame_cam_name_result_label.configure(
+                text=f"Camera {nuc_number}", text_color="white")
             self.right_bottom_frame_cam_status_result_label.configure(
                 text="Running", text_color="yellow")
+            # self.right_bottom_frame_cam_model_result_label.configure(
+                
             # rospy.loginfo(f"Camera at NUC {nuc_number} is running..")
 
     def _check_camera_fps_event(self, nuc_number) -> None:
@@ -706,7 +715,7 @@ class ClientGUI(customtkinter.CTk):
             nuc_cam_driver.start()
             self.running_processes[f'camera_{nuc_machine}_driver'] = nuc_cam_driver
             rospy.sleep(1)
-            self._check_camera_event(nuc_machine)
+            self._update_camera_specs(nuc_machine)
             self._check_camera_fps_event(nuc_machine)
 
             # Update button text to indicate that the camera can be stopped
@@ -754,7 +763,7 @@ class ClientGUI(customtkinter.CTk):
                 )
                 self.running_processes.pop(
                     f'camera_{nuc_machine}_driver', None)
-                self._check_camera_event(nuc_machine)
+                self._update_camera_specs(nuc_machine)
                 self._check_camera_fps_event(nuc_machine)
                 rospy.loginfo(
                     f'NUC {nuc_machine} Camera stopped successfully!')
@@ -786,6 +795,8 @@ class ClientGUI(customtkinter.CTk):
 
     def _left_button_frame_calib_update_button_event(self):
         """ routine for updating calibration parameters """
+        chessboard_entry = self.middle_center_frame_chessboard_entry.get()
+        sq_size_entry = self.middle_center_frame_sq_size_entry.get()
         if not chessboard_entry and not sq_size_entry:
             print('Nothing updated')
             print(f'Original square size: {self.square_size}')

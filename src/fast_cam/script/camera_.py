@@ -8,7 +8,7 @@ from cv_bridge import CvBridge
 from camera_info_manager import CameraInfoManager
 from fast_cam.msg import CameraSpecs as CameraParameters
 from fast_cam.srv import SetGain, SetGainResponse
-
+from fast_cam.srv import GetCameraProperties, GetCameraPropertiesResponse
 # from std_srvs.srv import Trigger, TriggerResponse
 # import sys
 
@@ -186,7 +186,7 @@ class CameraNode:
 
         self.image_publisher.publish(ros_image)
         self.camera_info_publisher.publish(camera_info)
-        self.camera_parameters_publisher.publish(self.camera_parameters)
+        # self.camera_parameters_publisher.publish(self.camera_parameters)
         self.rate.sleep()
 
     def cleanup(self):
@@ -225,7 +225,6 @@ class CameraNode:
         except mvsdk.CameraException as e:
             rospy.logerr(f"Failed to set gain: {e.message}")
             return SetGainResponse(False, f"Failed to set gain: {e.message}")
-
 
 if __name__ == '__main__':
     try:
