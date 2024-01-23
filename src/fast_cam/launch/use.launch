@@ -6,7 +6,7 @@
         <include file="$(find fast_cam)/launch/fc.launch">
             <arg name="camera_name" value="$(arg launch_nuc)" />
             <arg name="device_id" value="0" />
-            <arg name="device_ip" value="192.168.1.101" />
+            <arg name="device_ip" value="192.168.1.11" />
             <arg name="calib_file" value="$(arg launch_nuc)" />
         </include>
     </group>
@@ -15,7 +15,7 @@
         <include file="$(find fast_cam)/launch/fc.launch">
             <arg name="camera_name" value="$(arg launch_nuc)" />
             <arg name="device_id" value="1" />
-            <arg name="device_ip" value="192.168.1.102" />
+            <arg name="device_ip" value="192.168.1.12" />
             <arg name="calib_file" value="$(arg launch_nuc)" />
         </include>
     </group>
@@ -24,7 +24,25 @@
         <include file="$(find fast_cam)/launch/fc.launch">
             <arg name="camera_name" value="$(arg launch_nuc)" />
             <arg name="device_id" value="2" />
-            <arg name="device_ip" value="192.168.1.103" />
+            <arg name="device_ip" value="192.168.1.13" />
+            <arg name="calib_file" value="$(arg launch_nuc)" />
+        </include>
+    </group>
+
+        <group if = "$(eval launch_nuc == 'camera_4')">
+        <include file="$(find fast_cam)/launch/fc.launch">
+            <arg name="camera_name" value="$(arg launch_nuc)" />
+            <arg name="device_id" value="3" />
+            <arg name="device_ip" value="192.168.1.14" />
+            <arg name="calib_file" value="$(arg launch_nuc)" />
+        </include>
+    </group>
+
+        <group if = "$(eval launch_nuc == 'camera_5')">
+        <include file="$(find fast_cam)/launch/fc.launch">
+            <arg name="camera_name" value="$(arg launch_nuc)" />
+            <arg name="device_id" value="4" />
+            <arg name="device_ip" value="192.168.1.105" />
             <arg name="calib_file" value="$(arg launch_nuc)" />
         </include>
     </group>

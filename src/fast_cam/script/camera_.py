@@ -33,7 +33,7 @@ class CameraNode:
         # Camera parameters
         self.camera_parameters_file = "/home/ammar/ros_ws/src/fast_cam/config/camera_info_nuc1.yaml"
         self.camera_name = rospy.get_param("~camera_name", "Camera_0")
-        self.default_fps = 150
+        self.default_fps = 125
         self.rate = rospy.Rate(rospy.get_param(
             '~frame_rate', self.default_fps))
         self.device_id = rospy.get_param("~device_id", -1)
