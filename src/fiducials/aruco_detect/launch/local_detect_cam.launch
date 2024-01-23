@@ -42,5 +42,23 @@
 
         </include>
     </group>
+    <!-- NUC 4 -->
+    <group if="$(eval launch_nuc == 'camera_4')">
+        <include file="$(find aruco_detect)/launch/final_aruco.launch">
+        <arg name="camera" value="/camera_4"/>
+        <arg name="fiducial_len" value="$(arg fiducial_len)"/>
+        <arg name="dictionary" value="$(arg dictionary)"/>
+
+        </include>
+    </group>
+            <!-- NUC 5 -->
+    <group if="$(eval launch_nuc == 'camera_5')">
+        <include file="$(find aruco_detect)/launch/final_aruco.launch">
+        <arg name="camera" value="/camera_5"/>
+        <arg name="fiducial_len" value="$(arg fiducial_len)"/>
+        <arg name="dictionary" value="$(arg dictionary)"/>
+
+        </include>
+    </group>
 </launch>
 
