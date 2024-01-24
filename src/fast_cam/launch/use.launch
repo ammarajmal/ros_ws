@@ -42,7 +42,7 @@
         <include file="$(find fast_cam)/launch/fc.launch">
             <arg name="camera_name" value="$(arg launch_nuc)" />
             <arg name="device_id" value="4" />
-            <arg name="device_ip" value="192.168.1.105" />
+            <arg name="device_ip" value="192.168.1.15" />
             <arg name="calib_file" value="$(arg launch_nuc)" />
         </include>
     </group>

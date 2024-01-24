@@ -56,6 +56,7 @@ def process_data(data, nuc_name):
             normalized_translation_x = translation.x - first_translation_x_nuc1
             normalized_translation_y = translation.y - first_translation_y_nuc1
             normalized_translation_z = translation.z - first_translation_z_nuc1
+            print(normalized_translation_x, normalized_translation_y, normalized_translation_z)
 
         elif nuc_name == 'nuc2':
             # Process data for nuc2
@@ -68,6 +69,7 @@ def process_data(data, nuc_name):
             normalized_translation_x = translation.x - first_translation_x_nuc2
             normalized_translation_y = translation.y - first_translation_y_nuc2
             normalized_translation_z = translation.z - first_translation_z_nuc2
+            print(normalized_translation_x, normalized_translation_y, normalized_translation_z)
 
         elif nuc_name == 'nuc3':
             # Process data for nuc3
@@ -75,6 +77,7 @@ def process_data(data, nuc_name):
                 first_translation_x_nuc3 = translation.x
                 first_translation_y_nuc3 = translation.y
                 first_translation_z_nuc3 = translation.z
+                print(first_translation_x_nuc3, first_translation_y_nuc3, first_translation_z_nuc3)
 
             # Subtract the first data point for nuc3
             normalized_translation_x = translation.x - first_translation_x_nuc3
@@ -99,9 +102,9 @@ def save_to_influxdb(nuc_name, translation_x, translation_y, translation_z, rota
 
 if __name__ == '__main__':
     rospy.init_node('data_processor', anonymous=True)
-    rospy.Subscriber("/nuc1/fiducial_transforms", FiducialTransformArray, callback_nuc1)
-    rospy.Subscriber("/nuc2/fiducial_transforms", FiducialTransformArray, callback_nuc2)
-    rospy.Subscriber("/nuc3/fiducial_transforms", FiducialTransformArray, callback_nuc3)
+    rospy.Subscriber("/camera_1/fiducial_transforms", FiducialTransformArray, callback_nuc1)
+    rospy.Subscriber("/camera_2/fiducial_transforms", FiducialTransformArray, callback_nuc2)
+    rospy.Subscriber("/camera_3/fiducial_transforms", FiducialTransformArray, callback_nuc3)
     try:
         rospy.spin()
     finally:
