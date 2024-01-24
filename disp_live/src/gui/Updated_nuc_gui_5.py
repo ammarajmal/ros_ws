@@ -65,8 +65,8 @@ class ClientGUI(customtkinter.CTk):
         # self.nuc1_camera = False
         # self.nuc2_camera = False
         # self.nuc3_camera = False
-        self.board_size = "7x9"  # dimensions for calibration
-        self.square_size = "0.020"  # in meters for calibration
+        self.board_size = "4x4"  # dimensions for calibration
+        self.square_size = "0.01725"  # in meters for calibrationclear
         self.marker_dim = "0.0200"  # in meters for ARUCO marker
         self.marker_dict = "0"  # (DICT_4X4_50)
         self.var_dictionary = tk.StringVar(self, "0")  # dict 5x5 (1000)
