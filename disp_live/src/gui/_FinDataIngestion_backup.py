@@ -26,6 +26,16 @@ first_translation_x_nuc3 = None
 first_translation_y_nuc3 = None
 first_translation_z_nuc3 = None
 
+first_translation_x_nuc4 = None
+first_translation_y_nuc4 = None
+first_translation_z_nuc4 = None
+
+first_translation_x_nuc5 = None
+first_translation_y_nuc5 = None
+first_translation_z_nuc6 = None
+
+
+
 def callback_nuc1(data):
     process_data(data, 'nuc1')
 
@@ -33,6 +43,12 @@ def callback_nuc2(data):
     process_data(data, 'nuc2')
 
 def callback_nuc3(data):
+    process_data(data, 'nuc3')
+    
+def callback_nuc4(data):
+    process_data(data, 'nuc3')
+    
+def callback_nuc5(data):
     process_data(data, 'nuc3')
 
 def process_data(data, nuc_name):
@@ -56,7 +72,7 @@ def process_data(data, nuc_name):
             normalized_translation_x = translation.x - first_translation_x_nuc1
             normalized_translation_y = translation.y - first_translation_y_nuc1
             normalized_translation_z = translation.z - first_translation_z_nuc1
-            # print(normalized_translation_x, normalized_translation_y, normalized_translation_z)
+            print(normalized_translation_x, normalized_translation_y, normalized_translation_z)
 
         elif nuc_name == 'nuc2':
             # Process data for nuc2
@@ -69,7 +85,7 @@ def process_data(data, nuc_name):
             normalized_translation_x = translation.x - first_translation_x_nuc2
             normalized_translation_y = translation.y - first_translation_y_nuc2
             normalized_translation_z = translation.z - first_translation_z_nuc2
-            # print(normalized_translation_x, normalized_translation_y, normalized_translation_z)
+            print(normalized_translation_x, normalized_translation_y, normalized_translation_z)
 
         elif nuc_name == 'nuc3':
             # Process data for nuc3
@@ -77,7 +93,7 @@ def process_data(data, nuc_name):
                 first_translation_x_nuc3 = translation.x
                 first_translation_y_nuc3 = translation.y
                 first_translation_z_nuc3 = translation.z
-                # print(first_translation_x_nuc3, first_translation_y_nuc3, first_translation_z_nuc3)
+                print(first_translation_x_nuc3, first_translation_y_nuc3, first_translation_z_nuc3)
 
             # Subtract the first data point for nuc3
             normalized_translation_x = translation.x - first_translation_x_nuc3

@@ -47,7 +47,7 @@ class CameraNode:
         # self.shutdown_service = rospy.Service("~shutdown", Trigger, self.handle_shutdown)
         self.bridge = CvBridge()
         self.cap = None
-        self.gain = 50
+        self.gain = 200
         self.camera_frate = 0
 
         self.camera = None
