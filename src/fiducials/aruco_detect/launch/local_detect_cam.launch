@@ -15,6 +15,16 @@
 
     <arg name="launch_nuc" default="camera_1"/>
 
+    <!-- NUC 0 -->
+    <group if="$(eval launch_nuc == 'camera_0')">
+        <include file="$(find aruco_detect)/launch/final_aruco.launch">
+        <arg name="camera" value="/camera_0"/>
+        <arg name="fiducial_len" value="$(arg fiducial_len)"/>
+        <arg name="dictionary" value="$(arg dictionary)"/>
+
+        </include>
+    </group>
+
     <!-- NUC 1 -->
     <group if="$(eval launch_nuc == 'camera_1')">
         <include file="$(find aruco_detect)/launch/final_aruco.launch">

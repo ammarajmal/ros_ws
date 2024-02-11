@@ -48,6 +48,8 @@
 #include <dynamic_reconfigure/server.h>
 #include <std_srvs/SetBool.h>
 #include <std_msgs/String.h>
+// #include <iostream>
+// using namespace std;
 
 #include "fiducial_msgs/Fiducial.h"
 #include "fiducial_msgs/FiducialArray.h"
@@ -75,10 +77,6 @@ typedef boost::shared_ptr< fiducial_msgs::FiducialArray const> FiducialArrayCons
 
 class FiducialsNode {
   private:
-      // New member variables for tracking detection rate
-    int totalFramesReceived = 0;
-    int framesWithDetectedMarkers = 0;
-
     ros::Publisher vertices_pub;
     ros::Publisher pose_pub;
 
@@ -343,9 +341,6 @@ void FiducialsNode::imageCallback(const sensor_msgs::ImageConstPtr & msg)
         ROS_INFO("Got image %d", msg->header.seq);       
     }
 
-        // Increment total frames received counter
-    totalFramesReceived++;
-
     fiducial_msgs::FiducialArray fva;
     fva.header.stamp = msg->header.stamp;
     fva.header.frame_id = frameId;
@@ -400,12 +395,30 @@ void FiducialsNode::imageCallback(const sensor_msgs::ImageConstPtr & msg)
         ROS_ERROR("cv exception: %s", e.what());
     }
 }
+void convert_to_world_frame(cv::Matx33d R, const cv::Vec3d tvec, std::vector<cv::Vec3d>& w_tvec) {
 
+
+    // Compute the inverse of the rotation matrix
+    cv::Matx33d R_inv = R.t();
+
+    cv::Vec3d world_tvec;
+    // Compute the translation vector in the world frame
+    world_tvec = -R_inv * tvec;
+
+    
+    w_tvec.push_back(world_tvec);
+
+}
+
+cv::Matx33d R;
+int flag_i = 0;
 void FiducialsNode::poseEstimateCallback(const FiducialArrayConstPtr & msg)
 {
     vector <Vec3d>  rvecs, tvecs;
+    
 
     vision_msgs::Detection2DArray vma;
+    // ROS_INFO("flag_i %d", flag_i);
     fiducial_msgs::FiducialTransformArray fta;
     if (vis_msgs) {
         vma.header.stamp = msg->header.stamp;
@@ -485,10 +498,30 @@ void FiducialsNode::poseEstimateCallback(const FiducialArrayConstPtr & msg)
                 }
                 else {
                     ft.fiducial_id = ids[i];
+                    // std::vector<cv::Vec3d> T;
+                    // convert_to_world_frame(rvecs[i], tvecs[i], T);
+                    if (flag_i == 0) {
+                        cv::Rodrigues(rvecs[i], R);
+                    }
+                    flag_i += 1;
+                    // ROS_INFO("flag_i %d", flag_i);
+                    // ROS_INFO("R %f %f %f", R(0,0), R(0,1), R(0,2));
 
-                    ft.transform.translation.x = tvecs[i][0];
-                    ft.transform.translation.y = tvecs[i][1];
-                    ft.transform.translation.z = tvecs[i][2];
+
+
+
+                    std::vector<cv::Vec3d> w_tvec;
+                    convert_to_world_frame(R, tvecs[i], w_tvec);
+
+
+
+                    ft.transform.translation.x = w_tvec[i][0];
+                    ft.transform.translation.y = w_tvec[i][1];
+                    ft.transform.translation.z = w_tvec[i][2];
+
+                    // ft.transform.translation.x = tvecs[i][0];
+                    // ft.transform.translation.y = tvecs[i][1];
+                    // ft.transform.translation.z = tvecs[i][2];
                     q.setRotation(tf2::Vector3(axis[0], axis[1], axis[2]), angle);
                     ft.transform.rotation.w = q.w();
                     ft.transform.rotation.x = q.x();
@@ -523,8 +556,8 @@ void FiducialsNode::poseEstimateCallback(const FiducialArrayConstPtr & msg)
                     else {
                         geometry_msgs::TransformStamped ts;
                         ts.transform = ft.transform;
-                        ts.header.frame_id = frameId;
                         ts.header.stamp = msg->header.stamp;
+                        ts.header.frame_id = frameId;
                         ts.child_frame_id = "fiducial_" + std::to_string(ft.fiducial_id);
                         broadcaster.sendTransform(ts);
                     }
@@ -614,59 +647,59 @@ FiducialsNode::FiducialsNode() : nh(), pnh("~"), it(nh)
     detectorParams = new aruco::DetectorParameters();
 
     pnh.param<bool>("publish_images", publish_images, false);
-    pnh.param<double>("fiducial_len", fiducial_len, 0.14);
-    pnh.param<int>("dictionary", dicno, 7);
+    pnh.param<double>("fiducial_len", fiducial_len, 0.099);
+    pnh.param<int>("dictionary", dicno, 9);
     pnh.param<bool>("do_pose_estimation", doPoseEstimation, true);
-    pnh.param<bool>("publish_fiducial_tf", publishFiducialTf, true);
+    pnh.param<bool>("publish_fiducial_tf", publishFiducialTf, false);
     pnh.param<bool>("vis_msgs", vis_msgs, false);
     pnh.param<bool>("verbose", verbose, false);
 
     std::string str;
     std::vector<std::string> strs;
 
-    pnh.param<string>("ignore_fiducials", str, "");
-    handleIgnoreString(str);
+    // pnh.param<string>("ignore_fiducials", str, "");
+    // handleIgnoreString(str);
 
     /*
     fiducial size can take comma separated list of size: id or size: range,
     e.g. "200.0: 12, 300.0: 200-300"
     */
-    pnh.param<string>("fiducial_len_override", str, "");
-    boost::split(strs, str, boost::is_any_of(","));
-    for (const string& element : strs) {
-        if (element == "") {
-           continue;
-        }
-        std::vector<std::string> parts;
-        boost::split(parts, element, boost::is_any_of(":"));
-        if (parts.size() == 2) {
-            double len = std::stod(parts[1]);
-            std::vector<std::string> range;
-            boost::split(range, element, boost::is_any_of("-"));
-            if (range.size() == 2) {
-               int start = std::stoi(range[0]);
-               int end = std::stoi(range[1]);
-               ROS_INFO("Setting fiducial id range %d - %d length to %f",
-                        start, end, len);
-               for (int j=start; j<=end; j++) {
-                   fiducialLens[j] = len;
-               }
-            }
-            else if (range.size() == 1){
-               int fid = std::stoi(range[0]);
-               ROS_INFO("Setting fiducial id %d length to %f", fid, len);
-               fiducialLens[fid] = len;
-            }
-            else {
-               ROS_ERROR("Malformed fiducial_len_override: %s", element.c_str());
-            }
-        }
-        else {
-           ROS_ERROR("Malformed fiducial_len_override: %s", element.c_str());
-        }
-    }
+    // pnh.param<string>("fiducial_len_override", str, "");
+    // boost::split(strs, str, boost::is_any_of(","));
+    // for (const string& element : strs) {
+    //     if (element == "") {
+    //        continue;
+    //     }
+    //     std::vector<std::string> parts;
+    //     boost::split(parts, element, boost::is_any_of(":"));
+    //     if (parts.size() == 2) {
+    //         double len = std::stod(parts[1]);
+    //         std::vector<std::string> range;
+    //         boost::split(range, element, boost::is_any_of("-"));
+    //         if (range.size() == 2) {
+    //            int start = std::stoi(range[0]);
+    //            int end = std::stoi(range[1]);
+    //            ROS_INFO("Setting fiducial id range %d - %d length to %f",
+    //                     start, end, len);
+    //            for (int j=start; j<=end; j++) {
+    //                fiducialLens[j] = len;
+    //            }
+    //         }
+    //         else if (range.size() == 1){
+    //            int fid = std::stoi(range[0]);
+    //            ROS_INFO("Setting fiducial id %d length to %f", fid, len);
+    //            fiducialLens[fid] = len;
+    //         }
+    //         else {
+    //            ROS_ERROR("Malformed fiducial_len_override: %s", element.c_str());
+    //         }
+    //     }
+    //     else {
+    //        ROS_ERROR("Malformed fiducial_len_override: %s", element.c_str());
+    //     }
+    // }
 
-    image_pub = it.advertise("/fiducial_images", 1);
+    image_pub = it.advertise("fiducial_images", 1);
 
     vertices_pub = nh.advertise<fiducial_msgs::FiducialArray>("fiducial_vertices", 1);
 
@@ -676,12 +709,16 @@ FiducialsNode::FiducialsNode() : nh(), pnh("~"), it(nh)
         pose_pub = nh.advertise<fiducial_msgs::FiducialTransformArray>("fiducial_transforms", 1);
 
     dictionary = aruco::getPredefinedDictionary(dicno);
+    // cout<<"dictionary"<<dicno<<endl;
+    // cout<<"fiducial len"<<fiducial_len<<endl;
+    
 
     img_sub = it.subscribe("camera", 1,
                         &FiducialsNode::imageCallback, this);
 
     vertices_sub = nh.subscribe("fiducial_vertices", 1,
                     &FiducialsNode::poseEstimateCallback, this);
+
     caminfo_sub = nh.subscribe("camera_info", 1,
                     &FiducialsNode::camInfoCallback, this);
 

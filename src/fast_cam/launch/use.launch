@@ -2,6 +2,16 @@
 
     <arg name="launch_nuc" default="camera_1" />
 
+
+    <group if = "$(eval launch_nuc == 'camera_0')">
+        <include file="$(find fast_cam)/launch/fc.launch">
+            <arg name="camera_name" value="$(arg launch_nuc)" />
+            <arg name="device_id" value="0" />
+            <arg name="device_ip" value="192.168.1.200" />
+            <arg name="calib_file" value="$(arg launch_nuc)" />
+        </include>
+    </group>
+
     <group if = "$(eval launch_nuc == 'camera_1')">
         <include file="$(find fast_cam)/launch/fc.launch">
             <arg name="camera_name" value="$(arg launch_nuc)" />
