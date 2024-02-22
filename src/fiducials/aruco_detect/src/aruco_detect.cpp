@@ -75,10 +75,6 @@ typedef boost::shared_ptr< fiducial_msgs::FiducialArray const> FiducialArrayCons
 
 class FiducialsNode {
   private:
-      // New member variables for tracking detection rate
-    int totalFramesReceived = 0;
-    int framesWithDetectedMarkers = 0;
-
     ros::Publisher vertices_pub;
     ros::Publisher pose_pub;
 
@@ -342,9 +338,6 @@ void FiducialsNode::imageCallback(const sensor_msgs::ImageConstPtr & msg)
     if(verbose){
         ROS_INFO("Got image %d", msg->header.seq);       
     }
-
-        // Increment total frames received counter
-    totalFramesReceived++;
 
     fiducial_msgs::FiducialArray fva;
     fva.header.stamp = msg->header.stamp;

@@ -15,12 +15,10 @@ find_package(catkin REQUIRED COMPONENTS
   sensor_msgs
   std_msgs
   fiducial_msgs
-  geometry_msgs
   dynamic_reconfigure
 )
 
 find_package(OpenCV REQUIRED)
-set(CMAKE_PREFIX_PATH "/path/to/Qt5WebSockets")
 
 # Python Setup
 catkin_python_setup()
@@ -37,13 +35,11 @@ include_directories(${catkin_INCLUDE_DIRS})
 include_directories(${OpenCV_INCLUDE_DIRS})
 
 add_executable(aruco_detect src/aruco_detect.cpp)
-# add_executable(aruco_pose_estimator src/pose_agcam.cpp)
 
 add_dependencies(aruco_detect ${${PROJECT_NAME}_EXPORTED_TARGETS}
                  ${catkin_EXPORTED_TARGETS})
-                 
+
 target_link_libraries(aruco_detect ${catkin_LIBRARIES} ${OpenCV_LIBS})
-# target_link_libraries(aruco_pose_estimator ${catkin_LIBRARIES} ${OpenCV_LIBS})
 
 #############
 ## Install ##
