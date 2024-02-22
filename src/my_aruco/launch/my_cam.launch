@@ -1,0 +1,12 @@
+<launch>
+    <!-- Node to run my_cam.py -->
+    <node pkg="my_aruco" type="my_cam.py" name="webcam" output="screen"/>
+    <param name="camera_info_file" value="$(find my_aruco)/config/my_camera0.yaml"/>
+
+    <!-- Node to run my_detect.py -->
+    <!-- <node pkg="my_aruco" type="my_detect.py" name="aruco_detector" output="screen"/> -->
+
+    <!-- Node to show the output of the marker detected -->
+    <!-- <node pkg="my_aruco" type="my_showMarker.py" name="aruco_display" output="screen"/> -->
+
+</launch>

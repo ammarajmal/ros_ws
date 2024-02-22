@@ -1,0 +1,55 @@
+camera_matrix:
+  cols: 3
+  data:
+  - 8233.7131
+  - 0.0
+  - 1538.17513
+  - 0.0
+  - 8209.15271
+  - -31.40974
+  - 0.0
+  - 0.0
+  - 1.0
+  rows: 3
+camera_name: sony_1
+distortion_coefficients:
+  cols: 5
+  data:
+  - -1.578633
+  - 13.290403
+  - 0.048513
+  - -0.047803
+  - 0.0
+  rows: 1
+distortion_model: plumb_bob
+image_height: 1080
+image_width: 1920
+projection_matrix:
+  cols: 4
+  data:
+  - 8202.47266
+  - 0.0
+  - 1535.099
+  - 0.0
+  - 0.0
+  - 8232.67578
+  - -31.43053
+  - 0.0
+  - 0.0
+  - 0.0
+  - 1.0
+  - 0.0
+  rows: 3
+rectification_matrix:
+  cols: 3
+  data:
+  - 1.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 1.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 1.0
+  rows: 3

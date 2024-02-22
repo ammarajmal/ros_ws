@@ -45,7 +45,7 @@ def callback(data):
 
 if __name__ == '__main__':
     rospy.init_node('data_processor', anonymous=True)
-    topic_name = "/usb_cam/camera_info"
+    topic_name = "/camera_0/camera_info"
     
     rospy.Subscriber(topic_name, CameraInfo, callback)
 

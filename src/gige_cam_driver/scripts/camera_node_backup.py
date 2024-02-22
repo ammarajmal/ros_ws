@@ -97,7 +97,7 @@ class Camera(object):
 		while not rospy.is_shutdown():
 			frame = self.grab()
 			if frame is not None:
-				frame = cv2.resize(frame, (640,480), interpolation = cv2.INTER_LINEAR)				
+				frame = cv2.resize(frame, (640,480), interpolation = cv2.INTER_LINEAR)
 				camera_info = self.camera_info_manager.getCameraInfo()
 				camera_info.header.stamp = rospy.Time.now()
 				camera_info.header.frame_id = self.camera_manager
