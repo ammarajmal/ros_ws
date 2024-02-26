@@ -7,7 +7,7 @@ from influxdb_client.client.write_api import SYNCHRONOUS
 from geometry_msgs.msg import PoseStamped
 
 # InfluxDB 2.0 setup
-token = os.environ.get("INFLUXDB_OMEN_CUR_TOKEN")
+token = os.environ.get("NEWTOKEN")
 org = "CAUSITL"
 url = "http://localhost:8086"
 write_client = InfluxDBClient(url=url, token=token, org=org)
@@ -41,7 +41,7 @@ def process_data(data):
     save_to_influxdb(normalized_translation_x, normalized_translation_y, normalized_translation_z, rotation)
 
 def save_to_influxdb(translation_x, translation_y, translation_z, rotation):
-    point = Point("_Marker") \
+    point = Point("ammar") \
         .tag("camera", "camera_0") \
         .field("translation_x", translation_x) \
         .field("translation_y", translation_y) \
@@ -57,7 +57,7 @@ def save_to_influxdb(translation_x, translation_y, translation_z, rotation):
 if __name__ == '__main__':
     rospy.init_node('data_processor', anonymous=True)
 
-    rospy.Subscriber("/camera_0/aruco_pose", PoseStamped, callback)
+    rospy.Subscriber("/sony_1/fiducial_transforms", PoseStamped, callback)
 
     try:
         rospy.spin()

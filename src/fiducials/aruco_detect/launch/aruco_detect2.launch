@@ -1,7 +1,7 @@
 <!-- Run the aruco_detect node -->
 <launch>
     <!-- namespace for camera input -->
-    <arg name="camera" default="sony_1"/>
+    <arg name="camera" default="sony_2"/>
     <arg name="image" default="image"/>
     <arg name="transport" default="raw"/>
     <arg name="fiducial_len"  default="0.02" />
