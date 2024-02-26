@@ -11,18 +11,22 @@ import yaml
 bridge = CvBridge()
 class SonyCamera(object):
     def __init__(self):
+        rospy.loginfo('###########################################')
+        rospy.loginfo('Initializing Sony Camera')
         self.cap = cv.VideoCapture(0)
         rospy.init_node('sony_camera', anonymous=False)
         self.image_publisher = rospy.Publisher('~image_raw', Image, queue_size=10)
         self.camera_info_publisher = rospy.Publisher('~camera_info', CameraInfo, queue_size=10)
         self.calibration_file = rospy.get_param("~calibration_file", 0)
         self.camera_manager = rospy.get_param("~camera_manager", 0)
+        self.device_id = rospy.get_param("~device_id", 4)
         self.camera_info_manager = CameraInfoManager(cname=self.camera_manager, url=f'file://{self.calibration_file}', namespace=self.camera_manager)
         self.camera_info_manager.loadCameraInfo()
     def open(self):
         # method to open the camera
         if not self.cap.isOpened():
-            self.cap = cv.VideoCapture(0)
+            rospy.loginfo(f'Opening camera at device{self.device_id}')
+            self.cap = cv.VideoCapture(self.device_id)
         return self.cap.isOpened()
     def close(self):
         # method to close the camera
