@@ -1,0 +1,14 @@
+[submodule "camera_info_manager_py"]
+	path = camera_info_manager_py
+	url = https://github.com/ros-perception/camera_info_manager_py.git
+[submodule "src/camera_info_manager_py"]
+	path = src/camera_info_manager_py
+	url = https://github.com/ros-perception/camera_info_manager_py.git
+[submodule "src/vision_msgs"]
+	path = src/vision_msgs
+	url = https://github.com/ros-perception/vision_msgs.git
+	branch = noetic-devel
+[submodule "src/image_pipeline"]
+	path = src/image_pipeline
+	url = https://github.com/ros-perception/image_pipeline.git
+	branch = noetic
