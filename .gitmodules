@@ -9,3 +9,6 @@
 	path = src/image_pipeline
 	url = https://github.com/ros-perception/image_pipeline.git
 	branch = noetic
+[submodule "src/fiducials"]
+	path = src/fiducials
+	url = https://github.com/UbiquityRobotics/fiducials.git
