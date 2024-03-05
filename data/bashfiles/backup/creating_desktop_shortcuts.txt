@@ -1,0 +1,5 @@
+Creating symbolic link
+ln -s /home/agcam/.local/share/applications/Ros.desktop ~/Desktop/Ros.desktop
+ln -s /home/agcam/.local/share/applications/main.desktop ~/Desktop/main.desktop
+
+

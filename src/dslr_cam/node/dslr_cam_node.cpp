@@ -1,3 +1,6 @@
+
+rosrun camera_calibration cameracalibrator.py --size 6x5 --square 0.025 image:=/sony_cam1_node/image camera:=/sony_cam1_node
+
 #include <ros/ros.h>
 #include <boost/shared_ptr.hpp>
 #include <sensor_msgs/Image.h>
